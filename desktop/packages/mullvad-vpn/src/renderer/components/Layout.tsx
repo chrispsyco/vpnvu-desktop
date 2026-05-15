@@ -8,7 +8,7 @@ export const Container = styled.div({
   display: 'flex',
   flexDirection: 'column',
   flex: 1,
-  backgroundColor: colors.blue,
+  backgroundColor: colors.darkerBlue50,
   overflow: 'hidden',
 });
 

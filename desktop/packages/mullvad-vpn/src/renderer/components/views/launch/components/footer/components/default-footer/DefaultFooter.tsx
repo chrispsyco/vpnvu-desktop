@@ -13,10 +13,10 @@ export function DefaultLaunchFooter() {
       <FlexColumn gap="medium">
         <FooterText>
           {
-            // TRANSLATORS: Message in launch view when the mullvad service cannot be contacted.
+            // TRANSLATORS: Message in launch view when the vpn.vu service cannot be contacted.
             messages.pgettext(
               'launch-view',
-              'Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the "Learn more" button.',
+              'Unable to contact the VPN.vu system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the "Learn more" button.',
             )
           }
         </FooterText>

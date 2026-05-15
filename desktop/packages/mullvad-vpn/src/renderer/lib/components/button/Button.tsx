@@ -12,25 +12,28 @@ export type ButtonProps = React.ComponentPropsWithRef<'button'> & {
 };
 
 const styles = {
-  radius: Radius.radius4,
+  radius: Radius.radius12,
   variants: {
     primary: {
-      background: colors.blue,
+      background: colors.blue80,
       hover: colors.blue60,
       pressed: colors.blue40,
       disabled: colors.blue40,
+      glow: '0 0 24px rgba(9, 158, 180, 0.25)',
     },
     success: {
       background: colors.green,
       hover: colors.green80,
       pressed: colors.green40,
       disabled: colors.green40,
+      glow: '0 0 24px rgba(68, 173, 77, 0.22)',
     },
     destructive: {
       background: colors.red,
       hover: colors.red80,
       pressed: colors.red40,
       disabled: colors.red40,
+      glow: '0 0 24px rgba(227, 67, 73, 0.22)',
     },
   },
 };
@@ -44,19 +47,23 @@ export const StyledButton = styled.button<TransientProps<Pick<ButtonProps, 'vari
       --hover: ${variant.hover};
       --pressed: ${variant.pressed};
       --disabled: ${variant.disabled};
+      --glow: ${variant.glow};
       --radius: ${styles.radius};
       --transition-duration: 0.15s;
 
       display: flex;
       align-items: center;
-      padding: ${spacings.tiny} ${spacings.small};
+      padding: ${spacings.small} ${spacings.medium};
       gap: ${spacings.small};
       overflow-wrap: anywhere;
+      font-weight: 600;
+      letter-spacing: -0.005em;
 
-      min-height: 32px;
+      min-height: 44px;
       min-width: 60px;
       border-radius: var(--radius);
       background: var(--background);
+      box-shadow: var(--glow);
 
       ${() => {
         if ($width === 'fill') {

@@ -76,7 +76,7 @@ export function ApiAccessView() {
               message={[
                 messages.pgettext(
                   'api-access-methods-view',
-                  'The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations.',
+                  'The app needs to communicate with a VPN.vu API server to log you in, fetch server lists, and other critical operations.',
                 ),
                 messages.pgettext(
                   'api-access-methods-view',
@@ -97,7 +97,7 @@ export function ApiAccessView() {
                 <HeaderSubTitle>
                   {messages.pgettext(
                     'api-access-methods-view',
-                    'Manage and add custom methods to access the Mullvad API.',
+                    'Manage and add custom methods to access the VPN.vu API.',
                   )}
                 </HeaderSubTitle>
               </SettingsHeader>
@@ -257,7 +257,7 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
             message={[
               messages.pgettext(
                 'api-access-methods-view',
-                'With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies.',
+                'With the “Direct” method, the app communicates with a VPN.vu API server directly without any intermediate proxies.',
               ),
               messages.pgettext(
                 'api-access-methods-view',
@@ -271,7 +271,7 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
             message={[
               messages.pgettext(
                 'api-access-methods-view',
-                'With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks.',
+                'With the “VPN.vu bridges” method, the app communicates with a VPN.vu API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks.',
               ),
               messages.pgettext(
                 'api-access-methods-view',
@@ -286,7 +286,7 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
             message={[
               messages.pgettext(
                 'api-access-methods-view',
-                'With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers.',
+                'With the “Encrypted DNS proxy” method, the app will communicate with our VPN.vu API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers.',
               ),
               messages.pgettext(
                 'api-access-methods-view',
@@ -305,7 +305,7 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
                 // TRANSLATORS: %(domainFronting)s - Will be replaced with: 'Domain fronting'
                 messages.pgettext(
                   'api-access-methods-view',
-                  'The app communicates with a Mullvad API server via %(domainFronting)s.',
+                  'The app communicates with a VPN.vu API server via %(domainFronting)s.',
                 ),
                 {
                   domainFronting: strings.domainFronting,
@@ -318,7 +318,7 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
                 // TRANSLATORS: %(domainFronting)s - Will be replaced with: 'Domain fronting'
                 messages.pgettext(
                   'api-access-methods-view',
-                  'With the %(domainFronting)s access method, the app reaches the Mullvad API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor.',
+                  'With the %(domainFronting)s access method, the app reaches the VPN.vu API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor.',
                 ),
                 {
                   domainFronting: strings.domainFronting,
