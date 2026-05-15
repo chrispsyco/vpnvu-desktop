@@ -38,7 +38,7 @@ const StyledHeader = styled.header<TransientProps<HeaderProps>>(
 
 const MainHeader = ({ size = '1', variant = 'default', children, ...props }: HeaderProps) => {
   return (
-    <StyledHeader $size={size} $variant={variant} {...props}>
+    <StyledHeader $size={size} $variant={variant} data-app-region="drag" {...props}>
       <Flex
         flexDirection="column"
         justifyContent="center"

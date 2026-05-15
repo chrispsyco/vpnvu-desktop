@@ -11,6 +11,19 @@ import { AriaDetails, AriaInput, AriaLabel } from '../AriaGroup';
 import InfoButton from '../InfoButton';
 import * as Cell from '.';
 
+// Selector cell radio button — matches the vpn.vu mobile figma spec:
+// 22x22 round, 2px line border when inactive, 2px brand-glow border + 12x12
+// inner dot + box-shadow glow when active. brand-glow rgba inlined because
+// color tokens don't expose a low-alpha cyan ring colour (#5BC8DA =
+// rgba(91, 200, 218, …)). 200ms cubic-bezier(0.22, 1, 0.36, 1) on selection.
+const selectorTransition =
+  'background-color 200ms cubic-bezier(0.22, 1, 0.36, 1), ' +
+  'border-color 200ms cubic-bezier(0.22, 1, 0.36, 1), ' +
+  'box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1), ' +
+  'color 200ms cubic-bezier(0.22, 1, 0.36, 1), ' +
+  'transform 200ms cubic-bezier(0.22, 1, 0.36, 1), ' +
+  'opacity 200ms cubic-bezier(0.22, 1, 0.36, 1)';
+
 const StyledTitleLabel = styled(Cell.SectionTitle)({
   flex: 1,
 });
@@ -136,9 +149,49 @@ export default function Selector<T, U>(props: SelectorProps<T, U>) {
   }
 }
 
+// Hidden visually but kept so that screen readers / existing tests that look
+// for the "checkmark" affordance still see a selected-state cue. The visible
+// affordance is now the radio dot to the left.
 const StyledCellIcon = styled(Icon)<{ $visible: boolean }>((props) => ({
   opacity: props.$visible ? 1 : 0,
   marginRight: '8px',
+  display: 'none',
+}));
+
+// Round radio button — visual only; the underlying CellButton already carries
+// role="option" + aria-selected for assistive tech.
+const StyledRadio = styled.span<{ $selected: boolean; $disabled?: boolean }>((props) => ({
+  position: 'relative',
+  flex: '0 0 auto',
+  width: '22px',
+  height: '22px',
+  marginRight: '12px',
+  borderRadius: '50%',
+  borderStyle: 'solid',
+  borderWidth: '2px',
+  borderColor: props.$selected
+    ? 'rgba(91, 200, 218, 1)'
+    : props.$disabled
+      ? 'rgba(255, 255, 255, 0.2)'
+      : 'rgba(255, 255, 255, 0.3)',
+  backgroundColor: props.$selected ? 'rgba(91, 200, 218, 0.16)' : 'transparent',
+  boxShadow: props.$selected ? '0 0 12px rgba(91, 200, 218, 0.55)' : 'none',
+  transition: selectorTransition,
+  pointerEvents: 'none',
+
+  '&&::after': {
+    content: '""',
+    position: 'absolute',
+    top: '3px',
+    left: '3px',
+    width: '12px',
+    height: '12px',
+    borderRadius: '50%',
+    backgroundColor: colors.blue80,
+    transform: props.$selected ? 'scale(1)' : 'scale(0)',
+    opacity: props.$selected ? 1 : 0,
+    transition: selectorTransition,
+  },
 }));
 
 interface SelectorCellProps<T> {
@@ -155,6 +208,61 @@ interface SelectorCellProps<T> {
 
 const StyledSelectorCell = styled.div({
   display: 'flex',
+});
+
+// Wraps Cell.CellButton without modifying it. The wrapper overrides the row's
+// default green-on-selected background back to the regular cell surface, then
+// repaints the inner ValueLabel cyan when active and adds a soft hover/focus
+// ring. Keeps the existing API + a11y intact.
+const StyledRowWrapper = styled.div<{ $selected: boolean; $disabled?: boolean }>((props) => {
+  // brand-glow (#5BC8DA) tints, inlined as rgba because tokens don't expose
+  // the low-alpha cyan ring colours used in the mobile figma spec.
+  const activeColor = 'rgba(91, 200, 218, 1)';
+  const ringSoftColor = 'rgba(91, 200, 218, 0.15)';
+
+  return {
+    flex: 1,
+    display: 'flex',
+    position: 'relative',
+    borderRadius: 'inherit',
+    transition: selectorTransition,
+
+    // Reset selected-green from CellButton — selection is signalled by the
+    // radio dot + title colour, not by tinting the whole row.
+    '> button': {
+      transition: selectorTransition,
+      ...(props.$selected
+        ? {
+            backgroundColor: `${colors.blue40} !important`,
+          }
+        : null),
+    },
+
+    // Subtle cyan hover wash (only when interactive).
+    ...(props.$disabled
+      ? null
+      : {
+          '&&:hover > button:not(:disabled)': {
+            backgroundColor: ringSoftColor,
+          },
+        }),
+
+    // Keyboard focus ring on the inner button.
+    '> button:focus-visible': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${activeColor}, 0 0 0 6px ${ringSoftColor}`,
+    },
+
+    // Active row title colour.
+    ...(props.$selected
+      ? {
+          [`${Cell.ValueLabel}`]: {
+            color: activeColor,
+            transition: selectorTransition,
+          },
+        }
+      : null),
+  };
 });
 
 const StyledSideButton = styled(Cell.SideButton)({
@@ -180,18 +288,25 @@ function SelectorCell<T>(props: SelectorCellProps<T>) {
 
   return (
     <StyledSelectorCell>
-      <Cell.CellButton
-        ref={props.forwardedRef}
-        onClick={handleClick}
-        selected={props.isSelected}
-        disabled={props.disabled}
-        role="option"
-        aria-selected={props.isSelected}
-        aria-disabled={props.disabled}
-        data-testid={props['data-testid']}>
-        <StyledCellIcon $visible={props.isSelected} icon="checkmark" />
-        <SelectorCellLabel subLabel={props.subLabel}>{props.children}</SelectorCellLabel>
-      </Cell.CellButton>
+      <StyledRowWrapper $selected={props.isSelected} $disabled={props.disabled}>
+        <Cell.CellButton
+          ref={props.forwardedRef}
+          onClick={handleClick}
+          selected={props.isSelected}
+          disabled={props.disabled}
+          role="option"
+          aria-selected={props.isSelected}
+          aria-disabled={props.disabled}
+          data-testid={props['data-testid']}>
+          <StyledRadio
+            aria-hidden="true"
+            $selected={props.isSelected}
+            $disabled={props.disabled}
+          />
+          <StyledCellIcon $visible={props.isSelected} icon="checkmark" />
+          <SelectorCellLabel subLabel={props.subLabel}>{props.children}</SelectorCellLabel>
+        </Cell.CellButton>
+      </StyledRowWrapper>
       {props.details && (
         <StyledSideButton
           $backgroundColor={colors.blue40}
@@ -227,11 +342,27 @@ interface StyledCustomContainerProps {
   selected: boolean;
 }
 
+// Matches the regular SelectorCell visual: neutral surface always, selection
+// is read from the radio dot + ValueLabel colour. Hover / focus apply the soft
+// cyan wash; brand-glow rgba inlined (#5BC8DA = rgba(91, 200, 218, …)).
 const StyledCustomContainer = styled(Cell.Container)<StyledCustomContainerProps>((props) => ({
-  backgroundColor: props.selected ? colors.green : colors.blue40,
+  backgroundColor: colors.blue40,
+  transition: selectorTransition,
   '&&:hover': {
-    backgroundColor: props.selected ? colors.green : colors.blue,
+    backgroundColor: 'rgba(91, 200, 218, 0.15)',
   },
+  '&&:focus-within': {
+    boxShadow:
+      '0 0 0 2px rgba(91, 200, 218, 1), 0 0 0 6px rgba(91, 200, 218, 0.15)',
+  },
+  ...(props.selected
+    ? {
+        [`${Cell.ValueLabel}`]: {
+          color: 'rgba(91, 200, 218, 1)',
+          transition: selectorTransition,
+        },
+      }
+    : null),
 }));
 
 // Adding undefined as possible value of the selector to be able to select nothing.
@@ -348,6 +479,11 @@ export function SelectorWithCustomItem<T, U>(props: SelectorWithCustomItemProps<
           role="option"
           aria-selected={customIsSelected}
           aria-disabled={props.disabled}>
+          <StyledRadio
+            aria-hidden="true"
+            $selected={customIsSelected}
+            $disabled={props.disabled}
+          />
           <StyledCellIcon $visible={customIsSelected} icon="checkmark" />
           <Cell.ValueLabel>{messages.gettext('Custom')}</Cell.ValueLabel>
           <AriaInput>

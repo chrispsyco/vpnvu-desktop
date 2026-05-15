@@ -1,6 +1,7 @@
 import { messages } from '../../../../shared/gettext';
 import { usePop } from '../../../history/hooks';
 import { FlexColumn } from '../../../lib/components/flex-column';
+import { PageTransition, StaggerReveal } from '../../../lib/components/page-transition';
 import { View } from '../../../lib/components/view';
 import { AppNavigationHeader } from '../../';
 import { BackAction } from '../../keyboard-navigation';
@@ -28,50 +29,54 @@ export function SettingsView() {
   const showDebug = useShowDebug();
 
   return (
-    <View backgroundColor="darkBlue">
-      <BackAction action={pop}>
-        <NavigationContainer>
-          <AppNavigationHeader
-            title={
-              // TRANSLATORS: Title label in navigation bar
-              messages.pgettext('settings-view', 'Settings')
-            }
-            titleVisible
-          />
+    <PageTransition>
+      <View backgroundColor="darkBlue">
+        <BackAction action={pop}>
+          <NavigationContainer>
+            <AppNavigationHeader
+              title={
+                // TRANSLATORS: Title label in navigation bar
+                messages.pgettext('settings-view', 'Settings')
+              }
+              titleVisible
+            />
 
-          <SettingsNavigationScrollbars fillContainer>
-            <View.Content>
-              <View.Container horizontalMargin="medium" gap="large" flexDirection="column">
-                <FlexColumn gap="medium">
-                  {showSubSettings ? (
-                    <>
+            <SettingsNavigationScrollbars fillContainer>
+              <View.Content>
+                <View.Container horizontalMargin="medium" gap="large" flexDirection="column">
+                  <StaggerReveal>
+                    <FlexColumn gap="medium">
+                      {showSubSettings ? (
+                        <>
+                          <FlexColumn>
+                            <DaitaListItem />
+                            <MultihopListItem />
+                            <VpnSettingsListItem />
+                            <UserInterfaceSettingsListItem />
+                          </FlexColumn>
+                          {showSplitTunneling && <SplitTunnelingListItem position="solo" />}
+                        </>
+                      ) : (
+                        <UserInterfaceSettingsListItem position="solo" />
+                      )}
+
+                      <ApiAccessMethodsListItem position="solo" />
+
                       <FlexColumn>
-                        <DaitaListItem />
-                        <MultihopListItem />
-                        <VpnSettingsListItem />
-                        <UserInterfaceSettingsListItem />
+                        <SupportListItem />
+                        <AppInfoListItem />
                       </FlexColumn>
-                      {showSplitTunneling && <SplitTunnelingListItem position="solo" />}
-                    </>
-                  ) : (
-                    <UserInterfaceSettingsListItem position="solo" />
-                  )}
 
-                  <ApiAccessMethodsListItem position="solo" />
-
-                  <FlexColumn>
-                    <SupportListItem />
-                    <AppInfoListItem />
-                  </FlexColumn>
-
-                  {showDebug && <DebugListItem />}
-                </FlexColumn>
-                <QuitButton />
-              </View.Container>
-            </View.Content>
-          </SettingsNavigationScrollbars>
-        </NavigationContainer>
-      </BackAction>
-    </View>
+                      {showDebug && <DebugListItem />}
+                    </FlexColumn>
+                    <QuitButton />
+                  </StaggerReveal>
+                </View.Container>
+              </View.Content>
+            </SettingsNavigationScrollbars>
+          </NavigationContainer>
+        </BackAction>
+      </View>
+    </PageTransition>
   );
 }

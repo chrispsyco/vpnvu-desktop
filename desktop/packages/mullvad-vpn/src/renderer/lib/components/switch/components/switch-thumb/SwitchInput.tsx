@@ -3,43 +3,56 @@ import styled, { css } from 'styled-components';
 
 import { colors } from '../../../../foundations';
 import { useSwitchContext } from '../../SwitchContext';
-import { useBackgroundColor, useBorderColor } from './hooks';
 
 export type SwitchInputProps = React.ComponentPropsWithRef<'input'>;
 
 export const StyledSwitchInput = styled.input<{
-  $borderColor: string;
-  $indicatorColor?: string;
   $checked?: boolean;
+  $disabled?: boolean;
 }>`
-  ${({ $borderColor, $indicatorColor, $checked }) => {
+  ${({ $checked, $disabled }) => {
+    const trackBg = $disabled
+      ? 'rgba(255, 255, 255, 0.06)'
+      : $checked
+        ? colors.blue80
+        : 'rgba(255, 255, 255, 0.10)';
+    const trackBorder = $disabled
+      ? 'rgba(255, 255, 255, 0.12)'
+      : $checked
+        ? 'rgba(91, 200, 218, 0.6)'
+        : 'rgba(255, 255, 255, 0.12)';
+    const thumbColor = $disabled ? 'rgba(255, 255, 255, 0.4)' : colors.white;
+    const glow = $checked && !$disabled
+      ? '0 0 0 1px rgba(91, 200, 218, 0.3), 0 0 16px rgba(9, 158, 180, 0.4)'
+      : 'none';
+
     return css`
-      --transition-duration: 0.1s;
+      --transition-duration: 0.2s;
       --scale: 1;
 
       appearance: none;
-
       margin: 0;
       padding: 0;
-      border: 0;
-      background: none;
 
       box-sizing: border-box;
-      display: inline-block;
       vertical-align: middle;
-
       position: relative;
       display: flex;
       align-items: center;
-      width: 32px;
-      height: 20px;
-      border: 2px solid ${$borderColor};
+      width: 44px;
+      height: 26px;
+      background: ${trackBg};
+      border: 1px solid ${trackBorder};
       border-radius: 100px;
-      transition: border-color 200ms ease;
+      box-shadow: ${glow};
+      cursor: ${$disabled ? 'default' : 'pointer'};
+      transition:
+        background-color var(--transition-duration) ease,
+        border-color var(--transition-duration) ease,
+        box-shadow var(--transition-duration) ease;
 
       &&:not(:disabled):hover {
-        // Scale takes a unitless ratio, so we derive it from the 12px base: 14 / 12 = ~1.1667
-        --scale: calc(14 / 12);
+        --scale: 1.08;
       }
 
       &&:focus-visible {
@@ -51,18 +64,17 @@ export const StyledSwitchInput = styled.input<{
         content: '';
         position: absolute;
         left: 2px;
-        background-color: ${$indicatorColor};
-
-        min-width: 12px;
-        width: 12px;
+        background-color: ${thumbColor};
+        min-width: 20px;
+        width: 20px;
         aspect-ratio: 1 / 1;
         border-radius: 50%;
-
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
         transform-origin: center;
         transition:
-          transform var(--transition-duration) ease-out,
+          transform var(--transition-duration) cubic-bezier(0.22, 1, 0.36, 1),
           background-color var(--transition-duration) linear;
-        transform: translateX(${$checked ? '12px' : '0px'}) scale(var(--scale));
+        transform: translateX(${$checked ? '20px' : '0px'}) scale(var(--scale));
       }
     `;
   }}
@@ -70,8 +82,6 @@ export const StyledSwitchInput = styled.input<{
 
 export function SwitchInput(props: SwitchInputProps) {
   const { inputId, checked, onCheckedChange, descriptionId, disabled } = useSwitchContext();
-  const backgroundColor = useBackgroundColor();
-  const borderColor = useBorderColor();
 
   const handleChange = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,8 +100,7 @@ export function SwitchInput(props: SwitchInputProps) {
       onChange={handleChange}
       aria-describedby={descriptionId}
       $checked={checked}
-      $borderColor={colors[borderColor]}
-      $indicatorColor={colors[backgroundColor]}
+      $disabled={disabled}
       {...props}
     />
   );

@@ -29,18 +29,26 @@ const GlobalStyle = createGlobalStyle`
 
   body {
     background-color: ${colors.darkBlue};
+    /* Cyan atmosphere mesh — top-left primary glow, bottom-right secondary, bottom-center accent. */
     background-image:
-      radial-gradient(ellipse 600px 400px at 20% 15%, rgba(9, 158, 180, 0.10), transparent 60%),
-      radial-gradient(ellipse 400px 300px at 90% 85%, rgba(91, 200, 218, 0.06), transparent 60%);
+      radial-gradient(ellipse 600px 400px at 20% 15%, rgba(9, 158, 180, 0.14), transparent 60%),
+      radial-gradient(ellipse 400px 300px at 90% 85%, rgba(91, 200, 218, 0.06), transparent 60%),
+      radial-gradient(ellipse 300px 200px at 50% 80%, rgba(9, 158, 180, 0.05), transparent 60%);
     background-attachment: fixed;
     font-family: "Geist", system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  [data-app-region="drag"] {
     -webkit-app-region: drag;
   }
 
-  button, a, input, textarea, select, [role="button"], [role="link"], [data-no-drag] {
+  [data-app-region="drag"] button,
+  [data-app-region="drag"] a,
+  [data-app-region="drag"] input,
+  [data-app-region="drag"] [role="button"] {
     -webkit-app-region: no-drag;
   }
 `;

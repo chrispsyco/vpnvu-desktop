@@ -7,7 +7,7 @@ import { useHistory } from '../../lib/history';
 import { useBoolean, useEffectEvent } from '../../lib/utility-hooks';
 import Accordion from '../Accordion';
 import ChevronButton from '../ChevronButton';
-import { buttonText, openSans, sourceSansPro } from '../common-styles';
+import { buttonText, kickerText, sourceSansPro } from '../common-styles';
 import { Container } from './Container';
 import { Row } from './Row';
 
@@ -21,12 +21,22 @@ interface SectionTitleProps {
   $thin?: boolean;
 }
 
+// `$thin` SectionTitles are used as small sub-headers and now adopt the
+// mobile "kicker" pattern (Geist Mono, all-caps, tracked-out). Default
+// (non-thin) section titles keep the original display-serif treatment.
 export const SectionTitle = styled(Row)<SectionTitleProps>(buttonText, (props) => ({
   paddingRight: spacings.medium,
-  color: props.disabled ? colors.whiteAlpha20 : colors.white,
-  fontWeight: props.$thin ? 400 : 600,
-  fontSize: props.$thin ? '15px' : '18px',
-  ...(props.$thin ? openSans : sourceSansPro),
+  ...(props.$thin
+    ? {
+        ...kickerText,
+        color: props.disabled ? colors.whiteAlpha20 : colors.whiteOnDarkBlue60,
+      }
+    : {
+        ...sourceSansPro,
+        color: props.disabled ? colors.whiteAlpha20 : colors.white,
+        fontWeight: 600,
+        fontSize: '18px',
+      }),
 }));
 
 export const CellSectionContext = React.createContext<boolean>(false);

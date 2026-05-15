@@ -63,9 +63,38 @@ export const hugeText = {
   color: colors.white,
 };
 
+// Geist Mono stack — used by `kickerText` and inline mono fragments. We don't
+// have a Mono FontFamilyTokens entry yet (typography-tokens declares both
+// families as Geist Sans aliases), so the font stack is inlined here.
+export const geistMono =
+  '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+
+/**
+ * Kicker / eyebrow label — small all-caps Geist Mono used as a section header
+ * or section sub-header. Mirrors the vpn.vu mobile figma `.mullvad-card__kicker`
+ * and `.frame-label` patterns. Default color is `var(--muted)` family
+ * (`whiteOnDarkBlue60`). Use `kickerText` with `color: colors.blue80` to get the
+ * cyan brand-glow accent variant.
+ */
+export const kickerText = {
+  fontFamily: geistMono,
+  fontSize: '11px',
+  fontWeight: 600,
+  lineHeight: '15px',
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase' as const,
+  color: colors.whiteOnDarkBlue60,
+};
+
+/** Cyan-accented kicker — use when the kicker is the focal point. */
+export const kickerTextAccent = {
+  ...kickerText,
+  color: colors.blue80,
+};
+
 export const measurements = {
   rowMinHeight: '48px',
-  horizontalViewMargin: spacings.medium,
+  horizontalViewMargin: spacings.large,
   verticalViewMargin: spacings.large,
   rowVerticalMargin: spacings.large,
   buttonVerticalMargin: spacings.medium,

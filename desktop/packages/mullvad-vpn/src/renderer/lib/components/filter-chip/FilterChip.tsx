@@ -33,7 +33,7 @@ export const StyledFilterChip = styled.button<{ $hasOnClick?: boolean }>`
       border-radius: ${Radius.radius8};
       background: var(--background);
       > ${StyledFilterChipIcon} {
-        border: 1px solid red;
+        opacity: 0.85;
       }
 
       ${() => {

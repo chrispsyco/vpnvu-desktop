@@ -7,15 +7,21 @@ import { AriaInputGroup, AriaLabel } from '../AriaGroup';
 import { measurements, smallNormalText, tinyText } from '../common-styles';
 import { StyledSettingsGroup, useSettingsGroupContext } from './SettingsGroup';
 
+// Settings input row — matches the framed-input pattern from the vpn.vu mobile
+// figma (48-56px height, 12px radius, dark surface, 1.5px cyan-tinted border,
+// soft cyan focus ring). brand-glow rgba inlined because color tokens don't
+// expose a low-alpha cyan ring color (#5BC8DA = rgba(91, 200, 218, …)).
 const StyledSettingsRow = styled.label<{ $invalid: boolean }>((props) => ({
   display: 'flex',
   alignItems: 'center',
 
   margin: `0 ${measurements.horizontalViewMargin} ${measurements.rowVerticalMargin}`,
-  padding: '0 8px',
-  minHeight: '36px',
-  backgroundColor: colors.blue60,
-  borderRadius: '4px',
+  padding: '0 14px',
+  minHeight: '48px',
+  backgroundColor: colors.darkBlue,
+  borderRadius: '12px',
+  transition:
+    'border-color 180ms ease, outline-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease',
 
   [`${StyledSettingsGroup} &&`]: {
     marginBottom: 0,
@@ -32,15 +38,22 @@ const StyledSettingsRow = styled.label<{ $invalid: boolean }>((props) => ({
     borderTopRightRadius: 0,
   },
 
-  borderWidth: '1px',
-  outlineWidth: '1px',
+  borderWidth: '1.5px',
+  outlineWidth: '0',
   borderStyle: 'solid',
   outlineStyle: 'solid',
-  borderColor: props.$invalid ? colors.red : colors.transparent,
-  outlineColor: props.$invalid ? colors.red : colors.transparent,
+  borderColor: props.$invalid ? colors.red : colors.blue20,
+  outlineColor: colors.transparent,
+  boxShadow: 'none',
+  '&&:hover': {
+    borderColor: props.$invalid ? colors.red : 'rgba(91, 200, 218, 0.3)',
+  },
   '&&:focus-within': {
-    borderColor: props.$invalid ? colors.red : colors.white,
-    outlineColor: props.$invalid ? colors.red : colors.white,
+    borderColor: props.$invalid ? colors.red : 'rgba(91, 200, 218, 1)',
+    outlineColor: colors.transparent,
+    boxShadow: props.$invalid
+      ? '0 0 0 4px rgba(227, 64, 57, 0.12)'
+      : '0 0 0 4px rgba(91, 200, 218, 0.12)',
   },
 }));
 

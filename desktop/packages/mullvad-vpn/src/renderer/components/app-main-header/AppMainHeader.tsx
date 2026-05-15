@@ -81,7 +81,7 @@ const AppMainHeader = ({
 
   return (
     <MainHeader variant={variant} size={size} {...props}>
-      <div style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
+      <div data-app-region="drag">
         <Flex justifyContent="space-between">
           <InitialFocus>
             {logoVariant !== 'none' ? <Logo variant={logoVariant} /> : <div />}

@@ -15,17 +15,27 @@ const inputTextStyles: React.CSSProperties = {
   padding: '0px',
 };
 
-const StyledInput = styled.input<{ $focused: boolean; $valid?: boolean }>((props) => ({
-  ...inputTextStyles,
-  backgroundColor: colors.transparent,
-  border: 'none',
-  width: '100%',
-  height: '100%',
-  color: props.$valid === false ? colors.red : props.$focused ? colors.blue : colors.white,
-  '&&::placeholder': {
-    color: props.$focused ? colors.blue60 : colors.whiteAlpha60,
-  },
-}));
+// Geist Mono stack — opt-in via the `mono` prop for IPs, account numbers, hex
+// codes, anything where digit alignment matters. Mirrors the Figma "Geist Mono"
+// usage on the login screen (account input).
+const monoFontStack =
+  '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+
+const StyledInput = styled.input<{ $focused: boolean; $valid?: boolean; $mono?: boolean }>(
+  (props) => ({
+    ...inputTextStyles,
+    backgroundColor: colors.transparent,
+    border: 'none',
+    width: '100%',
+    height: '100%',
+    color: props.$valid === false ? colors.red : props.$focused ? colors.blue : colors.white,
+    fontFamily: props.$mono ? monoFontStack : undefined,
+    letterSpacing: props.$mono ? '0.02em' : undefined,
+    '&&::placeholder': {
+      color: props.$focused ? colors.blue60 : colors.whiteAlpha60,
+    },
+  }),
+);
 
 interface IInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value?: string;
@@ -36,6 +46,11 @@ interface IInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onSubmitValue?: (value: string) => void;
   onInvalidValue?: (value: string) => void;
   onChangeValue?: (value: string) => void;
+  /**
+   * Render with Geist Mono — useful for IPs, account numbers, hex codes,
+   * anywhere digit alignment matters. Default false (uses Geist Sans).
+   */
+  mono?: boolean;
 }
 
 // If value is provided this component behaves like a controlled component.
@@ -50,6 +65,7 @@ function InputWithRef(props: IInputProps, forwardedRef: React.Ref<HTMLInputEleme
     onSubmitValue,
     onInvalidValue,
     onChangeValue,
+    mono,
     onFocus: propsOnFocus,
     onBlur: propsOnBlur,
     onChange: propsOnChange,
@@ -156,6 +172,7 @@ function InputWithRef(props: IInputProps, forwardedRef: React.Ref<HTMLInputEleme
           type="text"
           $valid={valid}
           $focused={isFocused}
+          $mono={mono}
           aria-invalid={!valid}
           onChange={onChange}
           onFocus={onFocus}
@@ -171,12 +188,30 @@ function InputWithRef(props: IInputProps, forwardedRef: React.Ref<HTMLInputEleme
 
 export const Input = React.memo(React.forwardRef(InputWithRef));
 
+// Premium "framed input" pattern — applied to Cell.AutoSizingTextInput. Matches
+// the vpn.vu mobile figma spec: 48px min-height, 12px radius, dark surface,
+// cyan-tinted border, soft cyan focus ring. Brand-glow rgba is inlined here
+// because the existing color tokens don't expose a low-alpha cyan ring color.
+//   - rgba(91, 200, 218, …) === brand-glow (#5BC8DA) at varying alphas
+//   - border resting: 1.5px solid blue20 (subtle structural line)
+//   - border hover:   brighter cyan (0.3) — anticipation
+//   - border focus:   solid cyan + 4px soft glow ring (0.12)
 const InputFrame = styled.div<{ $focused: boolean }>((props) => ({
   display: 'flex',
   flexGrow: 0,
-  backgroundColor: props.$focused ? colors.white : colors.whiteOnBlue10,
-  borderRadius: '4px',
-  padding: '6px 8px',
+  alignItems: 'center',
+  minHeight: '48px',
+  backgroundColor: props.$focused ? colors.white : colors.darkBlue,
+  border: props.$focused
+    ? '1.5px solid rgba(91, 200, 218, 1)'
+    : `1.5px solid ${colors.blue20}`,
+  borderRadius: '12px',
+  padding: '8px 14px',
+  boxShadow: props.$focused ? '0 0 0 4px rgba(91, 200, 218, 0.12)' : 'none',
+  transition: 'border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease',
+  '&&:hover': {
+    borderColor: props.$focused ? 'rgba(91, 200, 218, 1)' : 'rgba(91, 200, 218, 0.3)',
+  },
 }));
 
 const StyledAutoSizingTextInputContainer = styled.div({
