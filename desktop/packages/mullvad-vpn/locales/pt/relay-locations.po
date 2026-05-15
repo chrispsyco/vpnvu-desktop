@@ -4,12 +4,12 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Crowdin-Project: mullvad-app\n"
 "X-Crowdin-Project-ID: 350815\n"
-"X-Crowdin-Language: pt-PT\n"
+"X-Crowdin-Language: pt-BR\n"
 "X-Crowdin-File: relay-locations.pot\n"
 "X-Crowdin-File-ID: 14\n"
 "Project-Id-Version: mullvad-app\n"
 "Language-Team: Portuguese\n"
-"Language: pt_PT\n"
+"Language: pt_BR\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
 
 #. AU ADL
@@ -22,7 +22,7 @@ msgstr "Albânia"
 
 #. NL AMS
 msgid "Amsterdam"
-msgstr "Amesterdão"
+msgstr "Amsterdã"
 
 #. AR
 msgid "Argentina"
@@ -562,7 +562,7 @@ msgstr "Sérvia"
 
 #. SG SIN
 msgid "Singapore"
-msgstr "Singapura"
+msgstr "Cingapura"
 
 #. US FSD
 msgid "Sioux Falls, SD"
@@ -626,7 +626,7 @@ msgstr "Tallinn"
 
 #. IL TLV
 msgid "Tel Aviv"
-msgstr "Telavive"
+msgstr "Tel Aviv"
 
 #. TH
 msgid "Thailand"

@@ -1,0 +1,235 @@
+---
+name: VPN.vu Desktop - Release Build
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to build (e.g. 0.1.0-dev). Used in artifact filename."
+        type: string
+        required: true
+        default: "0.0.0-dev"
+      sign:
+        description: "Code-sign the artifact (requires SSL_COM_* secrets). Leave false until cert is provisioned."
+        type: boolean
+        required: false
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: psyco-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-windows-x64:
+    name: Build Windows x64 installer
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set git config for long paths
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up build environment (Rust + protoc + Go + Node + MSBuild + Zig)
+        uses: ./.github/actions/mullvad-build-env
+        with:
+          rust-cache-targets: "true"
+
+      - name: Install additional Rust targets
+        shell: bash
+        run: |
+          rustup target add x86_64-pc-windows-msvc
+          rustup target add i686-pc-windows-msvc
+          rustup target add aarch64-pc-windows-msvc
+
+      - name: Cache desktop node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            desktop/node_modules
+            desktop/packages/*/node_modules
+          key: ${{ runner.os }}-desktop-node-${{ hashFiles('desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-desktop-node-
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building VPN.vu Desktop version: $VERSION"
+
+      - name: Build Windows C++ modules (winfw + nsis-plugins)
+        shell: bash
+        run: ./build-windows-modules.sh build winfw nsis-plugins
+
+      - name: Install desktop dependencies
+        working-directory: desktop
+        shell: bash
+        run: npm run ci
+
+      - name: Build daemon + GUI installer (release, unsigned)
+        shell: bash
+        run: ./build.sh --optimize
+
+      - name: Locate installer artifact
+        id: artifact
+        shell: bash
+        run: |
+          INSTALLER=$(ls -1 dist/*_x64.exe 2>/dev/null | head -n1 || true)
+          if [[ -z "$INSTALLER" ]]; then
+            echo "ERROR: No x64 installer found in dist/"
+            ls -la dist/ || true
+            exit 1
+          fi
+          echo "Found installer: $INSTALLER"
+          echo "path=$INSTALLER" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$INSTALLER")" >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------------------
+      # Future code-signing step (placeholder, commented until cert is ready).
+      # When SSL.com OV cert + eSigner Cloud are provisioned, uncomment and
+      # add these secrets at the repo level: SSL_COM_USERNAME, SSL_COM_PASSWORD,
+      # SSL_COM_TOTP_SECRET, SSL_COM_CREDENTIAL_ID.
+      # ----------------------------------------------------------------------
+      # - name: Code-sign installer via SSL.com eSigner Cloud
+      #   if: ${{ inputs.sign == true }}
+      #   shell: pwsh
+      #   env:
+      #     SSL_COM_USERNAME: ${{ secrets.SSL_COM_USERNAME }}
+      #     SSL_COM_PASSWORD: ${{ secrets.SSL_COM_PASSWORD }}
+      #     SSL_COM_TOTP_SECRET: ${{ secrets.SSL_COM_TOTP_SECRET }}
+      #     SSL_COM_CREDENTIAL_ID: ${{ secrets.SSL_COM_CREDENTIAL_ID }}
+      #   run: |
+      #     java -jar CodeSignTool.jar sign `
+      #       -username="$env:SSL_COM_USERNAME" `
+      #       -password="$env:SSL_COM_PASSWORD" `
+      #       -totp_secret="$env:SSL_COM_TOTP_SECRET" `
+      #       -credential_id="$env:SSL_COM_CREDENTIAL_ID" `
+      #       -input_file_path="${{ steps.artifact.outputs.path }}" `
+      #       -override=true
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vpnvu-windows-x64-${{ steps.version.outputs.version }}
+          path: ${{ steps.artifact.outputs.path }}
+          if-no-files-found: error
+          retention-days: 30
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      artifact_name: ${{ steps.artifact.outputs.name }}
+
+  # ----------------------------------------------------------------------
+  # Future: Linux x64 build (scaffolding, commented until needed).
+  # ----------------------------------------------------------------------
+  # build-linux-x64:
+  #   name: Build Linux x64 (.deb + .rpm)
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+  #         fetch-depth: 0
+  #     - uses: ./.github/actions/mullvad-build-env
+  #       with:
+  #         rust-cache-targets: "true"
+  #     - name: Install Linux build deps
+  #       run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev rpm
+  #     - name: Install desktop dependencies
+  #       working-directory: desktop
+  #       run: npm run ci
+  #     - name: Build daemon + GUI (release)
+  #       run: ./build.sh --optimize
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: vpnvu-linux-x64
+  #         path: |
+  #           dist/*.deb
+  #           dist/*.rpm
+
+  # ----------------------------------------------------------------------
+  # Future: macOS universal build (scaffolding, commented until needed).
+  # Requires Apple Developer cert ($99/year) for notarization.
+  # ----------------------------------------------------------------------
+  # build-macos:
+  #   name: Build macOS universal (.pkg)
+  #   runs-on: macos-latest
+  #   permissions:
+  #     contents: read
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+  #         fetch-depth: 0
+  #     - uses: ./.github/actions/mullvad-build-env
+  #       with:
+  #         rust-cache-targets: "true"
+  #     - name: Install desktop dependencies
+  #       working-directory: desktop
+  #       run: npm run ci
+  #     - name: Build daemon + GUI universal (release, unsigned)
+  #       run: ./build.sh --optimize --universal
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: vpnvu-macos-universal
+  #         path: dist/*.pkg
+
+  release:
+    name: Create GitHub Release
+    needs: [build-windows-x64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Artifacts downloaded:"
+          find artifacts -type f -printf "%P\n"
+
+      - name: Resolve tag name
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=v${{ needs.build-windows-x64.outputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: VPN.vu Desktop ${{ steps.tag.outputs.tag }}
+          prerelease: ${{ steps.tag.outputs.prerelease }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
+            artifacts/**/*.pkg

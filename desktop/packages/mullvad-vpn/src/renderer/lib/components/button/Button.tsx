@@ -80,26 +80,33 @@ export const StyledButton = styled.button<TransientProps<Pick<ButtonProps, 'vari
       }}
 
       @media (prefers-reduced-motion: no-preference) {
-        transition: background-color var(--transition-duration) ease;
+        transition:
+          background-color var(--transition-duration) cubic-bezier(0.22, 1, 0.36, 1),
+          box-shadow var(--transition-duration) cubic-bezier(0.22, 1, 0.36, 1),
+          transform var(--transition-duration) cubic-bezier(0.22, 1, 0.36, 1),
+          filter 120ms ease;
       }
 
       &&:not(:disabled):hover {
-        --transition-duration: 0s;
         background: var(--hover);
+        filter: brightness(1.06);
       }
 
       &&:not(:disabled):active {
-        --transition-duration: 0s;
         background: var(--pressed);
+        filter: brightness(0.94);
+        transform: translateY(1px);
       }
 
       &:disabled {
         background: var(--disabled);
+        box-shadow: none;
+        opacity: 0.7;
       }
 
       &:focus-visible {
-        outline: 2px solid ${colors.white};
-        outline-offset: 2px;
+        outline: 2px solid rgba(91, 200, 218, 0.7);
+        outline-offset: 3px;
       }
 
       justify-content: space-between;

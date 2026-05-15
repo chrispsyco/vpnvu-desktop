@@ -5,6 +5,7 @@ import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { useSelector } from '../../../redux/store';
 import { AppMainHeader } from '../../app-main-header';
+import { GlobeBackgroundLazy } from '../../globe/GlobeBackgroundLazy';
 import Map from '../../Map';
 import NotificationArea from '../../NotificationArea';
 import { ConnectionPanel } from './components';
@@ -54,6 +55,7 @@ export function MainView() {
       </AppMainHeader>
       <StyledContent flexGrow={1}>
         <Map />
+        <GlobeBackgroundLazy />
         <StyledMapOverlay flexGrow={1}>
           <StyledNotificationArea />
           <StyledMain>

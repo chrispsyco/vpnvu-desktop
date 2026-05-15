@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 import { Icon, IconProps, Image, ImageProps } from '../../lib/components';
 import { colors, spacings } from '../../lib/foundations';
-import { buttonText, normalText, tinyText } from '../common-styles';
+import { buttonText, kickerText, normalText, tinyText } from '../common-styles';
 import { CellButton } from './CellButton';
 import { CellDisabledContext } from './Container';
 
@@ -53,14 +53,19 @@ const StyledTintedIcon = styled(Icon)<IconProps & { disabled?: boolean }>(
   }),
 );
 
-const StyledSubLabel = styled.div<{ disabled: boolean }>(tinyText, {
+// SubLabel adopts the mobile "kicker" pattern (Geist Mono, all-caps, tracked-out).
+// Used as a small caption above/below a main label.
+const StyledSubLabel = styled.div<{ disabled: boolean }>(kickerText, (props) => ({
   display: 'flex',
   alignItems: 'center',
-  color: colors.whiteAlpha60,
+  color: props.disabled ? colors.whiteAlpha20 : colors.whiteOnDarkBlue60,
   marginBottom: '5px',
-  lineHeight: '14px',
   height: '14px',
-});
+  lineHeight: '14px',
+  // Slightly tighter than the default kicker line-height so it slots into
+  // SubLabel's existing 14px row without disrupting vertical rhythm.
+  fontSize: '10px',
+}));
 
 export const LabelContainer = styled.div({
   display: 'flex',
