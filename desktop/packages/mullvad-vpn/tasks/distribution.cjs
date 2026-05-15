@@ -22,9 +22,9 @@ function getOptionValue(option) {
 
 function newConfig() {
   return {
-    appId: 'net.mullvad.vpn',
-    copyright: 'Mullvad VPN AB',
-    productName: 'Mullvad VPN',
+    appId: 'vu.vpn.app',
+    copyright: 'VPN.vu',
+    productName: 'VPN.vu',
     publish: null,
     asar: true,
     compression: noCompression ? 'store' : 'normal',
@@ -40,7 +40,7 @@ function newConfig() {
     },
 
     extraMetadata: {
-      name: 'mullvad-vpn',
+      name: 'vpnvu-desktop',
       // We have to stick to semver on Windows for now due to:
       // https://github.com/electron-userland/electron-builder/issues/7173
       version: productVersion(process.platform === 'win32' ? ['semver'] : []),
@@ -87,7 +87,7 @@ function newConfig() {
       },
       x64ArchFiles:
         'Contents/Resources/app.asar.unpacked/node_modules/nseventforwarder/dist/*/index.node',
-      artifactName: 'MullvadVPN-${version}.${ext}',
+      artifactName: 'vpn.vu-${version}.${ext}',
       category: 'public.app-category.tools',
       icon: distAssets('icon-macos.icns'),
       notarize: shouldNotarize,
@@ -114,7 +114,7 @@ function newConfig() {
     },
 
     nsis: {
-      guid: '2A356FD4-03B7-4F45-99B4-737BE580DC82',
+      guid: 'e0c672a4-2bf8-42eb-8f10-56e40889365f',
       oneClick: false,
       perMachine: true,
       allowElevation: true,
@@ -125,7 +125,7 @@ function newConfig() {
 
     win: {
       target: [],
-      artifactName: 'MullvadVPN-${version}_${arch}.${ext}',
+      artifactName: 'vpn.vu-${version}_${arch}.${ext}',
       extraResources: [
         { from: distAssets(path.join('${env.DIST_SUBDIR}', 'mullvad.exe')), to: '.' },
         {
@@ -180,7 +180,7 @@ function newConfig() {
         },
       ],
       executableName: 'mullvad-vpn',
-      artifactName: 'MullvadVPN-${version}_${arch}.${ext}',
+      artifactName: 'vpn.vu-${version}_${arch}.${ext}',
       category: 'Network',
       icon: distAssets('icon.icns'),
       extraFiles: [{ from: distAssets('linux/mullvad-gui-launcher.sh'), to: '.' }],

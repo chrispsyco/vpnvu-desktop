@@ -232,7 +232,7 @@ export class ErrorNotificationProvider
             default:
               return messages.pgettext(
                 'notifications',
-                'Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report.',
+                'Unable to communicate with VPN.vu kernel driver. Try reconnecting or send a problem report.',
               );
           }
       }

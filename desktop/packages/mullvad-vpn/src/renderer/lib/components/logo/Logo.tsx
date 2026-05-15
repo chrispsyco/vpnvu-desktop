@@ -12,8 +12,8 @@ const logoSizes = {
 };
 
 const textSizes = {
-  '1': 15.4,
-  '2': 18,
+  '1': 22,
+  '2': 36,
 };
 
 export const Logo = ({ variant = 'icon', size: sizeProp = '1' }: LogoProps) => {

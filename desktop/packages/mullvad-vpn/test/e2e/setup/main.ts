@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 
 import { getDefaultSettings } from '../../../src/main/default-settings';
@@ -22,7 +22,7 @@ const CI_E2E = process.env.CI === 'e2e';
 
 class ApplicationMain {
   private guiSettings: IGuiSettingsState = {
-    preferredLocale: 'en',
+    preferredLocale: 'pt',
     autoConnect: false,
     enableSystemNotifications: true,
     monochromaticIcon: false,
@@ -81,18 +81,17 @@ class ApplicationMain {
   }
 
   private onReady = async () => {
-    this.updateCurrentLocale('en');
+    this.updateCurrentLocale('pt');
 
     const window = new BrowserWindow({
       useContentSize: true,
-      width: 320,
-      height: 568,
+      width: 405,
+      height: 720,
       resizable: false,
       maximizable: false,
       fullscreenable: false,
       show: DEBUG,
-      titleBarStyle: 'hidden',
-      frame: true,
+      frame: false,
       webPreferences: {
         offscreen: CI_E2E && !TEST_SHOW_WINDOW,
         preload: path.join(import.meta.dirname, 'preload.cjs'),
@@ -107,6 +106,9 @@ class ApplicationMain {
     });
 
     changeIpcWebContents(window.webContents);
+
+    ipcMain.on('window-close', () => window.close());
+    ipcMain.on('window-minimize', () => window.minimize());
 
     this.registerIpcListeners();
 

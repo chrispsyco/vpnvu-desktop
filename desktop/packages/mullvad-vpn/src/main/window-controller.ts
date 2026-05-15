@@ -217,7 +217,7 @@ export default class WindowController {
 
   public static getContentSize(unpinnedWindow: boolean): { width: number; height: number } {
     return {
-      width: 320,
+      width: 405,
       height: WindowController.getContentHeight(unpinnedWindow),
     };
   }
@@ -319,7 +319,7 @@ export default class WindowController {
   // https://github.com/electron/electron/issues/28777
   private static getContentHeight(unpinnedWindow: boolean): number {
     // The height we want to achieve.
-    const contentHeight = 568;
+    const contentHeight = 720;
 
     switch (process.platform) {
       case 'win32':

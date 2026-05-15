@@ -19,7 +19,10 @@ img {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Geist", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   height: 100%;
   width: 100%;
   display: flex;

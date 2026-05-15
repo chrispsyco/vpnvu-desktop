@@ -1,5 +1,5 @@
 import { exec, execFile } from 'child_process';
-import { app, nativeTheme, powerMonitor, session, shell, systemPreferences } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, powerMonitor, session, shell, systemPreferences } from 'electron';
 import fs from 'fs';
 import * as path from 'path';
 import util from 'util';
@@ -189,7 +189,7 @@ class ApplicationMain
     log.info(`Running version ${this.version.currentVersion.gui}`);
 
     if (process.platform === 'win32') {
-      app.setAppUserModelId('net.mullvad.vpn');
+      app.setAppUserModelId('vu.vpn.app');
     }
 
     // While running in development the watch script triggers a reload of the renderer by sending
@@ -828,6 +828,9 @@ class ApplicationMain
   }
 
   private registerIpcListeners() {
+    ipcMain.on('window-close', () => BrowserWindow.getFocusedWindow()?.close());
+    ipcMain.on('window-minimize', () => BrowserWindow.getFocusedWindow()?.minimize());
+
     IpcMainEventChannel.state.handleGet(() => ({
       isConnected: this.daemonRpc.isConnected,
       autoStart: getOpenAtLogin(),

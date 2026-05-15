@@ -1,16 +1,16 @@
 {
-  "name": "mullvad-vpn",
+  "name": "vpnvu-desktop",
   "version": "0.0.0",
-  "productName": "Mullvad VPN",
+  "productName": "VPN.vu",
   "private": true,
-  "description": "Mullvad VPN client",
+  "description": "vpn.vu desktop client",
   "main": "build/main.js",
   "author": {
-    "name": "Mullvad VPN",
-    "email": "support@mullvadvpn.net"
+    "name": "PSYCO",
+    "email": "support@vpn.vu"
   },
   "type": "module",
-  "repository": "https://github.com/mullvad/mullvadvpn-app",
+  "repository": "https://vpn.vu",
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "@grpc/grpc-js": "^1.14.3",

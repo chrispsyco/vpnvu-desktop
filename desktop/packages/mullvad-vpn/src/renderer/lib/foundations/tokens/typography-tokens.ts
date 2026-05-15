@@ -1,6 +1,6 @@
 export enum FontFamilyTokens {
-  openSans = 'Open Sans',
-  sourceSansPro = '"Source Sans Pro", "Noto Sans Myanmar", "Noto Sans Thai", sans-serif',
+  openSans = '"Geist", "Noto Sans Myanmar", "Noto Sans Thai", sans-serif',
+  sourceSansPro = '"Geist", "Noto Sans Myanmar", "Noto Sans Thai", sans-serif',
 }
 
 export enum FontWeightTokens {

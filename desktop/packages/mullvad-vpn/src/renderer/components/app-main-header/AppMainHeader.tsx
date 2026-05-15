@@ -8,6 +8,53 @@ import {
   AppMainHeaderSettingsButton,
 } from './components';
 
+declare global {
+  interface Window {
+    windowControls?: {
+      close: () => void;
+      minimize: () => void;
+    };
+  }
+}
+
+const windowControlBtnStyle: React.CSSProperties = {
+  WebkitAppRegion: 'no-drag',
+  width: 28,
+  height: 28,
+  borderRadius: 14,
+  border: 0,
+  background: 'rgba(255,255,255,0.08)',
+  color: '#FFFFFF',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 14,
+  fontWeight: 700,
+  lineHeight: 1,
+} as React.CSSProperties;
+
+const WindowControls = () => (
+  <Flex gap="tiny" alignItems="center">
+    <button
+      type="button"
+      style={windowControlBtnStyle}
+      onClick={() => window.windowControls?.minimize()}
+      aria-label="Minimizar"
+      title="Minimizar">
+      —
+    </button>
+    <button
+      type="button"
+      style={windowControlBtnStyle}
+      onClick={() => window.windowControls?.close()}
+      aria-label="Fechar"
+      title="Fechar">
+      ×
+    </button>
+  </Flex>
+);
+
 export interface MainHeaderProps extends Omit<HeaderProps, 'variant' | 'size'> {
   variant?: HeaderProps['variant'] | 'basedOnConnectionStatus';
   size?: HeaderProps['size'] | 'basedOnLoginStatus';
@@ -34,19 +81,22 @@ const AppMainHeader = ({
 
   return (
     <MainHeader variant={variant} size={size} {...props}>
-      <Flex justifyContent="space-between">
-        <InitialFocus>
-          {logoVariant !== 'none' ? <Logo variant={logoVariant} /> : <div />}
-        </InitialFocus>
-        <Flex gap="medium" alignItems="center">
-          {children}
+      <div style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
+        <Flex justifyContent="space-between">
+          <InitialFocus>
+            {logoVariant !== 'none' ? <Logo variant={logoVariant} /> : <div />}
+          </InitialFocus>
+          <Flex gap="medium" alignItems="center">
+            {children}
+            <WindowControls />
+          </Flex>
         </Flex>
-      </Flex>
-      {size == '2' && (
-        <Flex alignItems="flex-end">
-          <AppMainHeaderDeviceInfo />
-        </Flex>
-      )}
+        {size == '2' && (
+          <Flex alignItems="flex-end">
+            <AppMainHeaderDeviceInfo />
+          </Flex>
+        )}
+      </div>
     </MainHeader>
   );
 };
