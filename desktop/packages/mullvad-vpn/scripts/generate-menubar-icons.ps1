@@ -217,11 +217,11 @@ function New-WindowsIco {
         $tmpFilesNotif.Add("${base}_notification-4.png")
     }
 
-    $args = @() + $tmpFiles + $CompressionOptions + @("$IcoTargetBasePath.ico")
-    Invoke-Native -Exe $magick -Args $args
+    $cmdArgs = @() + $tmpFiles + $CompressionOptions + @("$IcoTargetBasePath.ico")
+    Invoke-Native -Exe $magick -Args $cmdArgs
 
-    $args = @() + $tmpFilesNotif + $CompressionOptions + @("${IcoTargetBasePath}_notification.ico")
-    Invoke-Native -Exe $magick -Args $args
+    $cmdArgs = @() + $tmpFilesNotif + $CompressionOptions + @("${IcoTargetBasePath}_notification.ico")
+    Invoke-Native -Exe $magick -Args $cmdArgs
 
     foreach ($f in $tmpFiles + $tmpFilesNotif) { Remove-Item $f -Force }
 }
