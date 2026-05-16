@@ -11,7 +11,7 @@ interface Props {
  * (country borders, points, arcs) is hidden behind it. Renders first; everything
  * else has depthTest enabled so it gets occluded automatically.
  */
-export function GlobeCore({ radius = 1.59, color = '#0A2128' }: Props) {
+export function GlobeCore({ radius = 1.59, color = '#099EB4' }: Props) {
   const material = useMemo(
     () =>
       new THREE.MeshBasicMaterial({

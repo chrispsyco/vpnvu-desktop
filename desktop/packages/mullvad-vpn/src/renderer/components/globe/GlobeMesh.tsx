@@ -49,7 +49,7 @@ interface Props {
 
 export function GlobeMesh({ radius = 1.6, detail = 6 }: Props) {
   const meshRef = useRef<THREE.Points>(null);
-  const mask = useLoader(THREE.TextureLoader, '/assets/images/globe/continents-mask.png');
+  const mask = useLoader(THREE.TextureLoader, './assets/images/globe/continents-mask.png');
 
   const geometry = useMemo(
     () => new THREE.IcosahedronGeometry(radius, detail),

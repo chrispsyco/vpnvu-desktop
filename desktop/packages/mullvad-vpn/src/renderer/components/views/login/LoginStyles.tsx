@@ -62,18 +62,24 @@ interface IStyledAccountInputGroupProps {
 }
 
 export const StyledAccountInputGroup = styled.div<IStyledAccountInputGroupProps>((props) => ({
-  borderWidth: '2px',
+  borderWidth: '1.5px',
   borderStyle: 'solid',
-  borderRadius: '8px',
+  borderRadius: '12px',
   overflow: 'hidden',
-  borderColor: props.$error ? colors.red40 : props.$active ? colors.darkBlue : colors.transparent,
+  borderColor: props.$error
+    ? 'rgba(227, 67, 73, 0.6)'
+    : props.$active
+      ? 'rgba(91, 200, 218, 0.6)'
+      : 'rgba(255, 255, 255, 0.12)',
+  boxShadow: props.$active && !props.$error ? '0 0 0 4px rgba(91, 200, 218, 0.12)' : 'none',
   opacity: props.$editable ? 1 : 0.6,
+  transition: 'border-color 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1)',
 }));
 
 export const StyledAccountInputBackdrop = styled.div({
   display: 'flex',
-  backgroundColor: colors.white,
-  borderColor: colors.darkBlue,
+  backgroundColor: colors.darkBlue,
+  borderColor: 'transparent',
 });
 
 export const StyledDropdownSpacer = styled.div({
@@ -92,11 +98,12 @@ export const StyledInput = styled(FormattableTextInput)(largeText, {
   minWidth: 0,
   borderWidth: 0,
   padding: '12px 12px 12px',
-  color: colors.blue,
+  color: colors.white,
   backgroundColor: 'transparent',
+  letterSpacing: '0.08em',
   flex: 1,
   '&&::placeholder': {
-    color: colors.whiteOnBlue60,
+    color: 'rgba(255, 255, 255, 0.4)',
   },
 });
 

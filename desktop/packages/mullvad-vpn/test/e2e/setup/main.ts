@@ -16,7 +16,7 @@ import { ITranslations, MacOsScrollbarVisibility } from '../../../src/shared/ipc
 import { ICurrentAppVersionInfo } from '../../../src/shared/ipc-types';
 import { mockData } from '../mock-data';
 
-const DEBUG = false;
+const DEBUG = true;
 const TEST_SHOW_WINDOW = process.env.TEST_SHOW_WINDOW === '1';
 const CI_E2E = process.env.CI === 'e2e';
 
@@ -45,15 +45,7 @@ class ApplicationMain {
   };
 
   private deviceState: DeviceState = {
-    type: 'logged in',
-    accountAndDevice: {
-      accountNumber: '1234123412341234',
-      device: {
-        id: '1234',
-        name: 'Testing Mole',
-        created: new Date(),
-      },
-    },
+    type: 'logged out',
   };
 
   private currentVersion: ICurrentAppVersionInfo = {
@@ -153,6 +145,181 @@ class ApplicationMain {
       this.updateCurrentLocale(locale);
       IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);
       return Promise.resolve(this.translations);
+    });
+
+    // Fake login: any 16-digit number works
+    IpcMainEventChannel.account.handleLogin(async (accountNumber: string) => {
+      await new Promise((r) => setTimeout(r, 600));
+      this.deviceState = {
+        type: 'logged in',
+        accountAndDevice: {
+          accountNumber,
+          device: {
+            id: 'mock-device-1',
+            name: 'Testing Mole',
+            created: new Date(),
+          },
+        },
+      };
+      IpcMainEventChannel.account.notifyDevice?.({
+        type: 'logged in',
+        deviceState: this.deviceState as Extract<DeviceState, { type: 'logged in' }>,
+      });
+      return undefined;
+    });
+
+    // Fake create account: generates random 16-digit number
+    IpcMainEventChannel.account.handleCreate(async () => {
+      await new Promise((r) => setTimeout(r, 800));
+      const accountNumber = Array.from({ length: 16 }, () =>
+        Math.floor(Math.random() * 10),
+      ).join('');
+      this.deviceState = {
+        type: 'logged in',
+        accountAndDevice: {
+          accountNumber,
+          device: {
+            id: 'mock-device-1',
+            name: 'Testing Mole',
+            created: new Date(),
+          },
+        },
+      };
+      IpcMainEventChannel.account.notifyDevice?.({
+        type: 'logged in',
+        deviceState: this.deviceState as Extract<DeviceState, { type: 'logged in' }>,
+      });
+      return accountNumber;
+    });
+
+    IpcMainEventChannel.account.handleLogout(async () => {
+      await new Promise((r) => setTimeout(r, 300));
+      this.deviceState = { type: 'logged out' };
+      IpcMainEventChannel.account.notifyDevice?.({
+        type: 'logged out',
+        deviceState: this.deviceState as Extract<DeviceState, { type: 'logged out' }>,
+      });
+    });
+
+    IpcMainEventChannel.account.handleListDevices(async () => {
+      return [
+        {
+          id: 'mock-device-1',
+          name: 'Testing Mole',
+          created: new Date(),
+        },
+      ];
+    });
+
+    IpcMainEventChannel.account.handleUpdateData(() => Promise.resolve());
+    IpcMainEventChannel.account.handleGetWwwAuthToken(() => Promise.resolve('mock-www-token'));
+    IpcMainEventChannel.account.handleSubmitVoucher(async (voucherCode: string) => {
+      await new Promise((r) => setTimeout(r, 500));
+      const normalized = voucherCode.replace(/\s+/g, '').toUpperCase();
+      // Magic voucher: "1111 1111 1111 1111" adds 365 days
+      if (normalized === '1111111111111111') {
+        const secondsAdded = 365 * 24 * 60 * 60;
+        const currentExpiryMs = this.accountData.expiry ? new Date(this.accountData.expiry).getTime() : Date.now();
+        const baseMs = Math.max(currentExpiryMs, Date.now());
+        const newExpiry = new Date(baseMs + secondsAdded * 1000).toISOString();
+        this.accountData = { expiry: newExpiry };
+        // Note: NOT notifying via account.notify here — the success response
+        // already carries `newExpiry`, and double-notifying causes a flash of
+        // two success screens (account update + voucher redeemed).
+        return { type: 'success' as const, newExpiry, secondsAdded };
+      }
+      return { type: 'invalid' as const };
+    });
+    IpcMainEventChannel.account.handleRemoveDevice(() => Promise.resolve());
+    IpcMainEventChannel.accountHistory.handleClear(() => Promise.resolve());
+
+    // Fake tunnel state machine: disconnected → connecting → connected
+    const emitTunnelState = (state: 'disconnected' | 'connecting' | 'connected' | 'disconnecting') => {
+      const tunnelState =
+        state === 'connected'
+          ? {
+              state: 'connected' as const,
+              details: {
+                endpoint: {
+                  address: '193.32.127.66:51820',
+                  protocol: 'udp' as const,
+                  quantumResistant: false,
+                  tunnelType: 'wireguard' as const,
+                  proxy: undefined,
+                  entryEndpoint: undefined,
+                  obfuscationEndpointInfo: undefined,
+                  daita: false,
+                },
+                location: this.location,
+              },
+              featureIndicators: undefined,
+            }
+          : state === 'connecting'
+          ? {
+              state: 'connecting' as const,
+              details: undefined,
+              featureIndicators: undefined,
+            }
+          : state === 'disconnecting'
+          ? { state: 'disconnecting' as const, details: 'nothing' as const, location: this.location, lockedDown: false }
+          : { state: 'disconnected' as const, location: this.location, lockedDown: false };
+      IpcMainEventChannel.tunnel.notify?.(tunnelState);
+    };
+
+    IpcMainEventChannel.tunnel.handleConnect(async () => {
+      emitTunnelState('connecting');
+      await new Promise((r) => setTimeout(r, 1200));
+      emitTunnelState('connected');
+    });
+
+    IpcMainEventChannel.tunnel.handleReconnect(async () => {
+      emitTunnelState('connecting');
+      await new Promise((r) => setTimeout(r, 1200));
+      emitTunnelState('connected');
+    });
+
+    IpcMainEventChannel.tunnel.handleDisconnect(async () => {
+      emitTunnelState('disconnecting');
+      await new Promise((r) => setTimeout(r, 600));
+      emitTunnelState('disconnected');
+    });
+
+    // When user picks a server from the location list, update mock location
+    // so globe focuses on the chosen city and the connection panel shows it.
+    IpcMainEventChannel.settings.handleSetRelaySettings((relaySettings) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rs = relaySettings as any;
+      const loc = rs?.normal?.location?.only;
+      if (loc) {
+        const countryCode =
+          (typeof loc.country === 'string' ? loc.country : undefined) ??
+          loc.city?.country ??
+          loc.hostname?.country;
+        const cityCode = loc.city?.city ?? loc.hostname?.city;
+        const country = mockData.relayList.countries.find((c) => c.code === countryCode);
+        const city = country
+          ? cityCode
+            ? country.cities.find((ci) => ci.code === cityCode)
+            : country.cities[0]
+          : undefined;
+        if (country && city) {
+          this.location = {
+            country: country.name,
+            city: city.name,
+            latitude: city.latitude,
+            longitude: city.longitude,
+            mullvadExitIp: true,
+          };
+          // Re-emit disconnected tunnel state with new location so globe
+          // focuses on the chosen city even before user hits Connect.
+          IpcMainEventChannel.tunnel.notify?.({
+            state: 'disconnected',
+            location: this.location,
+            lockedDown: false,
+          });
+        }
+      }
+      return Promise.resolve();
     });
   }
 
