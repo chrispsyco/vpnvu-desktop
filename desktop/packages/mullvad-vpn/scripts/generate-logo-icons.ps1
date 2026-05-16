@@ -148,8 +148,8 @@ try {
         # ImageMagick can build a multi-image .icns directly. List PNGs in size order.
         $icnsTarget = Join-Path $DistAssetsDir 'icon-macos.icns'
         $pngs = Get-ChildItem -Path $TmpIconsetDir -File -Filter '*.png' | Sort-Object Name
-        $args = @() + ($pngs | ForEach-Object { $_.FullName }) + @('-strip', $icnsTarget)
-        Invoke-Native -Exe $magick -Args $args
+        $cmdArgs = @() + ($pngs | ForEach-Object { $_.FullName }) + @('-strip', $icnsTarget)
+        Invoke-Native -Exe $magick -Args $cmdArgs
 
         Get-ChildItem -Path $TmpIconsetDir -File | Remove-Item -Force
     } else {
@@ -169,8 +169,8 @@ try {
     }
     $icnsTarget = Join-Path $DistAssetsDir 'icon.icns'
     $pngs = Get-ChildItem -Path $TmpIconsetDir -File -Filter '*.png' | Sort-Object Name
-    $args = @() + ($pngs | ForEach-Object { $_.FullName }) + @('-strip', $icnsTarget)
-    Invoke-Native -Exe $magick -Args $args
+    $cmdArgs = @() + ($pngs | ForEach-Object { $_.FullName }) + @('-strip', $icnsTarget)
+    Invoke-Native -Exe $magick -Args $cmdArgs
     Remove-Item -Path $TmpIconsetDir -Recurse -Force
 
     # ---- Windows .ico (icon.ico) from graphics/icon.svg ----
@@ -184,8 +184,8 @@ try {
     # Numeric sort so resolutions are ordered correctly inside the .ico container.
     $icoPngs = Get-ChildItem -Path $TmpIcoDir -File -Filter '*.png' |
         Sort-Object { [int]([System.IO.Path]::GetFileNameWithoutExtension($_.Name)) }
-    $args = @() + ($icoPngs | ForEach-Object { $_.FullName }) + $CompressionOptions + @($icoTarget)
-    Invoke-Native -Exe $magick -Args $args
+    $cmdArgs = @() + ($icoPngs | ForEach-Object { $_.FullName }) + $CompressionOptions + @($icoTarget)
+    Invoke-Native -Exe $magick -Args $cmdArgs
     Remove-Item -Path $TmpIcoDir -Recurse -Force
 
     # ---- Windows installer sidebar (bmp3) ----
