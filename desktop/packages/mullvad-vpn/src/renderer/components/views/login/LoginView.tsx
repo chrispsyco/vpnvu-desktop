@@ -385,6 +385,7 @@ class Login extends React.Component<IProps, IState> {
                     allowedCharacters="[0-9]"
                     separator=" "
                     groupLength={4}
+                    maxLength={16}
                     placeholder="0000 0000 0000 0000"
                     value={this.props.accountNumber || ''}
                     disabled={!allowInteraction}

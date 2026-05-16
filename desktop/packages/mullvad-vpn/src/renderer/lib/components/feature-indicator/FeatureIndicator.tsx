@@ -13,10 +13,10 @@ const styles = {
   radius: Radius.radius4,
   variants: {
     primary: {
-      backgroundColor: colors.blue10,
-      borderColor: colors.blue,
-      borderColorHover: colors.whiteAlpha80,
-      borderColorPressed: colors.white,
+      backgroundColor: 'rgba(91, 200, 218, 0.10)',
+      borderColor: 'rgba(91, 200, 218, 0.18)',
+      borderColorHover: 'rgba(91, 200, 218, 0.45)',
+      borderColorPressed: 'rgba(91, 200, 218, 0.7)',
     },
     transparent: {
       backgroundColor: 'transparent',

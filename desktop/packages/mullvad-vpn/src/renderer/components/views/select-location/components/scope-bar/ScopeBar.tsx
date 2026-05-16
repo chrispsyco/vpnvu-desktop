@@ -1,15 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { colors } from '../../../../../lib/foundations';
 import type { IScopeBarItemProps } from '../scope-bar-item';
 
 const StyledScopeBar = styled.div({
   display: 'flex',
   flexDirection: 'row',
-  backgroundColor: colors.blue40,
+  padding: '4px',
+  gap: '4px',
+  backgroundColor: 'rgba(91, 200, 218, 0.08)',
+  border: '1px solid rgba(91, 200, 218, 0.16)',
   borderRadius: '13px',
-  overflow: 'hidden',
 });
 
 interface IScopeBarProps {

@@ -106,8 +106,8 @@ export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeScene
   // Pull the camera closer instead of widening the FOV — that keeps the
   // poles from distorting at the screen edges.
   const aspect = width / height;
-  const cameraZ = aspect < 0.7 ? 4 : 5;
-  const cameraFov = aspect < 0.7 ? 45 : 40;
+  const cameraZ = aspect < 0.7 ? 5.5 : 5;
+  const cameraFov = aspect < 0.7 ? 38 : 40;
 
   return (
     <Canvas
@@ -125,7 +125,7 @@ export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeScene
           <GlobeGrid radius={1.6} opacity={0.13} latStep={30} lngStep={30} />
           <CountryBorders radius={1.605} opacity={0.45} />
           <GlobeMesh detail={meshDetail} />
-          <VolcanoMarkers radius={1.615} />
+          <VolcanoMarkers radius={1.64} />
           {hasActiveServer && (
             <ActiveServerPin
               lat={activeLat as number}

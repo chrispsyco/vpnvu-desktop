@@ -58,7 +58,7 @@ export function CountryBorders({ radius = 1.605, opacity = 0.5 }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/assets/images/globe/countries-50m.json')
+    fetch('./assets/images/globe/countries-50m.json')
       .then((r) => r.json())
       .then((data: Topology) => {
         if (!cancelled) setTopo(data);
@@ -104,7 +104,7 @@ export function CountryBorders({ radius = 1.605, opacity = 0.5 }: Props) {
   const material = useMemo(
     () =>
       new THREE.LineBasicMaterial({
-        color: new THREE.Color('#099EB4'),
+        color: new THREE.Color('#06181E'),
         transparent: true,
         opacity,
         depthWrite: false,

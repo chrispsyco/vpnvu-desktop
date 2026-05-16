@@ -82,7 +82,7 @@ export function GlobeGrid({
   const material = useMemo(
     () =>
       new THREE.LineBasicMaterial({
-        color: new THREE.Color('#0E4850'),
+        color: new THREE.Color('#0A2128'),
         transparent: true,
         opacity,
         depthWrite: false,
