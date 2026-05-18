@@ -58,8 +58,10 @@ export const VPNVU_SERVERS: ReadonlyArray<VpnvuServer> = [
     popular: true,
   },
   // RJ -- secundario BR pra balance de load e latencia regional sudeste
-  // displayLat/displayLng deslocados ~3deg NE pra abrir distancia visual
-  // do pin de SP no globo 405x720 com pins de 28px. Pickers/daemon
+  // displayLat/displayLng com offset pequeno (~1.5deg NE) pra abrir um filete
+  // de distancia visual do pin de SP sem afastar muito da costa fluminense.
+  // GlobeBackgroundLazy resolve essa mesma display coord para o active pin
+  // tambem, entao o RJ nao "pula" ao ser selecionado. Pickers/daemon
   // continuam usando lat/lng reais — isto e visual-only.
   {
     id: 'br-rj-1',
@@ -69,8 +71,8 @@ export const VPNVU_SERVERS: ReadonlyArray<VpnvuServer> = [
     city: 'Rio de Janeiro',
     lat: -22.9068,
     lng: -43.1729,
-    displayLat: -20.0,
-    displayLng: -40.3,
+    displayLat: -21.4,
+    displayLng: -41.7,
     flag: '🇧🇷',
     provider: 'vpnvu',
     online: true,

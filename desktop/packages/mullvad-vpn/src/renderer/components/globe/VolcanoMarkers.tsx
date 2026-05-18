@@ -102,14 +102,18 @@ function latLngToVec3(lat: number, lng: number, r: number): THREE.Vector3 {
 }
 
 function matchesActive(
-  lat: number,
-  lng: number,
+  renderLat: number,
+  renderLng: number,
   activeLat: number | undefined,
   activeLng: number | undefined,
 ): boolean {
   if (activeLat === undefined || activeLng === undefined) return false;
   if (!isFinite(activeLat) || !isFinite(activeLng)) return false;
-  return Math.abs(lat - activeLat) < 0.5 && Math.abs(lng - activeLng) < 0.5;
+  // Active coords already come display-resolved from GlobeBackgroundLazy, so
+  // compare against the same render position rather than the raw daemon
+  // lat/lng — otherwise pins with a visual offset (RJ) get rendered twice
+  // when they're the active server.
+  return Math.abs(renderLat - activeLat) < 0.5 && Math.abs(renderLng - activeLng) < 0.5;
 }
 
 export function VolcanoMarkers({ radius = 1.625, activeLat, activeLng }: Props) {
@@ -118,11 +122,9 @@ export function VolcanoMarkers({ radius = 1.625, activeLat, activeLng }: Props) 
   const geometry = useMemo(() => {
     const positions: number[] = [];
     for (const s of VPNVU_SERVERS) {
-      // Match against real lat/lng so the daemon-driven active server filter
-      // still works even if the marker is offset for visual breathing room.
-      if (matchesActive(s.lat, s.lng, activeLat, activeLng)) continue;
       const renderLat = s.displayLat ?? s.lat;
       const renderLng = s.displayLng ?? s.lng;
+      if (matchesActive(renderLat, renderLng, activeLat, activeLng)) continue;
       const p = latLngToVec3(renderLat, renderLng, radius);
       positions.push(p.x, p.y, p.z);
     }
