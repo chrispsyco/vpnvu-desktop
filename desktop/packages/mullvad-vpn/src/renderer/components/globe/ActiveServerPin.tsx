@@ -40,24 +40,29 @@ interface ActiveServerPinProps {
   radius?: number;
 }
 
-const COLOR_BY_STATE: Record<ActiveServerPinState, string> = {
-  connected: '#44AD4D',
-  connecting: '#E8AC2E',
-  disconnected: '#E34349',
-  disconnecting: '#E34349',
-  error: '#E34349',
-  idle: '#5BC8DA',
+// Pin palette tuned to the VPN.vu cyan-leaning theme. The Mullvad originals
+// (#44AD4D / #E8AC2E / #E34349) read dark and saturated against our pale
+// cyan globe — these brighter variants keep semantic meaning (green/amber/
+// red) while sitting on the same lightness band as #5BC8DA.
+//
+// Stored as raw 0..1 RGB triplets (NOT hex strings) so we can push them
+// into THREE.Color via setRGB without the sRGB→linear conversion that
+// `new THREE.Color('#hex')` applies. That conversion would darken the
+// active pin relative to VolcanoMarkers, which uses a hardcoded vec3 of
+// the same numbers and so dodges the conversion entirely.
+const COLOR_BY_STATE: Record<ActiveServerPinState, [number, number, number]> = {
+  connected: [0.486, 0.933, 0.659], // #7CEEA8
+  connecting: [1.0, 0.784, 0.380], // #FFC861
+  disconnected: [0.357, 0.784, 0.855], // #5BC8DA
+  disconnecting: [0.357, 0.784, 0.855], // #5BC8DA
+  error: [1.0, 0.478, 0.522], // #FF7A85
+  idle: [0.357, 0.784, 0.855], // #5BC8DA
 };
 
-/** Pulse period in seconds. Connecting pulses noticeably faster. */
-const PULSE_PERIOD_BY_STATE: Record<ActiveServerPinState, number> = {
-  connected: 2.4,
-  connecting: 1.0,
-  disconnected: 2.4,
-  disconnecting: 2.4,
-  error: 2.4,
-  idle: 2.4,
-};
+function colorFor(state: ActiveServerPinState): THREE.Color {
+  const [r, g, b] = COLOR_BY_STATE[state];
+  return new THREE.Color().setRGB(r, g, b);
+}
 
 function latLngToVec3(lat: number, lng: number, r: number): THREE.Vector3 {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -70,29 +75,56 @@ function latLngToVec3(lat: number, lng: number, r: number): THREE.Vector3 {
 }
 
 const DOT_VERTEX = /* glsl */ `
+  uniform float uScale;     // 1.0 = static, animated 0.85..1.15 when pulsing
   varying float vFront;
   void main() {
     vec3 nrm = normalize(position);
     vec3 viewN = normalize(normalMatrix * nrm);
-    vFront = smoothstep(-0.05, 0.25, viewN.z);
-    gl_PointSize = 12.0;
+    vFront = smoothstep(-0.02, 0.15, viewN.z);
+    // 28px keeps the active pin clearly larger than VolcanoMarkers (20px)
+    // so it reads as the focal point, while leaving enough air below it
+    // for the ConnectionPanel overlay.
+    gl_PointSize = 28.0 * uScale;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
+// Active pin look mirrors VolcanoMarkers — solid coloured core, thin white
+// ring, soft same-colour glow — but the core/glow tint comes from uColor so
+// the pin reads as a live status indicator (green/amber/red/cyan). Edges
+// follow the canonical smoothstep(edge0 < edge1) form to dodge the ANGLE
+// reversed-edge gotcha that bit us earlier.
 const DOT_FRAGMENT = /* glsl */ `
   uniform vec3 uColor;
   varying float vFront;
   void main() {
-    if (vFront < 0.01) discard;
-    // Centred disk with soft halo.
+    if (vFront < 0.05) discard;
     vec2 cxy = gl_PointCoord * 2.0 - 1.0;
-    float r2 = dot(cxy, cxy);
-    if (r2 > 1.0) discard;
-    float core = smoothstep(0.45, 0.0, r2);
-    float halo = smoothstep(1.0, 0.55, r2) * 0.55;
-    float a = clamp(core + halo, 0.0, 1.0) * vFront;
-    gl_FragColor = vec4(uColor, a);
+    float r = length(cxy);
+    if (r > 1.0) discard;
+
+    vec3 white = vec3(1.0, 1.0, 1.0);
+
+    float aa = fwidth(r) * 1.2;
+
+    float coreR = 0.30;
+    float ringR = 0.46;
+    float glowR = 0.95;
+
+    float diskCore = 1.0 - smoothstep(coreR - aa, coreR + aa, r);
+    float diskRing = 1.0 - smoothstep(ringR - aa, ringR + aa, r);
+
+    float ringMask = max(diskRing - diskCore, 0.0);
+    float outsideRing = 1.0 - diskRing;
+    float glowMask = (1.0 - smoothstep(ringR, glowR, r)) * outsideRing;
+
+    vec3 color = uColor;
+    color = mix(color, white, ringMask);
+    color = mix(color, uColor, diskCore);
+
+    float alpha = clamp(diskCore + ringMask + glowMask * 0.55, 0.0, 1.0) * vFront;
+    if (alpha < 0.005) discard;
+    gl_FragColor = vec4(color, alpha);
   }
 `;
 
@@ -101,8 +133,10 @@ const RING_VERTEX = /* glsl */ `
   void main() {
     vec3 nrm = normalize(position);
     vec3 viewN = normalize(normalMatrix * nrm);
-    vFront = smoothstep(-0.05, 0.2, viewN.z);
-    gl_PointSize = 64.0;
+    vFront = smoothstep(-0.02, 0.15, viewN.z);
+    // 48px so the expanding "ping" stays inside the visible globe area and
+    // doesn't slip behind the ConnectionPanel overlay.
+    gl_PointSize = 48.0;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
@@ -139,23 +173,39 @@ export function ActiveServerPin({
 }: ActiveServerPinProps) {
   const groupRef = useRef<THREE.Group>(null);
 
-  const position = useMemo(() => {
-    if (!isFinite(lat) || !isFinite(lng)) return null;
-    return latLngToVec3(lat, lng, radius);
-  }, [lat, lng, radius]);
+  const hasPosition = isFinite(lat) && isFinite(lng);
 
-  // Both ring + dot live as a single GL_POINT at the local origin. The parent
-  // <group position={...}> places that origin on the globe surface.
+  // The single GL_POINT vertex lives at latLngToVec3(lat, lng, radius) in the
+  // group's local space — NOT at (0,0,0). The shader uses normalize(position)
+  // to derive the surface normal for the front-facing test, and normalising
+  // (0,0,0) returns NaN, which propagates into vFront → alpha and silently
+  // kills the pin in most GL drivers. Storing the real surface position keeps
+  // the normal well-defined and matches what VolcanoMarkers already does.
   const pointGeometry = useMemo(() => {
     const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
+    const p = hasPosition ? latLngToVec3(lat, lng, radius) : new THREE.Vector3(0, 0, radius);
+    g.setAttribute('position', new THREE.Float32BufferAttribute([p.x, p.y, p.z], 3));
     return g;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-write the vertex position whenever the selected server moves so the
+  // pin follows the redux-driven lat/lng without re-mounting the geometry.
+  useEffect(() => {
+    if (!hasPosition) return;
+    const p = latLngToVec3(lat, lng, radius);
+    const attr = pointGeometry.getAttribute('position') as THREE.BufferAttribute;
+    attr.setXYZ(0, p.x, p.y, p.z);
+    attr.needsUpdate = true;
+  }, [lat, lng, radius, hasPosition, pointGeometry]);
 
   const dotMaterial = useMemo(
     () =>
       new THREE.ShaderMaterial({
-        uniforms: { uColor: { value: new THREE.Color(COLOR_BY_STATE[connectionState]) } },
+        uniforms: {
+          uColor: { value: colorFor(connectionState) },
+          uScale: { value: 1.0 },
+        },
         vertexShader: DOT_VERTEX,
         fragmentShader: DOT_FRAGMENT,
         transparent: true,
@@ -169,7 +219,7 @@ export function ActiveServerPin({
     () =>
       new THREE.ShaderMaterial({
         uniforms: {
-          uColor: { value: new THREE.Color(COLOR_BY_STATE[connectionState]) },
+          uColor: { value: colorFor(connectionState) },
           uPulse: { value: 0 },
           uOpacity: { value: 0.6 },
         },
@@ -184,7 +234,7 @@ export function ActiveServerPin({
 
   // Apply colour updates when the connection state changes (no re-mount).
   useEffect(() => {
-    const col = new THREE.Color(COLOR_BY_STATE[connectionState]);
+    const col = colorFor(connectionState);
     (dotMaterial.uniforms.uColor.value as THREE.Color).copy(col);
     (ringMaterial.uniforms.uColor.value as THREE.Color).copy(col);
   }, [connectionState, dotMaterial, ringMaterial]);
@@ -200,20 +250,36 @@ export function ActiveServerPin({
 
   useFrame((threeState) => {
     if (groupRef.current) groupRef.current.rotation.y = getGlobeRotationY();
-    const period = PULSE_PERIOD_BY_STATE[connectionState];
     const t = threeState.clock.getElapsedTime();
-    const pulse = (t % period) / period;
-    ringMaterial.uniforms.uPulse.value = pulse;
+
+    if (connectionState === 'connecting' || connectionState === 'error') {
+      // States that signal something "in flight" or "wrong" — breathe the
+      // dot itself, no expanding ring. Slow + subtle so it reads as a calm
+      // status indicator instead of a flashing warning.
+      const period = 2.0;
+      const phase = (t % period) / period;
+      const breathe = 0.5 + 0.5 * Math.sin(phase * Math.PI * 2);
+      dotMaterial.uniforms.uScale.value = 0.85 + breathe * 0.30;
+      ringMaterial.uniforms.uPulse.value = 0;
+      ringMaterial.uniforms.uOpacity.value = 0;
+    } else {
+      // Settled states (connected / disconnected / disconnecting / idle) —
+      // static dot at the selected server with an expanding "ping" ring in
+      // the same colour. Ring opacity stays low so the dot core keeps the
+      // same cyan tone as the surrounding inactive pins where they overlap.
+      dotMaterial.uniforms.uScale.value = 1.0;
+      const period = 2.4;
+      ringMaterial.uniforms.uPulse.value = (t % period) / period;
+      ringMaterial.uniforms.uOpacity.value = 0.45;
+    }
   });
 
-  if (!position) return null;
+  if (!hasPosition) return null;
 
   return (
     <group ref={groupRef}>
-      <group position={position}>
-        <points geometry={pointGeometry} material={ringMaterial} renderOrder={4} />
-        <points geometry={pointGeometry} material={dotMaterial} renderOrder={5} />
-      </group>
+      <points geometry={pointGeometry} material={ringMaterial} renderOrder={4} />
+      <points geometry={pointGeometry} material={dotMaterial} renderOrder={5} />
     </group>
   );
 }

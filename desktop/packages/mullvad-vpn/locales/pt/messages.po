@@ -1413,7 +1413,11 @@ msgstr "ESTÁ DISPONÍVEL UMA ATUALIZAÇÃO BETA"
 
 msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
-msgstr "BLOQUEAR A INTERNET"
+msgstr "PROTEGENDO ENQUANTO CONECTA"
+
+msgctxt "in-app-notifications"
+msgid "Your traffic is paused while we set up the secure tunnel. This prevents any data from leaking outside the VPN."
+msgstr "Pausamos seu tráfego enquanto montamos o túnel seguro. Isso evita que qualquer dado vaze fora da VPN."
 
 #. Notification subtitle when the app upgrade is ready to install.
 msgctxt "in-app-notifications"
@@ -2549,6 +2553,10 @@ msgstr "Conectar"
 msgctxt "tunnel-control"
 msgid "Switch location"
 msgstr "Alterar local"
+
+msgctxt "tunnel-control"
+msgid "Select a server"
+msgstr "Selecione um servidor"
 
 msgctxt "user-interface-settings-view"
 msgid "Animate map"

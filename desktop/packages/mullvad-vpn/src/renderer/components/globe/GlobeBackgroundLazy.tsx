@@ -3,6 +3,20 @@ import styled from 'styled-components';
 
 import { useFocusOnLocation } from '../../lib/globe/useFocusOnLocation';
 import { useSelector } from '../../redux/store';
+import { ActiveServerPinState } from './ActiveServerPin';
+
+function toPinState(state: string | undefined): ActiveServerPinState {
+  switch (state) {
+    case 'connected':
+    case 'connecting':
+    case 'disconnected':
+    case 'disconnecting':
+    case 'error':
+      return state;
+    default:
+      return 'idle';
+  }
+}
 
 /**
  * Lazy-imported R3F scene. Splits three.js, @react-three/fiber and every
@@ -33,6 +47,7 @@ const StyledGlobeWrap = styled.div`
 export function GlobeBackgroundLazy() {
   const latitude = useSelector((state) => state.connection.latitude);
   const longitude = useSelector((state) => state.connection.longitude);
+  const tunnelState = useSelector((state) => state.connection.status.state);
 
   useFocusOnLocation(latitude, longitude);
 
@@ -43,7 +58,11 @@ export function GlobeBackgroundLazy() {
   return (
     <StyledGlobeWrap aria-hidden="true">
       <Suspense fallback={null}>
-        <LazyGlobeScene />
+        <LazyGlobeScene
+          activeLat={latitude}
+          activeLng={longitude}
+          connectionState={toPinState(tunnelState)}
+        />
       </Suspense>
     </StyledGlobeWrap>
   );

@@ -1,44 +1,94 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 import { getGlobeRotationY } from '../../lib/globe/globe-rotation';
 import { VPNVU_SERVERS } from '../../lib/globe/vpnvu-servers';
 
-const VERTEX_SHADER = `
-  uniform float uTime;
+/**
+ * Server markers rendered on the globe surface for every VPN.vu location
+ * EXCEPT the currently active one (which gets the larger ActiveServerPin).
+ *
+ * Visual matches the mobile figma `.globe-marker`:
+ *   • Core cyan dot (#5BC8DA)
+ *   • Thin white ring around the core (≈ box-shadow 0 0 0 3px white)
+ *   • Soft outer cyan glow
+ *
+ * Pulsing is reserved for the active pin so the focal point reads first.
+ */
+
+const VERTEX_SHADER = /* glsl */ `
   varying float vFront;
-  varying float vPulse;
   void main() {
     vec3 nrm = normalize(position);
     vec3 viewN = normalize(normalMatrix * nrm);
-    vFront = smoothstep(-0.2, 0.15, viewN.z);
-    // Pulse 0..1 with ~2.4s period, eased.
-    vPulse = 0.5 + 0.5 * sin(uTime * 2.6);
+    vFront = smoothstep(-0.02, 0.15, viewN.z);
+    // 28px so every server pin reads at the same size as the active one —
+    // the expanding ring on the selected pin is what differentiates it,
+    // not the dot dimensions.
+    gl_PointSize = 28.0;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = 14.0 + vPulse * 6.0;
   }
 `;
 
-const FRAGMENT_SHADER = `
-  uniform vec3 uColor;
+/**
+ * Soft circular pin: solid cyan core, thin white ring, soft cyan glow.
+ *
+ * Composition uses mutually exclusive masks (instead of summing layers)
+ * so the colours never saturate to white where regions overlap.
+ * Antialiasing width tracks the screen-space derivative of r so the
+ * border stays clean regardless of point size or DPI.
+ */
+const FRAGMENT_SHADER = /* glsl */ `
+  precision highp float;
   varying float vFront;
-  varying float vPulse;
   void main() {
-    if (vFront < 0.01) discard;
-    vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-    float r2 = dot(cxy, cxy);
-    if (r2 > 1.0) discard;
-    float core = 1.0 - smoothstep(0.0, 0.35, r2);
-    float halo = 1.0 - smoothstep(0.35, 1.0, r2);
-    // Halo intensity follows the pulse, core stays bright.
-    float alpha = clamp(core + halo * (0.30 + vPulse * 0.45), 0.0, 1.0);
-    gl_FragColor = vec4(uColor, alpha * vFront);
+    if (vFront < 0.05) discard;
+    vec2 cxy = gl_PointCoord * 2.0 - 1.0;
+    float r = length(cxy);
+    if (r > 1.0) discard;
+
+    vec3 cyan  = vec3(0.357, 0.784, 0.855);
+    vec3 white = vec3(1.0, 1.0, 1.0);
+
+    float aa = fwidth(r) * 1.2;
+
+    float coreR = 0.30;
+    float ringR = 0.46;
+    float glowR = 0.95;
+
+    // Filled disks (1 inside, 0 outside, smooth at the edge).
+    float diskCore = smoothstep(coreR + aa, coreR - aa, r);
+    float diskRing = smoothstep(ringR + aa, ringR - aa, r);
+
+    // Donut for the white ring = ring disk minus core disk.
+    float ringMask = max(diskRing - diskCore, 0.0);
+
+    // Glow lives outside the ring: smooth fade from ringR out to glowR.
+    float outsideRing = 1.0 - diskRing;
+    float glowMask = smoothstep(glowR, ringR, r) * outsideRing;
+
+    // Mutually exclusive cover masks decide which colour wins per pixel.
+    float coreCover = diskCore;
+    float ringCover = ringMask;
+    float glowCover = glowMask;
+
+    vec3 color = cyan;
+    color = mix(color, white, ringCover);
+    color = mix(color, cyan,  coreCover);
+
+    float alpha = clamp(coreCover + ringCover + glowCover * 0.55, 0.0, 1.0) * vFront;
+    if (alpha < 0.005) discard;
+    gl_FragColor = vec4(color, alpha);
   }
 `;
 
 interface Props {
   radius?: number;
+  /** Lat of the active server — suppressed to avoid duplicate marker. */
+  activeLat?: number;
+  /** Lng of the active server — suppressed to avoid duplicate marker. */
+  activeLng?: number;
 }
 
 function latLngToVec3(lat: number, lng: number, r: number): THREE.Vector3 {
@@ -51,27 +101,39 @@ function latLngToVec3(lat: number, lng: number, r: number): THREE.Vector3 {
   );
 }
 
-export function VolcanoMarkers({ radius = 1.62 }: Props) {
+function matchesActive(
+  lat: number,
+  lng: number,
+  activeLat: number | undefined,
+  activeLng: number | undefined,
+): boolean {
+  if (activeLat === undefined || activeLng === undefined) return false;
+  if (!isFinite(activeLat) || !isFinite(activeLng)) return false;
+  return Math.abs(lat - activeLat) < 0.5 && Math.abs(lng - activeLng) < 0.5;
+}
+
+export function VolcanoMarkers({ radius = 1.625, activeLat, activeLng }: Props) {
   const ref = useRef<THREE.Points>(null);
 
   const geometry = useMemo(() => {
     const positions: number[] = [];
     for (const s of VPNVU_SERVERS) {
-      const p = latLngToVec3(s.lat, s.lng, radius);
+      // Match against real lat/lng so the daemon-driven active server filter
+      // still works even if the marker is offset for visual breathing room.
+      if (matchesActive(s.lat, s.lng, activeLat, activeLng)) continue;
+      const renderLat = s.displayLat ?? s.lat;
+      const renderLng = s.displayLng ?? s.lng;
+      const p = latLngToVec3(renderLat, renderLng, radius);
       positions.push(p.x, p.y, p.z);
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     return g;
-  }, [radius]);
+  }, [radius, activeLat, activeLng]);
 
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
-        uniforms: {
-          uColor: { value: new THREE.Color('#A8F0FF') },
-          uTime: { value: 0 },
-        },
         vertexShader: VERTEX_SHADER,
         fragmentShader: FRAGMENT_SHADER,
         transparent: true,
@@ -80,10 +142,16 @@ export function VolcanoMarkers({ radius = 1.62 }: Props) {
     [],
   );
 
-  useFrame((_, delta) => {
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+      material.dispose();
+    };
+  }, [geometry, material]);
+
+  useFrame(() => {
     if (ref.current) ref.current.rotation.y = getGlobeRotationY();
-    material.uniforms.uTime.value += delta;
   });
 
-  return <points ref={ref} geometry={geometry} material={material} />;
+  return <points ref={ref} geometry={geometry} material={material} renderOrder={3} />;
 }

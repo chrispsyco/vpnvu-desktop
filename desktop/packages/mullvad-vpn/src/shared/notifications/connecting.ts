@@ -54,7 +54,12 @@ export class ConnectingNotificationProvider
 
   public getInAppNotification(): InAppNotification {
     return {
+      indicator: 'warning',
       title: messages.pgettext('in-app-notifications', 'BLOCKING INTERNET'),
+      subtitle: messages.pgettext(
+        'in-app-notifications',
+        'Your traffic is paused while we set up the secure tunnel. This prevents any data from leaking outside the VPN.',
+      ),
     };
   }
 }

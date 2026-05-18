@@ -1,13 +1,13 @@
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
+import { peekFocus } from '../../lib/globe/globe-focus';
 import { getGlobeRotationX } from '../../lib/globe/globe-rotation';
 import { usePauseWhenHidden } from '../../lib/globe/usePauseWhenHidden';
 import { ActiveServerPin, ActiveServerPinState } from './ActiveServerPin';
 import { Atmosphere } from './Atmosphere';
 import { CountryBorders } from './CountryBorders';
-import { GlobeConnectors } from './GlobeConnectors';
 import { GlobeCore } from './GlobeCore';
 import { GlobeGrid } from './GlobeGrid';
 import { GlobeMesh } from './GlobeMesh';
@@ -25,6 +25,30 @@ function TiltedGlobe({ children }: { children: React.ReactNode }) {
     if (ref.current) ref.current.rotation.x = getGlobeRotationX();
   });
   return <group ref={ref}>{children}</group>;
+}
+
+/**
+ * Drives `camera.position.z` from the focus timeline so the camera pulls back
+ * during the pan phase and returns once the target lands on the meridian.
+ *
+ * Sits inside the Canvas tree (needs useThree). Lerps toward the target zoom
+ * every frame so it stays smooth even when the focus frame snaps to active
+ * mid-frame.
+ */
+function CameraZoomController({ baseZ }: { baseZ: number }) {
+  const { camera } = useThree();
+  // Track the rendered z so a re-mount with a different baseZ doesn't snap.
+  const renderedZ = useRef(baseZ);
+  useFrame((_, delta) => {
+    const focus = peekFocus();
+    const targetZ = baseZ * focus.zoom;
+    // Critically-damped follow: ~50ms time constant. Smooths over the per-
+    // frame zoom changes without lagging visibly behind the animation.
+    const k = 1 - Math.exp(-Math.min(delta, 0.05) * 18);
+    renderedZ.current = renderedZ.current + (targetZ - renderedZ.current) * k;
+    camera.position.z = renderedZ.current;
+  });
+  return null;
 }
 
 /**
@@ -96,8 +120,6 @@ export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeScene
     isFinite(activeLat) &&
     isFinite(activeLng);
 
-  const isConnecting = connectionState === 'connecting';
-
   const dpr = getAdaptiveDpr(width, height);
   const meshDetail = getMeshDetail(width, height);
 
@@ -119,31 +141,27 @@ export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeScene
       <ambientLight intensity={0.4} />
       <Suspense fallback={null}>
         <GlobeRotator />
-        <Atmosphere />
-        <TiltedGlobe>
-          <GlobeCore radius={1.59} />
+        <CameraZoomController baseZ={cameraZ} />
+        {/* Vertical offset slides the whole globe down so the visible centre
+            lines up with the middle of the area between header and connect
+            card (not with the canvas centre, which sits a bit too high). */}
+        <group position={[0, -0.55, 0]}>
+          <Atmosphere />
+          <TiltedGlobe>
+            <GlobeCore radius={1.59} />
           <GlobeGrid radius={1.6} opacity={0.13} latStep={30} lngStep={30} />
           <CountryBorders radius={1.605} opacity={0.45} />
-          <GlobeMesh detail={meshDetail} />
-          <VolcanoMarkers radius={1.64} />
-          {hasActiveServer && (
-            <ActiveServerPin
-              lat={activeLat as number}
-              lng={activeLng as number}
-              connectionState={connectionState}
-            />
-          )}
-          {/*
-            Connection arc: reuses the existing scroll-driven GlobeConnectors
-            shimmer, but only mounts during `connecting` so the lines feel like
-            an active handshake instead of decor.
-
-            TODO: replace the fixed NODES list inside GlobeConnectors with a
-            proper device->server great-circle arc once the user geo lookup is
-            wired in. For now we keep the existing layout and gate it on state.
-          */}
-          {isConnecting && <GlobeConnectors />}
-        </TiltedGlobe>
+            <GlobeMesh detail={meshDetail} />
+            <VolcanoMarkers radius={1.625} activeLat={activeLat} activeLng={activeLng} />
+            {hasActiveServer && (
+              <ActiveServerPin
+                lat={activeLat as number}
+                lng={activeLng as number}
+                connectionState={connectionState}
+              />
+            )}
+          </TiltedGlobe>
+        </group>
       </Suspense>
     </Canvas>
   );
