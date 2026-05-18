@@ -2,8 +2,30 @@ import { lazy, Suspense } from 'react';
 import styled from 'styled-components';
 
 import { useFocusOnLocation } from '../../lib/globe/useFocusOnLocation';
+import { VPNVU_SERVERS } from '../../lib/globe/vpnvu-servers';
 import { useSelector } from '../../redux/store';
 import { ActiveServerPinState } from './ActiveServerPin';
+
+/**
+ * Look up a server whose real lat/lng matches the daemon-driven coordinates
+ * and substitute its displayLat/displayLng if present, so the active pin
+ * never jumps between the real location (when selected) and the visually
+ * offset location (when inactive). Matching uses a 0.5° tolerance to absorb
+ * any IP-geolocation jitter the daemon might apply.
+ */
+function resolveDisplayCoords(
+  lat: number | undefined,
+  lng: number | undefined,
+): { lat: number | undefined; lng: number | undefined } {
+  if (typeof lat !== 'number' || typeof lng !== 'number') return { lat, lng };
+  if (!isFinite(lat) || !isFinite(lng)) return { lat, lng };
+  for (const s of VPNVU_SERVERS) {
+    if (Math.abs(s.lat - lat) < 0.5 && Math.abs(s.lng - lng) < 0.5) {
+      return { lat: s.displayLat ?? s.lat, lng: s.displayLng ?? s.lng };
+    }
+  }
+  return { lat, lng };
+}
 
 function toPinState(state: string | undefined): ActiveServerPinState {
   switch (state) {
@@ -49,7 +71,9 @@ export function GlobeBackgroundLazy() {
   const longitude = useSelector((state) => state.connection.longitude);
   const tunnelState = useSelector((state) => state.connection.status.state);
 
-  useFocusOnLocation(latitude, longitude);
+  const { lat: displayLat, lng: displayLng } = resolveDisplayCoords(latitude, longitude);
+
+  useFocusOnLocation(displayLat, displayLng);
 
   if (window.env.e2e) {
     return null;
@@ -59,8 +83,8 @@ export function GlobeBackgroundLazy() {
     <StyledGlobeWrap aria-hidden="true">
       <Suspense fallback={null}>
         <LazyGlobeScene
-          activeLat={latitude}
-          activeLng={longitude}
+          activeLat={displayLat}
+          activeLng={displayLng}
           connectionState={toPinState(tunnelState)}
         />
       </Suspense>
