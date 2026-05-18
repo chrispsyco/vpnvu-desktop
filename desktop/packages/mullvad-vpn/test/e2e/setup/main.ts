@@ -332,6 +332,15 @@ class ApplicationMain {
             longitude: city.longitude,
             mullvadExitIp: true,
           };
+          // Push the new constraint into the mock settings so subsequent
+          // reads (e.g. getLocationFromConstraints during reconnect) see the
+          // chosen city instead of the previous one. Without this the redux
+          // store kept the stale relaySettings and the connect/reconnect
+          // flow snapped back to the original server.
+          (this.settings.relaySettings as { normal: { location: unknown } }).normal.location = {
+            only: { country: countryCode, city: cityCode },
+          };
+          IpcMainEventChannel.settings.notify?.(this.settings);
           // Re-emit disconnected tunnel state with new location so globe
           // focuses on the chosen city even before user hits Connect.
           IpcMainEventChannel.tunnel.notify?.({
