@@ -6,7 +6,6 @@ import { View } from '../../../lib/components/view';
 import { useSelector } from '../../../redux/store';
 import { AppMainHeader } from '../../app-main-header';
 import { GlobeBackgroundLazy } from '../../globe/GlobeBackgroundLazy';
-import Map from '../../Map';
 import NotificationArea from '../../NotificationArea';
 import { ConnectionPanel } from './components';
 
@@ -21,10 +20,12 @@ const StyledMapOverlay = styled(FlexColumn)`
   max-height: 100%;
 `;
 
-const StatusIcon = styled(Spinner)`
-  position: absolute;
-  align-self: center;
-  margin-top: 94px;
+const SpinnerSlot = styled.div`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 `;
 
 const StyledNotificationArea = styled(NotificationArea)`
@@ -54,13 +55,11 @@ export function MainView() {
         <AppMainHeader.SettingsButton />
       </AppMainHeader>
       <StyledContent flexGrow={1}>
-        <Map />
         <GlobeBackgroundLazy />
         <StyledMapOverlay flexGrow={1}>
           <StyledNotificationArea />
           <StyledMain>
-            {showSpinner ? <StatusIcon size="big" /> : null}
-
+            <SpinnerSlot>{showSpinner ? <Spinner size="big" /> : null}</SpinnerSlot>
             <ConnectionPanel />
           </StyledMain>
         </StyledMapOverlay>

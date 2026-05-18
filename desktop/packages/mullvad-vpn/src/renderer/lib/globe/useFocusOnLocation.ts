@@ -1,26 +1,26 @@
 import { useEffect } from 'react';
 
-import { setFocusTarget } from './globe-focus';
+import { clearFocus, requestFocus } from './globe-focus';
 
 /**
  * Bind a (lat, lng) pair to the globe focus target. When `lat`/`lng` are both
- * finite numbers, the globe will lerp until that point sits at the camera
- * meridian. Pass `undefined`/`null` (or NaN) to release control and let the
- * globe go back to its idle drift.
+ * finite numbers, the globe runs a zoom-out → pan → zoom-in animation toward
+ * that point. Pass `undefined`/`null` (or NaN) to release control.
  *
- * This hook is intentionally tiny — the heavy lifting lives in GlobeRotator,
- * which reads the focus target via `useFrame` so React never re-renders just
- * because the rotation changed.
+ * The hook only triggers a new transition when the coordinates change — it
+ * does NOT clear-then-set on every render, which would have caused a one-frame
+ * idle stall (visible as a "stutter") between transitions.
  */
 export function useFocusOnLocation(lat: number | undefined, lng: number | undefined): void {
   useEffect(() => {
     if (typeof lat === 'number' && typeof lng === 'number' && isFinite(lat) && isFinite(lng)) {
-      setFocusTarget({ lat, lng });
-    } else {
-      setFocusTarget(null);
+      requestFocus({ lat, lng });
     }
-    return () => {
-      setFocusTarget(null);
-    };
   }, [lat, lng]);
+
+  // Only release on full unmount — switching coordinates re-runs the effect
+  // above without dropping the lock in between.
+  useEffect(() => {
+    return () => clearFocus();
+  }, []);
 }

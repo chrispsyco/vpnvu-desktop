@@ -34,7 +34,16 @@ class ApplicationMain {
     animateMap: true,
   };
 
-  private settings = getDefaultSettings();
+  private settings = (() => {
+    const s = getDefaultSettings();
+    // Default to Brasil/São Paulo so the globe focuses on BR on first launch
+    // (primary audience is pt-BR) and the ReconnectButton can shuffle between
+    // BR cities without the user having to pick one first.
+    (s.relaySettings as { normal: { location: unknown } }).normal.location = {
+      only: { country: 'br', city: 'sao' },
+    };
+    return s;
+  })();
 
   private translations: ITranslations = { locale: this.guiSettings.preferredLocale };
 
@@ -60,10 +69,10 @@ class ApplicationMain {
   };
 
   private location: ILocation = {
-    country: 'Sweden',
-    city: 'Gothenburg',
-    latitude: 58,
-    longitude: 12,
+    country: 'Brasil',
+    city: 'São Paulo',
+    latitude: -23.5505,
+    longitude: -46.6333,
     mullvadExitIp: false,
   };
 
@@ -84,6 +93,13 @@ class ApplicationMain {
       fullscreenable: false,
       show: DEBUG,
       frame: false,
+      // Transparent window only so the CSS-side rounded corners of #app can
+      // peek through at the four corners. The app surface itself is fully
+      // opaque cyan — no acrylic, no see-through.
+      transparent: true,
+      backgroundColor: '#00000000',
+      roundedCorners: true,
+      hasShadow: true,
       webPreferences: {
         offscreen: CI_E2E && !TEST_SHOW_WINDOW,
         preload: path.join(import.meta.dirname, 'preload.cjs'),
@@ -291,11 +307,17 @@ class ApplicationMain {
       const rs = relaySettings as any;
       const loc = rs?.normal?.location?.only;
       if (loc) {
+        // Two shapes are accepted: flat `{ country, city }` from the standard
+        // RelayLocationCity, and the legacy nested `{ city: { country, city }}`
+        // / `{ hostname: { country, city, hostname }}`. Try the flat form first.
         const countryCode =
           (typeof loc.country === 'string' ? loc.country : undefined) ??
           loc.city?.country ??
           loc.hostname?.country;
-        const cityCode = loc.city?.city ?? loc.hostname?.city;
+        const cityCode =
+          (typeof loc.city === 'string' ? loc.city : undefined) ??
+          loc.city?.city ??
+          loc.hostname?.city;
         const country = mockData.relayList.countries.find((c) => c.code === countryCode);
         const city = country
           ? cityCode

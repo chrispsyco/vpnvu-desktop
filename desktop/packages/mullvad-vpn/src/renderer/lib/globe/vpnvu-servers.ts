@@ -24,6 +24,14 @@ export interface VpnvuServer {
   readonly lat: number;
   /** Longitude in decimal degrees. */
   readonly lng: number;
+  /**
+   * Optional visual-only latitude used by the globe renderer when the real
+   * coordinate sits visually on top of a neighbor pin (e.g. Toronto and NYC).
+   * Pickers, daemon lookups, and lat/lng filters still use `lat`/`lng`.
+   */
+  readonly displayLat?: number;
+  /** Optional visual-only longitude (see `displayLat`). */
+  readonly displayLng?: number;
   /** Flag emoji for the country. */
   readonly flag: string;
   /** Provider tag. Only `vpnvu` for now (Mullvad fork is internal infra). */
@@ -50,6 +58,9 @@ export const VPNVU_SERVERS: ReadonlyArray<VpnvuServer> = [
     popular: true,
   },
   // RJ -- secundario BR pra balance de load e latencia regional sudeste
+  // displayLat/displayLng deslocados ~3deg NE pra abrir distancia visual
+  // do pin de SP no globo 405x720 com pins de 28px. Pickers/daemon
+  // continuam usando lat/lng reais — isto e visual-only.
   {
     id: 'br-rj-1',
     hostname: 'vpnvu-br-rj-1.vpn.vu',
@@ -58,6 +69,8 @@ export const VPNVU_SERVERS: ReadonlyArray<VpnvuServer> = [
     city: 'Rio de Janeiro',
     lat: -22.9068,
     lng: -43.1729,
+    displayLat: -20.0,
+    displayLng: -40.3,
     flag: '🇧🇷',
     provider: 'vpnvu',
     online: true,
@@ -190,6 +203,9 @@ export const VPNVU_SERVERS: ReadonlyArray<VpnvuServer> = [
     popular: false,
   },
   // YYZ -- Toronto, alternativa America do Norte sem entrar em jurisdicao US (Five Eyes lite)
+  // displayLat puxado +2.5deg pra norte: na coord real (43.65) o pin colava
+  // visualmente em NYC (40.71) no globo pequeno 405x720 e tambem encostava
+  // na borda norte do continente. Pickers/daemon continuam usando lat real.
   {
     id: 'ca-yyz-1',
     hostname: 'vpnvu-ca-yyz-1.vpn.vu',
@@ -198,6 +214,8 @@ export const VPNVU_SERVERS: ReadonlyArray<VpnvuServer> = [
     city: 'Toronto',
     lat: 43.6532,
     lng: -79.3832,
+    displayLat: 46.2,
+    displayLng: -79.3832,
     flag: '🇨🇦',
     provider: 'vpnvu',
     online: true,

@@ -111,7 +111,14 @@ const Collapsible = styled(motion.div)({
   flexDirection: 'column',
   justifyContent: 'flex-start',
   translateY: '0%',
-  backgroundColor: colors.darkerBlue50,
+  // Glassmorphism: translucent surface with backdrop blur and a hairline.
+  // The dark cyan base sits under the blur so the globe colours still bleed
+  // through subtly instead of reading as a flat solid bar.
+  backgroundColor: 'rgba(16, 48, 64, 0.55)',
+  backdropFilter: 'blur(20px) saturate(140%)',
+  WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
   overflow: 'hidden',
 });
 

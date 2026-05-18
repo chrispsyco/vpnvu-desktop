@@ -38,6 +38,10 @@ export const StyledListItemItem = styled(FlexRow)<{
         padding-left: ${$paddingLeft};
       }
 
+      > :last-child {
+        padding-right: ${$paddingLeft};
+      }
+
       ${$animation}
     `;
   }}
