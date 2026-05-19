@@ -1,0 +1,19 @@
+---
+name: PSYCO Ping
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - psyco-fork
+    paths:
+      - .github/workflows/psyco-ping.yml
+
+permissions: {}
+
+jobs:
+  ping:
+    name: Ping
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - run: echo "PSYCO Actions reach test · OK"
