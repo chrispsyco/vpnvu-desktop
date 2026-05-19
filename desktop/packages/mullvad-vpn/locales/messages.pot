@@ -2576,6 +2576,11 @@ msgctxt "user-interface-settings-view"
 msgid "Animate map movements."
 msgstr ""
 
+#. Section kicker label above the appearance-related UI settings (map animation, tray icon, language)
+msgctxt "user-interface-settings-view"
+msgid "Appearance"
+msgstr ""
+
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
 msgstr ""
@@ -2616,6 +2621,11 @@ msgstr ""
 #. Title label in navigation bar
 msgctxt "user-interface-settings-view"
 msgid "User interface settings"
+msgstr ""
+
+#. Section kicker label above window-behaviour settings (unpinned window, start minimized)
+msgctxt "user-interface-settings-view"
+msgid "Window"
 msgstr ""
 
 msgctxt "vpn-settings-view"

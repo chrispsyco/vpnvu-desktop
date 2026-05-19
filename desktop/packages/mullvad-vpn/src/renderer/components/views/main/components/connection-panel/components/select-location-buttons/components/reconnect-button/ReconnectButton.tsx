@@ -7,6 +7,7 @@ import log from '../../../../../../../../../../shared/logging';
 import { useAppContext } from '../../../../../../../../../context';
 import { Button, ButtonProps, Icon } from '../../../../../../../../../lib/components';
 import { useRelaySettingsUpdater } from '../../../../../../../../../lib/constraint-updater';
+import { markReconnectStarted } from '../../../../../../../../../lib/reconnect-tracker';
 import { useSelector } from '../../../../../../../../../redux/store';
 
 const StyledReconnectButton = styled(Button)({
@@ -28,6 +29,7 @@ export function ReconnectButton(props: ButtonProps) {
   const relayLocations = useSelector((state) => state.settings.relayLocations);
   const relaySettings = useSelector((state) => state.settings.relaySettings);
   const tunnelState = useSelector((state) => state.connection.status.state);
+  const connectedCityName = useSelector((state) => state.connection.city);
 
   const onClick = useCallback(async () => {
     try {
@@ -52,11 +54,26 @@ export function ReconnectButton(props: ButtonProps) {
         }
       }
 
-      let nextCity: string | undefined = currentCity;
+      // When the user picked only a country (no city), the daemon resolves
+      // a city internally — `relaySettings.location.city` stays undefined,
+      // but the connection redux slice holds the resolved display name
+      // (e.g. "São Paulo"). Translate that back to a city *code* so the
+      // shuffle below doesn't accidentally re-pick the city we're already
+      // connected to on the first click.
+      let effectiveCurrentCity: string | undefined = currentCity;
+      if (!effectiveCurrentCity && currentCountry && connectedCityName) {
+        const country = relayLocations.find((c) => c.code === currentCountry);
+        const matched = country?.cities.find((c) => c.name === connectedCityName);
+        if (matched) {
+          effectiveCurrentCity = matched.code;
+        }
+      }
+
+      let nextCity: string | undefined = effectiveCurrentCity;
       if (currentCountry) {
         const country = relayLocations.find((c) => c.code === currentCountry);
         if (country && country.cities.length > 1) {
-          const candidates = country.cities.filter((c) => c.code !== currentCity);
+          const candidates = country.cities.filter((c) => c.code !== effectiveCurrentCity);
           if (candidates.length > 0) {
             const pick = candidates[Math.floor(Math.random() * candidates.length)];
             nextCity = pick.code;
@@ -64,7 +81,7 @@ export function ReconnectButton(props: ButtonProps) {
         }
       }
 
-      if (currentCountry && nextCity && nextCity !== currentCity) {
+      if (currentCountry && nextCity && nextCity !== effectiveCurrentCity) {
         const nextLocation: RelayLocation = { country: currentCountry, city: nextCity };
         // useRelaySettingsUpdater rewraps every redux-lifted constraint
         // (wireguard.ipVersion / entryLocation / location) into the
@@ -78,13 +95,21 @@ export function ReconnectButton(props: ButtonProps) {
       }
 
       if (tunnelState === 'connected' || tunnelState === 'connecting') {
+        markReconnectStarted();
         await reconnectTunnel();
       }
     } catch (e) {
       const error = e as Error;
       log.error(`Failed to switch server: ${error.message}`);
     }
-  }, [relaySettings, relayLocations, tunnelState, updateRelaySettings, reconnectTunnel]);
+  }, [
+    relaySettings,
+    relayLocations,
+    tunnelState,
+    connectedCityName,
+    updateRelaySettings,
+    reconnectTunnel,
+  ]);
 
   return (
     <StyledReconnectButton

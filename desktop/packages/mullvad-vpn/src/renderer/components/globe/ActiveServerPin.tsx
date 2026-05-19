@@ -36,7 +36,7 @@ interface ActiveServerPinProps {
   lng: number;
   /** Live tunnel state from redux. Optional — falls back to `idle` (cyan). */
   connectionState?: ActiveServerPinState;
-  /** Surface radius the pin should sit on. Defaults to slightly above the globe. */
+  /** Surface radius the pin should sit on. Matches VolcanoMarkers (1.625). */
   radius?: number;
 }
 
@@ -59,11 +59,6 @@ const COLOR_BY_STATE: Record<ActiveServerPinState, [number, number, number]> = {
   idle: [0.357, 0.784, 0.855], // #5BC8DA
 };
 
-function colorFor(state: ActiveServerPinState): THREE.Color {
-  const [r, g, b] = COLOR_BY_STATE[state];
-  return new THREE.Color().setRGB(r, g, b);
-}
-
 function latLngToVec3(lat: number, lng: number, r: number): THREE.Vector3 {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lng + 180) * (Math.PI / 180);
@@ -75,16 +70,16 @@ function latLngToVec3(lat: number, lng: number, r: number): THREE.Vector3 {
 }
 
 const DOT_VERTEX = /* glsl */ `
-  uniform float uScale;     // 1.0 = static, animated 0.85..1.15 when pulsing
   varying float vFront;
   void main() {
     vec3 nrm = normalize(position);
     vec3 viewN = normalize(normalMatrix * nrm);
     vFront = smoothstep(-0.02, 0.15, viewN.z);
-    // 28px keeps the active pin clearly larger than VolcanoMarkers (20px)
-    // so it reads as the focal point, while leaving enough air below it
-    // for the ConnectionPanel overlay.
-    gl_PointSize = 28.0 * uScale;
+    // 32px makes the active pin clearly larger than VolcanoMarkers' 28px so
+    // it reads as the focal point. The pulsing scale uniform that lived here
+    // before was removed because mutating it via useFrame triggered a driver
+    // bug where the dot stopped drawing once the value settled.
+    gl_PointSize = 32.0;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
@@ -128,43 +123,6 @@ const DOT_FRAGMENT = /* glsl */ `
   }
 `;
 
-const RING_VERTEX = /* glsl */ `
-  varying float vFront;
-  void main() {
-    vec3 nrm = normalize(position);
-    vec3 viewN = normalize(normalMatrix * nrm);
-    vFront = smoothstep(-0.02, 0.15, viewN.z);
-    // 48px so the expanding "ping" stays inside the visible globe area and
-    // doesn't slip behind the ConnectionPanel overlay.
-    gl_PointSize = 48.0;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const RING_FRAGMENT = /* glsl */ `
-  uniform vec3 uColor;
-  uniform float uPulse;     // 0..1 ring progress within the period
-  uniform float uOpacity;   // base opacity multiplier
-  varying float vFront;
-  void main() {
-    if (vFront < 0.01) discard;
-    vec2 cxy = gl_PointCoord * 2.0 - 1.0;
-    float r2 = dot(cxy, cxy);
-    if (r2 > 1.0) discard;
-    // Hollow ring whose radius rides on uPulse; fades as it expands.
-    float r = sqrt(r2);
-    float thickness = 0.09;
-    float ringEdge = mix(0.35, 0.98, uPulse);
-    float inner = smoothstep(ringEdge - thickness, ringEdge, r);
-    float outer = 1.0 - smoothstep(ringEdge, ringEdge + thickness, r);
-    float band = inner * outer;
-    float fade = 1.0 - uPulse;
-    float a = band * fade * vFront * uOpacity;
-    if (a < 0.01) discard;
-    gl_FragColor = vec4(uColor, a);
-  }
-`;
-
 export function ActiveServerPin({
   lat,
   lng,
@@ -199,87 +157,67 @@ export function ActiveServerPin({
     attr.needsUpdate = true;
   }, [lat, lng, radius, hasPosition, pointGeometry]);
 
-  const dotMaterial = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        uniforms: {
-          uColor: { value: colorFor(connectionState) },
-          uScale: { value: 1.0 },
-        },
-        vertexShader: DOT_VERTEX,
-        fragmentShader: DOT_FRAGMENT,
-        transparent: true,
-        depthWrite: false,
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const ringMaterial = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        uniforms: {
-          uColor: { value: colorFor(connectionState) },
-          uPulse: { value: 0 },
-          uOpacity: { value: 0.6 },
-        },
-        vertexShader: RING_VERTEX,
-        fragmentShader: RING_FRAGMENT,
-        transparent: true,
-        depthWrite: false,
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  // Apply colour updates when the connection state changes (no re-mount).
-  useEffect(() => {
-    const col = colorFor(connectionState);
-    (dotMaterial.uniforms.uColor.value as THREE.Color).copy(col);
-    (ringMaterial.uniforms.uColor.value as THREE.Color).copy(col);
-  }, [connectionState, dotMaterial, ringMaterial]);
+  // Material is rebuilt whenever connectionState changes. We do NOT mutate
+  // uniform values via copy() across the connecting -> connected transition:
+  // a recent driver/Three.js regression caused the pin to stop drawing the
+  // moment the uScale uniform stopped animating (the dot became invisible
+  // even with depthTest off and renderOrder >GlobeCore's). Rebuilding the
+  // ShaderMaterial per-state forces a clean uniform upload each transition
+  // and matches VolcanoMarkers' single-material model that works reliably.
+  const material = useMemo(() => {
+    const [r, g, b] = COLOR_BY_STATE[connectionState];
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: new THREE.Color().setRGB(r, g, b) },
+      },
+      vertexShader: DOT_VERTEX,
+      fragmentShader: DOT_FRAGMENT,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+    });
+  }, [connectionState]);
 
   // Dispose GPU resources on unmount.
   useEffect(() => {
     return () => {
       pointGeometry.dispose();
-      dotMaterial.dispose();
-      ringMaterial.dispose();
     };
-  }, [pointGeometry, dotMaterial, ringMaterial]);
+  }, [pointGeometry]);
 
-  useFrame((threeState) => {
+  // Dispose old material when connectionState swaps the reference.
+  useEffect(() => {
+    return () => {
+      material.dispose();
+    };
+  }, [material]);
+
+  // Co-rotate with the globe. Same pattern as VolcanoMarkers.
+  useFrame(() => {
     if (groupRef.current) groupRef.current.rotation.y = getGlobeRotationY();
-    const t = threeState.clock.getElapsedTime();
-
-    if (connectionState === 'connecting' || connectionState === 'error') {
-      // States that signal something "in flight" or "wrong" — breathe the
-      // dot itself, no expanding ring. Slow + subtle so it reads as a calm
-      // status indicator instead of a flashing warning.
-      const period = 2.0;
-      const phase = (t % period) / period;
-      const breathe = 0.5 + 0.5 * Math.sin(phase * Math.PI * 2);
-      dotMaterial.uniforms.uScale.value = 0.85 + breathe * 0.30;
-      ringMaterial.uniforms.uPulse.value = 0;
-      ringMaterial.uniforms.uOpacity.value = 0;
-    } else {
-      // Settled states (connected / disconnected / disconnecting / idle) —
-      // static dot at the selected server with an expanding "ping" ring in
-      // the same colour. Ring opacity stays low so the dot core keeps the
-      // same cyan tone as the surrounding inactive pins where they overlap.
-      dotMaterial.uniforms.uScale.value = 1.0;
-      const period = 2.4;
-      ringMaterial.uniforms.uPulse.value = (t % period) / period;
-      ringMaterial.uniforms.uOpacity.value = 0.45;
-    }
   });
 
   if (!hasPosition) return null;
 
   return (
     <group ref={groupRef}>
-      <points geometry={pointGeometry} material={ringMaterial} renderOrder={4} />
-      <points geometry={pointGeometry} material={dotMaterial} renderOrder={5} />
+      {/*
+        frustumCulled=false is required: BufferGeometry's auto-computed
+        boundingSphere for a single-vertex geometry has radius 0, so Three.js
+        culls the points object whenever the camera animation puts the vertex
+        within rounding-error of the frustum edge. That cull lasts forever
+        because the bounding sphere never updates — the result is the active
+        pin vanishing the moment the focus animation parks, even though the
+        vertex is clearly inside the visible globe area. Inactive markers in
+        VolcanoMarkers dodge this because their geometry has 11 vertices, so
+        the bounding sphere is big enough to never get culled accidentally.
+      */}
+      <points
+        geometry={pointGeometry}
+        material={material}
+        renderOrder={5}
+        frustumCulled={false}
+      />
     </group>
   );
 }

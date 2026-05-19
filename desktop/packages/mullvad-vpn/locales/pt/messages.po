@@ -12,6 +12,55 @@ msgstr ""
 "Language: pt_BR\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
 
+#. VPN.vu fork · privacy disclaimer wizard, step 2 (Termos & LGPD) and
+#. step 3 (Diagnóstico opcional). Strings are currently hardcoded in
+#. PrivacyDisclaimerView.tsx (PT-only fork) but registered here so a
+#. future migration to messages.pgettext('privacy-disclaimer-view', ...)
+#. has translation rows already in place.
+msgctxt "privacy-disclaimer-view"
+msgid "Step header label · privacy"
+msgstr "Privacidade"
+
+msgctxt "privacy-disclaimer-view"
+msgid "Step header label · terms and LGPD"
+msgstr "Termos & LGPD"
+
+msgctxt "privacy-disclaimer-view"
+msgid "Step header label · diagnostics"
+msgstr "Diagnóstico"
+
+msgctxt "privacy-disclaimer-view"
+msgid "Step 2 kicker"
+msgstr "Termos de uso · proteção de dados"
+
+msgctxt "privacy-disclaimer-view"
+msgid "Step 2 title"
+msgstr "Como a gente trata seus dados."
+
+msgctxt "privacy-disclaimer-view"
+msgid "Step 3 kicker"
+msgstr "Telemetria · totalmente opcional"
+
+msgctxt "privacy-disclaimer-view"
+msgid "Step 3 title"
+msgstr "Quer ajudar a gente a melhorar?"
+
+msgctxt "privacy-disclaimer-view"
+msgid "Primary CTA · advance to next step"
+msgstr "Aceitar e continuar"
+
+msgctxt "privacy-disclaimer-view"
+msgid "Primary CTA · final, default"
+msgstr "Aceitar e começar"
+
+msgctxt "privacy-disclaimer-view"
+msgid "Primary CTA · final, create-account intent"
+msgstr "Aceitar e criar conta"
+
+msgctxt "privacy-disclaimer-view"
+msgid "Step 3 checkbox label"
+msgstr "Enviar crash reports anônimos"
+
 msgid "%(amount)d more..."
 msgstr "Mais %(amount)d..."
 
@@ -567,6 +616,26 @@ msgctxt "account-view"
 msgid "Currently unavailable"
 msgstr "Atualmente indisponível"
 
+#. Empty-state replacement for "Currently unavailable" on the Account row.
+msgctxt "account-view"
+msgid "No time on this account"
+msgstr "Sem tempo nessa conta"
+
+#. Sub-line under the empty-state headline, framing the two CTAs below.
+msgctxt "account-view"
+msgid "Add time to start using VPN.vu. Redeem a voucher or buy credit on our site."
+msgstr "Adicione tempo pra começar a usar a VPN.vu. Resgate um voucher ou compre crédito no nosso site."
+
+#. Primary CTA on the empty Account row · navigates to the in-app voucher redemption.
+msgctxt "account-view"
+msgid "Redeem voucher"
+msgstr "Resgatar voucher"
+
+#. Secondary CTA on the empty Account row · opens the external purchase page.
+msgctxt "account-view"
+msgid "Buy credit"
+msgstr "Comprar crédito"
+
 #. Button label for logging out.
 msgctxt "account-view"
 msgid "Log out"
@@ -796,6 +865,11 @@ msgctxt "app-info-view"
 msgid "App is out of sync. Please quit and restart."
 msgstr "O app não está sincronizada. Saia e reinicie."
 
+#. Section kicker label above the beta program toggle.
+msgctxt "app-info-view"
+msgid "Beta"
+msgstr "Beta"
+
 #. Label for switch to toggle beta program.
 msgctxt "app-info-view"
 msgid "Beta program"
@@ -804,6 +878,21 @@ msgstr "Programa beta"
 msgctxt "app-info-view"
 msgid "Enable to get notified when new beta versions of the app are released."
 msgstr "Ative para ser notificado quando forem lançadas novas versões beta do aplicativo."
+
+#. CTA pill on the update available banner.
+msgctxt "app-info-view"
+msgid "Install"
+msgstr "Instalar"
+
+#. Sub-label under the Beta program toggle.
+msgctxt "app-info-view"
+msgid "Receive pre-release builds"
+msgstr "Receber builds pré-lançamento"
+
+#. Sub-label under the changelog row in App Info.
+msgctxt "app-info-view"
+msgid "Release notes for this version"
+msgstr "Notas desta versão"
 
 msgctxt "app-info-view"
 msgid "This option is unavailable while using a beta version."
@@ -823,6 +912,11 @@ msgstr "Versão"
 msgctxt "app-info-view"
 msgid "What’s new"
 msgstr "Novidades"
+
+#. Tagline shown under the brand in the App Info hero.
+msgctxt "app-info-view"
+msgid "Your VPN · no name, no trace"
+msgstr "Sua VPN · sem nome, sem rastros"
 
 #. Status text displayed below a progress bar when the update is being downloaded
 #. with the estimated time of completion is within a few seconds.
@@ -1097,6 +1191,16 @@ msgctxt "connect-view"
 msgid "Start using the app"
 msgstr "Comece a usar o aplicativo"
 
+#. Tiny hint under the account number telling the user the number is tap-to-copy.
+msgctxt "connect-view"
+msgid "Tap the number to copy"
+msgstr "Toque no número pra copiar"
+
+#. Eyebrow kicker shown above the out-of-time title.
+msgctxt "connect-view"
+msgid "Time expired"
+msgstr "Tempo expirado"
+
 msgctxt "connect-view"
 msgid "Time was successfully added"
 msgstr "Tempo adicionado com sucesso"
@@ -1116,6 +1220,16 @@ msgstr "Para começar a usar o aplicativo, primeiro tem de adicionar tempo à su
 msgctxt "connect-view"
 msgid "Voucher was successfully redeemed"
 msgstr "O voucher foi resgatado com sucesso"
+
+#. Eyebrow kicker shown above the welcome title for newly created accounts.
+msgctxt "connect-view"
+msgid "Welcome · your account is ready"
+msgstr "Bem-vindo · sua conta tá pronta"
+
+#. Section label above the account number on the welcome screen.
+msgctxt "connect-view"
+msgid "Your account number"
+msgstr "Seu número de conta"
 
 msgctxt "connect-view"
 msgid "You have no more VPN time left on this account."
@@ -1308,8 +1422,8 @@ msgid "The device will be removed from the list and logged out."
 msgstr "O dispositivo será removido da lista e encerrará a sessão."
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "Este é o nome atribuído ao dispositivo. Cada dispositivo com sessão iniciada numa conta VPN.vu recebe um nome único que lhe ajuda a identificá-lo quando gerencia os seus dispositivos no app ou no site."
+msgid "This is the name assigned to the device. Each device logged in on a VPN.vu account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgstr "Este é o nome atribuído ao dispositivo. Cada dispositivo com sessão iniciada numa conta VPN.vu recebe um nome único que ajuda a identificá-lo quando você gerencia seus dispositivos no app ou no site."
 
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
@@ -1333,8 +1447,8 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr "Veja e faça a gerenciamento de todos os seus dispositivos com sessão iniciada. Pode ter até 5 dispositivos numa conta de cada vez. Cada dispositivo recebe um nome quando tem sessão iniciada para ajudar a distingui-los facilmente."
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
-msgstr "Pode ter até 5 dispositivos com sessão iniciada numa só conta VPN.vu."
+msgid "You can have up to 5 devices logged in on one VPN.vu account."
+msgstr "Você pode ter até 5 dispositivos com sessão iniciada numa só conta VPN.vu."
 
 msgctxt "device-management"
 msgid "You can now continue logging in on this device."
@@ -2106,6 +2220,10 @@ msgid "Entry"
 msgstr "Entrada"
 
 msgctxt "select-location-view"
+msgid "Entry locked"
+msgstr "Entrada bloqueada"
+
+msgctxt "select-location-view"
 msgid "Exit"
 msgstr "Saída"
 
@@ -2558,6 +2676,10 @@ msgctxt "tunnel-control"
 msgid "Select a server"
 msgstr "Selecione um servidor"
 
+msgctxt "tunnel-control"
+msgid "Switch server · %(location)s"
+msgstr "Trocar servidor · %(location)s"
+
 msgctxt "user-interface-settings-view"
 msgid "Animate map"
 msgstr "Animar o mapa"
@@ -2565,6 +2687,11 @@ msgstr "Animar o mapa"
 msgctxt "user-interface-settings-view"
 msgid "Animate map movements."
 msgstr "Animar movimentos do mapa."
+
+#. Section kicker label above the appearance-related UI settings (map animation, tray icon, language)
+msgctxt "user-interface-settings-view"
+msgid "Appearance"
+msgstr "Aparência"
 
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
@@ -2608,6 +2735,11 @@ msgctxt "user-interface-settings-view"
 msgid "User interface settings"
 msgstr "Configurações da interface de usuário"
 
+#. Section kicker label above window-behaviour settings (unpinned window, start minimized)
+msgctxt "user-interface-settings-view"
+msgid "Window"
+msgstr "Janela"
+
 msgctxt "vpn-settings-view"
 msgid "Add a server"
 msgstr "Adicionar um servidor"
@@ -2627,6 +2759,36 @@ msgctxt "vpn-settings-view"
 msgid "Adult content"
 msgstr "Conteúdo para adultos"
 
+#. Inline description for the "Ads" DNS blocker row.
+msgctxt "vpn-settings-view"
+msgid "Banners, pop-ups, native ads"
+msgstr "Banners, pop-ups, anúncios nativos"
+
+#. Inline description for the "Trackers" DNS blocker row.
+msgctxt "vpn-settings-view"
+msgid "Analytics, fingerprinting, telemetry"
+msgstr "Analytics, fingerprinting, telemetria"
+
+#. Inline description for the "Malware" DNS blocker row.
+msgctxt "vpn-settings-view"
+msgid "Known malicious domains"
+msgstr "Domínios maliciosos conhecidos"
+
+#. Inline description for the "Adult content" DNS blocker row.
+msgctxt "vpn-settings-view"
+msgid "NSFW websites"
+msgstr "Sites NSFW"
+
+#. Inline description for the "Gambling" DNS blocker row.
+msgctxt "vpn-settings-view"
+msgid "Online casinos, sportsbooks"
+msgstr "Cassinos online, apostas"
+
+#. Inline description for the "Social media" DNS blocker row.
+msgctxt "vpn-settings-view"
+msgid "X, Facebook, TikTok, Instagram"
+msgstr "X, Facebook, TikTok, Instagram"
+
 #. Label for list item that navigates to anti-censorship
 #. settings view.
 msgctxt "vpn-settings-view"
@@ -2634,8 +2796,8 @@ msgid "Anti-censorship"
 msgstr "Anti-censura"
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
-msgstr "Atenção: ativar esta opção exige sempre uma conexão através de VPN.vu para acessar à Internet."
+msgid "Attention: enabling this will always require a VPN.vu connection in order to reach the internet."
+msgstr "Atenção: ativar esta opção exige sempre uma conexão VPN.vu pra acessar a Internet."
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2874,6 +3036,21 @@ msgstr "O Multihop está sendo usado para ativar DAITA na localização selecion
 msgctxt "wireguard-settings-view"
 msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
 msgstr "Multihop encaminha o tráfego para entrar num servidor WireGuard e sair por outro, dificultando o seguimento. Isto resulta em maior latência, mas aumenta o anonimato online."
+
+#. Section kicker label above the entry/exit relay selectors on the Multihop view.
+msgctxt "wireguard-settings-view"
+msgid "Servers"
+msgstr "Servidores"
+
+#. Accessibility label for the "Entry" server selector card on the Multihop view.
+msgctxt "wireguard-settings-view"
+msgid "Select entry server"
+msgstr "Selecionar servidor de entrada"
+
+#. Accessibility label for the "Exit" server selector card on the Multihop view.
+msgctxt "wireguard-settings-view"
+msgid "Select exit server"
+msgstr "Selecionar servidor de saída"
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -3173,8 +3350,8 @@ msgstr "Conectando..."
 msgid "Continue"
 msgstr "Continuar"
 
-msgid "Copied Mullvad account number to clipboard"
-msgstr "Número de conta VPN.vu copiado para a área de transferência"
+msgid "Copied VPN.vu account number to clipboard"
+msgstr "Número de conta VPN.vu copiado pra área de transferência"
 
 msgid "Copied logs to clipboard"
 msgstr "Logs copiados para a área de transferência"
@@ -3605,11 +3782,11 @@ msgstr "O método \"Atual\" representa o método que o aplicativo está usando p
 msgid "The app is blocking internet, please disconnect first"
 msgstr "O aplicativo está bloqueando a Internet. Desconecte primeiro"
 
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr "Não foi possível ao aplicativo criar uma conta devido a falta de acesso à API da VPN.vu."
+msgid "The app was unable to create an account due to not being able to reach the VPN.vu API."
+msgstr "Não foi possível criar uma conta porque o app não conseguiu acessar a API da VPN.vu."
 
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr "Não foi possível ao aplicativo iniciar sessão devido a falta de acesso à API da VPN.vu."
+msgid "The app was unable to login due to not being able to reach the VPN.vu API."
+msgstr "Não foi possível entrar porque o app não conseguiu acessar a API da VPN.vu."
 
 msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
 msgstr "O servidor DNS local não funcionará a menos que ative a \"Compartilhamento de rede local\" nas configurações de VPN."

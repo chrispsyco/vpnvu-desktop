@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { forwardRef, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 
 import { IconButton } from '../../../../../lib/components';
@@ -70,7 +70,7 @@ const StyledConnectionStatusContainer = styled.div<{
   transitionTimingFunction: 'ease-out',
 }));
 
-export function ConnectionPanel() {
+export const ConnectionPanel = forwardRef<HTMLDivElement>(function ConnectionPanel(_props, ref) {
   const [expanded, expandImpl, collapse, toggleExpandedImpl] = useBoolean();
   const tunnelState = useSelector((state) => state.connection.status);
 
@@ -97,7 +97,7 @@ export function ConnectionPanel() {
 
   return (
     <BackAction disabled={!expanded} action={collapse}>
-      <StyledConnectionPanel $expanded={expanded}>
+      <StyledConnectionPanel ref={ref} $expanded={expanded}>
         {allowExpand && (
           <StyledConnectionPanelChevron
             onClick={toggleExpanded}
@@ -126,4 +126,4 @@ export function ConnectionPanel() {
       </StyledConnectionPanel>
     </BackAction>
   );
-}
+});

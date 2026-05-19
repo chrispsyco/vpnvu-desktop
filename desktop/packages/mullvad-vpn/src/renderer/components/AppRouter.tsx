@@ -10,6 +10,7 @@ import {
   VoucherVerificationSuccess,
 } from './ExpiredAccountAddTime';
 import Focus, { IFocusHandle } from './Focus';
+import { PersistentGlobeLayer } from './PersistentGlobeLayer';
 import StateTriggeredNavigation from './StateTriggeredNavigation';
 import {
   AccountView,
@@ -30,6 +31,7 @@ import {
   MainView,
   ManageDevicesView,
   MultihopSettingsView,
+  PrivacyDisclaimerView,
   ProblemReportView,
   SelectLanguageView,
   SelectLocationView,
@@ -57,9 +59,11 @@ export default function AppRouter() {
   return (
     <>
       <StateTriggeredNavigation />
+      <PersistentGlobeLayer currentLocation={currentLocation} />
       <Focus ref={focusRef}>
         <Switch key={currentLocation.key} location={currentLocation}>
           <Route exact path={RoutePath.launch} component={LaunchView} />
+          <Route exact path={RoutePath.privacyDisclaimer} component={PrivacyDisclaimerView} />
           <Route exact path={RoutePath.login} component={LoginView} />
           <Route exact path={RoutePath.tooManyDevices} component={TooManyDevicesView} />
           <Route exact path={RoutePath.deviceRevoked} component={DeviceRevokedView} />

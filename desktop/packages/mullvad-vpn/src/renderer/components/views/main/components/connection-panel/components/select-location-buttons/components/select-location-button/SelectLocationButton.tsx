@@ -29,6 +29,8 @@ export function SelectLocationButton(props: ButtonProps) {
     push(RoutePath.selectLocation, { transition: TransitionType.show });
   }, [push]);
 
+  const showSwitchLabel = tunnelState === 'disconnected' && selectedRelayName !== 'Automatic';
+
   return (
     <Button
       onClick={onSelectLocation}
@@ -38,10 +40,14 @@ export function SelectLocationButton(props: ButtonProps) {
       )}
       {...props}>
       <Button.Text>
-        {tunnelState === 'disconnected' && selectedRelayName !== 'Automatic'
-          ? selectedRelayName
+        {showSwitchLabel
+          ? sprintf(
+              messages.pgettext('tunnel-control', 'Switch server · %(location)s'),
+              { location: selectedRelayName },
+            )
           : messages.pgettext('tunnel-control', 'Select a server')}
       </Button.Text>
+      {showSwitchLabel ? <Button.Icon icon="chevron-right" /> : null}
     </Button>
   );
 }

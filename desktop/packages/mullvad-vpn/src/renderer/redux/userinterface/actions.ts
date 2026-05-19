@@ -61,6 +61,15 @@ export interface ISetIsMacOs13OrNewer {
   isMacOs13OrNewer: boolean;
 }
 
+// Set true by LoginView when the user clicks "Criar conta", consumed by
+// getNavigationBase to force the privacy disclaimer route even if the user
+// has already accepted on a previous account. Reset to false after the
+// disclaimer's step-3 CTA fires `createNewAccount`.
+export interface ISetPendingCreateAccount {
+  type: 'SET_PENDING_CREATE_ACCOUNT';
+  pendingCreateAccount: boolean;
+}
+
 export type UserInterfaceAction =
   | IUpdateLocaleAction
   | IUpdateWindowArrowPositionAction
@@ -73,6 +82,7 @@ export type UserInterfaceAction =
   | ISetChangelog
   | ISetIsPerformingPostUpgrade
   | ISetSelectLocationView
+  | ISetPendingCreateAccount
   | ISetIsMacOs13OrNewer;
 
 function updateLocale(locale: string): IUpdateLocaleAction {
@@ -153,6 +163,13 @@ function setSelectLocationView(selectLocationView: LocationType): ISetSelectLoca
   };
 }
 
+function setPendingCreateAccount(pendingCreateAccount: boolean): ISetPendingCreateAccount {
+  return {
+    type: 'SET_PENDING_CREATE_ACCOUNT',
+    pendingCreateAccount,
+  };
+}
+
 function setIsMacOs13OrNewer(isMacOs13OrNewer: boolean): ISetIsMacOs13OrNewer {
   return {
     type: 'SET_IS_MACOS13_OR_NEWER',
@@ -173,4 +190,5 @@ export default {
   setIsPerformingPostUpgrade,
   setSelectLocationView,
   setIsMacOs13OrNewer,
+  setPendingCreateAccount,
 };

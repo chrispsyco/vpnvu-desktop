@@ -23,8 +23,10 @@ export function NonSplitApplicationSection() {
     [addApplication, forgetManuallyAddedApplicationAndUpdate],
   );
 
+  // `$thin` flips SectionTitle to the Geist Mono kicker style (matches the
+  // Figma `.mv-section-title` token: uppercase, tracked-out, muted color).
   const sectionTitle = (
-    <SectionTitle>{messages.pgettext('split-tunneling-view', 'All apps')}</SectionTitle>
+    <SectionTitle $thin>{messages.pgettext('split-tunneling-view', 'All apps')}</SectionTitle>
   );
 
   return (

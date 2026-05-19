@@ -16,6 +16,10 @@ export interface IUserInterfaceReduxState {
   isPerformingPostUpgrade: boolean;
   selectLocationView: LocationType;
   isMacOs13OrNewer: boolean;
+  // Set true by LoginView when the user kicks off "Criar conta". Consumed
+  // by getNavigationBase to force /privacy-disclaimer even when the flag is
+  // already true (so each new account flow still passes through the wizard).
+  pendingCreateAccount: boolean;
 }
 
 const initialState: IUserInterfaceReduxState = {
@@ -29,6 +33,7 @@ const initialState: IUserInterfaceReduxState = {
   isPerformingPostUpgrade: false,
   selectLocationView: LocationType.exit,
   isMacOs13OrNewer: true,
+  pendingCreateAccount: false,
 };
 
 export default function (
@@ -67,6 +72,25 @@ export default function (
       return {
         ...state,
         changelog: action.changelog,
+      };
+
+    case 'SET_PENDING_CREATE_ACCOUNT':
+      return {
+        ...state,
+        pendingCreateAccount: action.pendingCreateAccount,
+      };
+
+    // Clear any stale "Criar conta" flow lock when the create-account flow
+    // resolves (success or sign-out). Without ACCOUNT_CREATED in the list
+    // the gate would keep the user pinned on /privacy-disclaimer even after
+    // a new account was provisioned, because pendingCreateAccount stayed
+    // true. LOGGED_OUT also fires on initial app startup if the daemon
+    // reports a logged-out device, which makes that one a safe no-op there.
+    case 'ACCOUNT_CREATED':
+    case 'LOGGED_OUT':
+      return {
+        ...state,
+        pendingCreateAccount: false,
       };
 
     case 'SET_IS_PERFORMING_POST_UPGRADE':

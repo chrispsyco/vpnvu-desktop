@@ -8,9 +8,12 @@ import { useRelaySettingsUpdater } from '../../../../../lib/constraint-updater';
 import { useNormalRelaySettings } from '../../../../../lib/relay-settings-hooks';
 import { useFilteredProviders } from '../../../filter/hooks';
 import { useScrollPositionContext } from '../../ScrollPositionContext';
+import { FilterChipShell } from '../filter-chips/StyledFilterChipShell';
 
 export type ProvidersFilterChip = FilterChipProps;
 
+// Providers chip · clickable, clears providers list on tap. The cyan-pill
+// VPN.vu repaint is applied via FilterChipShell parent wrapper.
 export function ProvidersFilterChip(props: ProvidersFilterChip) {
   const relaySettingsUpdater = useRelaySettingsUpdater();
   const { resetScrollPositions } = useScrollPositionContext();
@@ -27,13 +30,15 @@ export function ProvidersFilterChip(props: ProvidersFilterChip) {
   }, [relaySettingsUpdater, resetScrollPositions, relaySettings]);
 
   return (
-    <FilterChip aria-label={messages.gettext('Clear')} onClick={onClearProviders} {...props}>
-      <FilterChip.Text>
-        {sprintf(messages.pgettext('select-location-view', 'Providers: %(numberOfProviders)d'), {
-          numberOfProviders: filteredProviders.length,
-        })}
-      </FilterChip.Text>
-      <FilterChip.Icon icon="cross" />
-    </FilterChip>
+    <FilterChipShell>
+      <FilterChip aria-label={messages.gettext('Clear')} onClick={onClearProviders} {...props}>
+        <FilterChip.Text>
+          {sprintf(messages.pgettext('select-location-view', 'Providers: %(numberOfProviders)d'), {
+            numberOfProviders: filteredProviders.length,
+          })}
+        </FilterChip.Text>
+        <FilterChip.Icon icon="cross" />
+      </FilterChip>
+    </FilterChipShell>
   );
 }

@@ -39,11 +39,21 @@ export type LocationStateOptions = SuppressOutdatedVersionOption | ScrollToAncho
 
 export type IChangelog = Array<string>;
 
+// VPN.vu fork: arbitrary string passed by a navigation source to signal
+// the *reason* the user landed on a destination view, so the destination can
+// adapt its CTAs/copy. Today the only producer is `LoginView` (button "criar
+// conta") and the only consumer is `PrivacyDisclaimerView` (step 3 final CTA
+// label + post-accept action). We keep it as an optional string union so new
+// intents can be added without touching every route. Don't put PII here — it
+// gets serialized to the persisted history snapshot.
+export type LocationIntent = 'create-account';
+
 export interface LocationState {
   scrollPosition: [number, number];
   expandedSections: Record<string, boolean>;
   transition: TransitionType;
   options?: LocationStateOptions[];
+  intent?: LocationIntent;
 }
 
 export interface IHistoryObject {

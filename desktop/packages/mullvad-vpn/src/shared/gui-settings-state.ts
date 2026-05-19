@@ -38,4 +38,9 @@ export interface IGuiSettingsState {
 
   // Tells the app whether or not to show the map in the main view.
   animateMap: boolean;
+
+  // Whether the user has accepted the first-boot privacy disclaimer.
+  // Until this is true the StateTriggeredNavigation routes to
+  // RoutePath.privacyDisclaimer before the login view.
+  hasAcceptedPrivacyDisclaimer: boolean;
 }

@@ -8,28 +8,38 @@ import log from '../../../../shared/logging';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
 import { LockdownModeSwitch } from '../../../features/tunnel/components';
-import { Button, Flex } from '../../../lib/components';
-import { FlexColumn } from '../../../lib/components/flex-column';
+import { Button } from '../../../lib/components';
+import { Image } from '../../../lib/components/image';
 import { View } from '../../../lib/components/view';
 import { spacings } from '../../../lib/foundations';
 import { useHistory } from '../../../lib/history';
 import { useExclusiveTask } from '../../../lib/hooks/use-exclusive-task';
-import { IconBadge } from '../../../lib/icon-badge';
 import { formatDeviceName } from '../../../lib/utils';
 import { useSelector } from '../../../redux/store';
+import AccountNumberLabel from '../../AccountNumberLabel';
 import { AppMainHeader } from '../../app-main-header';
 import DeviceInfoButton from '../../DeviceInfoButton';
-import {
-  StyledAccountNumberContainer,
-  StyledAccountNumberLabel,
-  StyledAccountNumberMessage,
-  StyledCustomScrollbars,
-  StyledDeviceLabel,
-  StyledMessage,
-  StyledTitle,
-} from '../../ExpiredAccountErrorViewStyles';
+import { StyledCustomScrollbars } from '../../ExpiredAccountErrorViewStyles';
 import { ModalAlert, ModalAlertType, ModalMessage } from '../../Modal';
 import { SettingsListItem } from '../../settings-list-item';
+import {
+  StyledAccountCard,
+  StyledAccountCardLabel,
+  StyledAccountCardValue,
+  StyledActions,
+  StyledCopyHint,
+  StyledDescription,
+  StyledDeviceRow,
+  StyledDivider,
+  StyledExpiredAtmosphere,
+  StyledExpiredRoot,
+  StyledHeading,
+  StyledHeroIcon,
+  StyledHeroSlot,
+  StyledKicker,
+  StyledRecoveryHint,
+  StyledStack,
+} from './ExpiredAccountErrorStyles';
 
 enum RecoveryAction {
   openBrowser,
@@ -40,6 +50,18 @@ enum RecoveryAction {
 const StyledSettingsToggleListItem = styled(SettingsListItem)`
   margin-top: ${spacings.medium};
 `;
+
+// Account number label spec for both Out-of-time and Welcome screens — bumped
+// weight + cyan-friendly letter spacing. We keep `AccountNumberLabel` (which
+// wraps ClipboardLabel) so the copy-to-clipboard affordance still works.
+const StyledAccountNumber = styled(AccountNumberLabel)({
+  fontFamily: '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+  fontSize: '16px',
+  fontWeight: 700,
+  lineHeight: '22px',
+  letterSpacing: '0.06em',
+  color: 'var(--color-white)',
+});
 
 export function ExpiredAccountErrorView() {
   return (
@@ -71,50 +93,53 @@ function ExpiredAccountErrorViewComponent() {
 
   return (
     <View backgroundColor="darkBlue">
-      <AppMainHeader
-        variant={isNewAccount ? 'default' : 'basedOnConnectionStatus'}
-        size="basedOnLoginStatus">
-        <AppMainHeader.AccountButton />
-        <AppMainHeader.SettingsButton />
-      </AppMainHeader>
-      <StyledCustomScrollbars fillContainer>
-        <View.Content>
-          <View.Container
-            flexDirection="column"
-            horizontalMargin="large"
-            margin={{ top: 'large' }}
-            flexGrow={1}
-            justifyContent="space-between">
-            <FlexColumn>{isNewAccount ? <WelcomeView /> : <Content />}</FlexColumn>
+      <StyledExpiredRoot>
+        <StyledExpiredAtmosphere aria-hidden="true" />
+        <AppMainHeader
+          variant={isNewAccount ? 'default' : 'basedOnConnectionStatus'}
+          size="basedOnLoginStatus">
+          <AppMainHeader.AccountButton />
+          <AppMainHeader.SettingsButton />
+        </AppMainHeader>
+        <StyledCustomScrollbars fillContainer>
+          <View.Content>
+            <View.Container
+              flexDirection="column"
+              horizontalMargin="large"
+              margin={{ top: 'large' }}
+              flexGrow={1}
+              justifyContent="space-between">
+              {isNewAccount ? <WelcomeView /> : <Content />}
 
-            <FlexColumn gap="medium">
-              {recoveryAction === RecoveryAction.disconnect && (
-                <Button variant="destructive" disabled={disconnecting} onClick={disconnect}>
+              <StyledActions>
+                {recoveryAction === RecoveryAction.disconnect && (
+                  <Button variant="destructive" disabled={disconnecting} onClick={disconnect}>
+                    <Button.Text>
+                      {
+                        // TRANSLATORS: Button label for disconnecting from the VPN.
+                        messages.pgettext('connect-view', 'Disconnect')
+                      }
+                    </Button.Text>
+                  </Button>
+                )}
+
+                <ExternalPaymentButton />
+
+                <Button variant="success" onClick={navigateToRedeemVoucher}>
                   <Button.Text>
                     {
-                      // TRANSLATORS: Button label for disconnecting from the VPN.
-                      messages.pgettext('connect-view', 'Disconnect')
+                      // TRANSLATORS: Button label for navigating to the voucher redemption view.
+                      messages.pgettext('connect-view', 'Redeem voucher')
                     }
                   </Button.Text>
                 </Button>
-              )}
+              </StyledActions>
 
-              <ExternalPaymentButton />
-
-              <Button variant="success" onClick={navigateToRedeemVoucher}>
-                <Button.Text>
-                  {
-                    // TRANSLATORS: Button label for navigating to the voucher redemption view.
-                    messages.pgettext('connect-view', 'Redeem voucher')
-                  }
-                </Button.Text>
-              </Button>
-            </FlexColumn>
-
-            <LockdownModeAlert />
-          </View.Container>
-        </View.Content>
-      </StyledCustomScrollbars>
+              <LockdownModeAlert />
+            </View.Container>
+          </View.Content>
+        </StyledCustomScrollbars>
+      </StyledExpiredRoot>
     </View>
   );
 }
@@ -124,46 +149,85 @@ function WelcomeView() {
   const { recoveryMessage } = useRecoveryAction();
 
   return (
-    <>
-      <StyledTitle data-testid="title">
+    <StyledStack>
+      {/* Hero chip with the volcano brand mark sitting on the cyan gradient.
+          The image is decorative (the label below carries semantic value). */}
+      <StyledHeroSlot>
+        <StyledHeroIcon $variant="spark" aria-hidden="true">
+          <Image source="logo-icon" alt="" />
+        </StyledHeroIcon>
+      </StyledHeroSlot>
+
+      <StyledKicker $variant="brand">
+        {
+          // TRANSLATORS: Eyebrow kicker shown above the welcome title for newly created accounts.
+          messages.pgettext('connect-view', 'Welcome · your account is ready')
+        }
+      </StyledKicker>
+
+      <StyledHeading variant="titleBig" as="h1" data-testid="title">
         {messages.pgettext('connect-view', 'Congrats!')}
-      </StyledTitle>
-      <StyledAccountNumberMessage>
-        {messages.pgettext('connect-view', 'Here’s your account number. Save it!')}
-        <StyledAccountNumberContainer>
-          <StyledAccountNumberLabel
+      </StyledHeading>
+
+      <StyledDescription>
+        {
+          // TRANSLATORS: Subtitle shown to a brand-new account, framing the "add time" CTA below.
+          messages.pgettext(
+            'connect-view',
+            'To start using the app, you first need to add time to your account.',
+          )
+        }
+      </StyledDescription>
+
+      <StyledAccountCard>
+        <StyledAccountCardLabel>
+          {
+            // TRANSLATORS: Section label above the account number on the welcome screen.
+            messages.pgettext('connect-view', 'Your account number')
+          }
+        </StyledAccountCardLabel>
+        <StyledAccountCardValue>
+          <StyledAccountNumber
             accountNumber={account.accountNumber || ''}
             obscureValue={false}
           />
-        </StyledAccountNumberContainer>
-      </StyledAccountNumberMessage>
+        </StyledAccountCardValue>
+        <StyledCopyHint>
+          {
+            // TRANSLATORS: Tiny hint under the account number telling the user the number is tap-to-copy.
+            messages.pgettext('connect-view', 'Tap the number to copy')
+          }
+        </StyledCopyHint>
+        <StyledDeviceRow>
+          <span>
+            {sprintf(
+              // TRANSLATORS: A label that will display the newly created device name to inform the user
+              // TRANSLATORS: about it.
+              // TRANSLATORS: Available placeholders:
+              // TRANSLATORS: %(deviceName)s - The name of the current device
+              messages.pgettext('device-management', 'Device name: %(deviceName)s'),
+              {
+                deviceName: formatDeviceName(account.deviceName ?? ''),
+              },
+            )}
+          </span>
+          <DeviceInfoButton />
+        </StyledDeviceRow>
+      </StyledAccountCard>
 
-      <Flex alignItems="center" gap="tiny" margin={{ bottom: 'medium' }}>
-        <StyledDeviceLabel>
-          {sprintf(
-            // TRANSLATORS: A label that will display the newly created device name to inform the user
-            // TRANSLATORS: about it.
-            // TRANSLATORS: Available placeholders:
-            // TRANSLATORS: %(deviceName)s - The name of the current device
-            messages.pgettext('device-management', 'Device name: %(deviceName)s'),
-            {
-              deviceName: formatDeviceName(account.deviceName ?? ''),
-            },
-          )}
-        </StyledDeviceLabel>
-        <DeviceInfoButton />
-      </Flex>
+      <StyledDivider aria-hidden="true" />
 
-      <StyledMessage>
-        {sprintf('%(introduction)s %(recoveryMessage)s', {
-          introduction: messages.pgettext(
-            'connect-view',
-            'To start using the app, you first need to add time to your account.',
-          ),
-          recoveryMessage,
-        })}
-      </StyledMessage>
-    </>
+      {/* Recovery hint — small cyan-tinted line that surfaces the recovery
+          instruction without competing with the headline. */}
+      <StyledRecoveryHint>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+             strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4M12 8h.01" />
+        </svg>
+        <span>{recoveryMessage}</span>
+      </StyledRecoveryHint>
+    </StyledStack>
   );
 }
 
@@ -171,23 +235,53 @@ function Content() {
   const { recoveryMessage } = useRecoveryAction();
 
   return (
-    <>
-      <Flex justifyContent="center" margin={{ bottom: 'medium' }}>
-        <IconBadge state="negative" />
-      </Flex>
-      <StyledTitle data-testid="title">
+    <StyledStack>
+      <StyledHeroSlot>
+        <StyledHeroIcon $variant="negative" aria-hidden="true">
+          {/* Clock glyph matching the figma `.oot-hero__icon` for out-of-time. */}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+               strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+        </StyledHeroIcon>
+      </StyledHeroSlot>
+
+      <StyledKicker $variant="negative">
+        {
+          // TRANSLATORS: Eyebrow kicker shown above the out-of-time title.
+          messages.pgettext('connect-view', 'Time expired')
+        }
+      </StyledKicker>
+
+      <StyledHeading variant="titleBig" as="h1" data-testid="title">
         {messages.pgettext('connect-view', 'Out of time')}
-      </StyledTitle>
-      <StyledMessage>
-        {sprintf('%(introduction)s %(recoveryMessage)s', {
-          introduction: messages.pgettext(
+      </StyledHeading>
+
+      <StyledDescription>
+        {
+          // TRANSLATORS: Primary out-of-time copy. The recovery hint below carries the actionable detail.
+          messages.pgettext(
             'connect-view',
             'You have no more VPN time left on this account.',
-          ),
-          recoveryMessage,
-        })}
-      </StyledMessage>
-    </>
+          )
+        }
+      </StyledDescription>
+
+      <StyledDivider aria-hidden="true" />
+
+      {/* Recovery hint — explains *how* to get back online without piling
+          another wall of text onto the description. Cyan icon + muted body
+          keeps it secondary to the headline. */}
+      <StyledRecoveryHint>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+             strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4M12 8h.01" />
+        </svg>
+        <span>{recoveryMessage}</span>
+      </StyledRecoveryHint>
+    </StyledStack>
   );
 }
 

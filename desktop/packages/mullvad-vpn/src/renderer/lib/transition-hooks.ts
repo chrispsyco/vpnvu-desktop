@@ -5,12 +5,9 @@ import { ViewTransition } from '../../../types/global';
 import { LocationState } from '../../shared/ipc-types';
 import { useAppContext } from '../context';
 import { TransitionType, useHistory } from '../lib/history';
-import { getReduceMotion } from './functions';
 import { useEffectEvent } from './utility-hooks';
 
 type QueueItem = { location: Location<LocationState>; transition: TransitionType };
-
-const TRANSITION_DURATION = 450;
 
 const viewTransitionRef: { current?: ViewTransition } = {};
 
@@ -46,30 +43,14 @@ export function useViewTransitions(onTransition?: () => void): Location<Location
   });
 
   const transitionToView = useEffectEvent(
-    (location: Location<LocationState>, transition: TransitionType) => {
-      if (getReduceMotion()) {
-        updateView(location);
-        setTimeout(() => onTransitionEnd(location));
-        return;
-      }
-
-      viewTransitionRef.current = document.startViewTransition(() => {
-        updateView(location);
-      });
-
-      void viewTransitionRef.current.ready.then(() => animateNavigation(transition));
-      void viewTransitionRef.current.finished.then(() => {
-        const queueLocation = queuedLocationRef.current;
-
-        delete viewTransitionRef.current;
-        delete queuedLocationRef.current;
-
-        if (queueLocation) {
-          transitionToView(queueLocation.location, queueLocation.transition);
-        } else {
-          onTransitionEnd?.(location);
-        }
-      });
+    (location: Location<LocationState>, _transition: TransitionType) => {
+      // Skip the View Transitions snapshot animation entirely. The snapshot
+      // pair leaves a visible "middle frame" where old and new sit side by
+      // side at partial transforms, which reads as a flash on the 405x720
+      // viewport. Each view's <PageTransition> still runs its own component-
+      // level entrance (opacity + small slide) for polish.
+      updateView(location);
+      setTimeout(() => onTransitionEnd(location));
     },
   );
 
@@ -97,43 +78,3 @@ export function useViewTransitions(onTransition?: () => void): Location<Location
   return currentLocation;
 }
 
-function animateNavigation(transition: TransitionType) {
-  const oldInFront = transition === TransitionType.dismiss || transition === TransitionType.pop;
-  const oldZIndex = oldInFront ? 2 : 0;
-
-  document.documentElement.animate(
-    [
-      { transform: 'translate(0%, 0%)', zIndex: oldZIndex },
-      { transform: oldToTransform[transition], zIndex: oldZIndex },
-    ],
-    {
-      duration: TRANSITION_DURATION,
-      easing: 'ease-in-out',
-      pseudoElement: '::view-transition-old(root)',
-    },
-  );
-  document.documentElement.animate(
-    [{ transform: newFromTransform[transition] }, { transform: 'translate(0%, 0%)' }],
-    {
-      duration: TRANSITION_DURATION,
-      easing: 'ease-in-out',
-      pseudoElement: '::view-transition-new(root)',
-    },
-  );
-}
-
-const oldToTransform = {
-  [TransitionType.show]: 'translateY(0%)',
-  [TransitionType.dismiss]: 'translateY(100%)',
-  [TransitionType.push]: 'translateX(-33%)',
-  [TransitionType.pop]: 'translateX(100%)',
-  [TransitionType.none]: '',
-};
-
-const newFromTransform = {
-  [TransitionType.show]: 'translateY(100%)',
-  [TransitionType.dismiss]: 'translateY(0%)',
-  [TransitionType.push]: 'translateX(100%)',
-  [TransitionType.pop]: 'translateX(-33%)',
-  [TransitionType.none]: '',
-};

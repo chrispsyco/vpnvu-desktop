@@ -2,9 +2,7 @@ import { useRecents } from '../../../../../features/locations/hooks';
 import type { LocationType } from '../../../../../features/locations/types';
 import { Expandable } from '../../../../../lib/components/expandable';
 import { FlexColumn } from '../../../../../lib/components/flex-column';
-import { useHasCustomLists } from '../../hooks';
 import { CountryLocations } from '../country-locations';
-import { CustomListLocations } from '../custom-list-locations';
 import { NoSearchResult } from '../no-search-result';
 import { RecentLocations } from '../recent-locations';
 import { useHasSearched, useHasSearchedLocations } from './hooks';
@@ -14,17 +12,20 @@ export type LocationsListsProps = React.PropsWithChildren & {
   type: LocationType;
 };
 
+/**
+ * Custom lists (`<CustomListLocations />`) intencionalmente removidas no v1
+ * do VPN.vu — Chris pediu pra cortar a seção da picker enquanto a feature
+ * não tem espaço no produto. Pra reativar, re-importar `CustomListLocations`
+ * + `useHasCustomLists` e adicionar ao FlexColumn entre Recents e Countries.
+ */
 export function LocationLists(props: LocationsListsProps) {
   const { hasRecents } = useRecents();
   const hasSearched = useHasSearched();
-  const hasVisibleCustomLists = useHasCustomLists();
   const hasSearchedLocations = useHasSearchedLocations();
 
   const showRecentLocations = !hasSearched && hasRecents;
-  const showCustomListLocationLists = !hasSearched || hasVisibleCustomLists;
   const showCountryLocations = !hasSearched || hasSearchedLocations;
-  const showNoSearchResult =
-    hasSearched && !showCustomListLocationLists && !showCountryLocations && !showRecentLocations;
+  const showNoSearchResult = hasSearched && !showCountryLocations && !showRecentLocations;
 
   return (
     <LocationListsProvider {...props}>
@@ -34,7 +35,6 @@ export function LocationLists(props: LocationsListsProps) {
         </Expandable.Content>
       </Expandable>
       <FlexColumn gap="large">
-        {showCustomListLocationLists && <CustomListLocations />}
         {showCountryLocations && <CountryLocations />}
         {showNoSearchResult && <NoSearchResult />}
       </FlexColumn>

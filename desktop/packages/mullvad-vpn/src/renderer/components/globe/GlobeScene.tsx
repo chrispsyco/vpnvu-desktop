@@ -2,6 +2,8 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
+const GLOBE_OFFSET_Y = -0.55;
+
 import { peekFocus } from '../../lib/globe/globe-focus';
 import { getGlobeRotationX } from '../../lib/globe/globe-rotation';
 import { usePauseWhenHidden } from '../../lib/globe/usePauseWhenHidden';
@@ -50,6 +52,27 @@ function CameraZoomController({ baseZ }: { baseZ: number }) {
   });
   return null;
 }
+
+/**
+ * Aligns the camera's vertical position with the globe's vertical offset so
+ * the camera looks straight at the globe's centre instead of angling down at
+ * it. Without this, the canvas centre sits above the globe centre and the
+ * scene reads as "looking up from below" — country shapes lean back and the
+ * upper hemisphere dominates the frame.
+ *
+ * Pairs with the `<group position={[0, GLOBE_OFFSET_Y, 0]}>` wrapper around
+ * the globe content below.
+ */
+function CameraAlign({ offsetY }: { offsetY: number }) {
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.position.y = offsetY;
+    camera.lookAt(0, offsetY, 0);
+    camera.updateProjectionMatrix();
+  }, [camera, offsetY]);
+  return null;
+}
+
 
 /**
  * Compute a sensible device pixel ratio for the Electron window.
@@ -134,7 +157,7 @@ export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeScene
   return (
     <Canvas
       dpr={dpr}
-      camera={{ position: [0, 0, cameraZ], fov: cameraFov }}
+      camera={{ position: [0, GLOBE_OFFSET_Y, cameraZ], fov: cameraFov }}
       gl={{ antialias: true, alpha: true }}
       frameloop={hidden ? 'never' : 'always'}
     >
@@ -142,10 +165,13 @@ export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeScene
       <Suspense fallback={null}>
         <GlobeRotator />
         <CameraZoomController baseZ={cameraZ} />
+        <CameraAlign offsetY={GLOBE_OFFSET_Y} />
         {/* Vertical offset slides the whole globe down so the visible centre
             lines up with the middle of the area between header and connect
-            card (not with the canvas centre, which sits a bit too high). */}
-        <group position={[0, -0.55, 0]}>
+            card (not with the canvas centre, which sits a bit too high).
+            CameraAlign above tilts the camera to match, so the perspective
+            stays straight-on rather than reading as "looking up from below". */}
+        <group position={[0, GLOBE_OFFSET_Y, 0]}>
           <Atmosphere />
           <TiltedGlobe>
             <GlobeCore radius={1.59} />

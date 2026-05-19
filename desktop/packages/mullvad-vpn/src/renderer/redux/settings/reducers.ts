@@ -111,6 +111,7 @@ const initialState: ISettingsReduxState = {
     changelogDisplayedForVersion: '',
     updateDismissedForVersion: '',
     animateMap: true,
+    hasAcceptedPrivacyDisclaimer: false,
   },
   relaySettings: {
     normal: {

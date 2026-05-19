@@ -1,15 +1,19 @@
 import { useEffect } from 'react';
 
-import { clearFocus, requestFocus } from './globe-focus';
+import { requestFocus } from './globe-focus';
 
 /**
  * Bind a (lat, lng) pair to the globe focus target. When `lat`/`lng` are both
  * finite numbers, the globe runs a zoom-out → pan → zoom-in animation toward
  * that point. Pass `undefined`/`null` (or NaN) to release control.
  *
- * The hook only triggers a new transition when the coordinates change — it
- * does NOT clear-then-set on every render, which would have caused a one-frame
- * idle stall (visible as a "stutter") between transitions.
+ * The focus STATE in `globe-focus.ts` is a module-level singleton — it
+ * survives React unmounts. We deliberately do NOT call `clearFocus()` on
+ * unmount: navigating to Account/Settings unmounts MainView (and the globe
+ * with it), and clearing the lock would force the next mount to re-run the
+ * full focus animation from idle drift to the same destination.
+ * `requestFocus` itself no-ops when the coord hasn't changed, so re-mounting
+ * is free.
  */
 export function useFocusOnLocation(lat: number | undefined, lng: number | undefined): void {
   useEffect(() => {
@@ -17,10 +21,4 @@ export function useFocusOnLocation(lat: number | undefined, lng: number | undefi
       requestFocus({ lat, lng });
     }
   }, [lat, lng]);
-
-  // Only release on full unmount — switching coordinates re-runs the effect
-  // above without dropping the lock in between.
-  useEffect(() => {
-    return () => clearFocus();
-  }, []);
 }
