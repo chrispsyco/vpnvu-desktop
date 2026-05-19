@@ -12,13 +12,32 @@ export default function StateTriggeredNavigation() {
 
   const connectedToDaemon = useSelector((state) => state.userInterface.connectedToDaemon);
   const loginState = useSelector((state) => state.account.status);
+  const hasAcceptedPrivacyDisclaimer = useSelector(
+    (state) => state.settings.guiSettings.hasAcceptedPrivacyDisclaimer,
+  );
+  const pendingCreateAccount = useSelector(
+    (state) => state.userInterface.pendingCreateAccount,
+  );
 
   const delayScheduler = useScheduler();
 
-  const prevPath = useRef<RoutePath>(getNavigationBase(connectedToDaemon, loginState));
+  const prevPath = useRef<RoutePath>(
+    getNavigationBase(
+      connectedToDaemon,
+      loginState,
+      hasAcceptedPrivacyDisclaimer,
+      pendingCreateAccount,
+    ),
+  );
   const nextPath = useMemo(
-    () => getNavigationBase(connectedToDaemon, loginState),
-    [connectedToDaemon, loginState],
+    () =>
+      getNavigationBase(
+        connectedToDaemon,
+        loginState,
+        hasAcceptedPrivacyDisclaimer,
+        pendingCreateAccount,
+      ),
+    [connectedToDaemon, loginState, hasAcceptedPrivacyDisclaimer, pendingCreateAccount],
   );
 
   const updatePath = useEffectEvent((nextPath: RoutePath) => {

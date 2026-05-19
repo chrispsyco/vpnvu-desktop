@@ -7,6 +7,7 @@ import { LocationType } from '../../../features/locations/types';
 import { useMultihop } from '../../../features/multihop/hooks';
 import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
+import { useSelector } from '../../../redux/store';
 import { AppNavigationHeader } from '../../';
 import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
@@ -21,7 +22,13 @@ import {
   SpacePreAllocationView,
 } from './components';
 import { ScrollPositionContextProvider, useScrollPositionContext } from './ScrollPositionContext';
-import { StyledScopeBar } from './SelectLocationStyles';
+import {
+  StyledCurrentLocationCard,
+  StyledCurrentLocationHostname,
+  StyledCurrentLocationKicker,
+  StyledCurrentLocationTitle,
+  StyledScopeBar,
+} from './SelectLocationStyles';
 import {
   SelectLocationViewProvider,
   useSelectLocationViewContext,
@@ -37,6 +44,18 @@ export function SelectLocationViewImpl() {
   const { daitaDirectOnly } = useDaitaDirectOnly();
   const { multihop } = useMultihop();
   const { isAnyFilterActive } = useActiveFilters(locationType);
+
+  // Current-location card (Figma `.sl-card`): shows the user's active or last
+  // known exit. country/city populate from the daemon's NEW_LOCATION event;
+  // hostname only exists once a tunnel is up. We render the card whenever we
+  // at least know a country, and label it "Local atual · saída" if connected,
+  // otherwise "Última saída conhecida" so it never lies about an active link.
+  const connectionCountry = useSelector((state) => state.connection.country);
+  const connectionCity = useSelector((state) => state.connection.city);
+  const connectionHostname = useSelector((state) => state.connection.hostname);
+  const connectionStatusState = useSelector((state) => state.connection.status.state);
+  const isConnected = connectionStatusState === 'connected';
+  const showCurrentLocationCard = Boolean(connectionCountry);
 
   const onClose = useCallback(() => history.pop(), [history]);
 
@@ -70,6 +89,26 @@ export function SelectLocationViewImpl() {
             flexDirection="column"
             horizontalMargin="medium"
             padding={{ bottom: 'small' }}>
+            {showCurrentLocationCard && (
+              <StyledCurrentLocationCard aria-live="polite">
+                <StyledCurrentLocationKicker>
+                  {isConnected
+                    ? // TRANSLATORS: Kicker label above the current exit location on the select-location card.
+                      messages.pgettext('select-location-view', 'Local atual · saída')
+                    : // TRANSLATORS: Kicker label when the user is NOT currently connected — shows the last known exit instead.
+                      messages.pgettext('select-location-view', 'Última saída')}
+                </StyledCurrentLocationKicker>
+                <StyledCurrentLocationTitle>
+                  {connectionCity ? `${connectionCountry} · ${connectionCity}` : connectionCountry}
+                </StyledCurrentLocationTitle>
+                {connectionHostname && (
+                  <StyledCurrentLocationHostname>
+                    {connectionHostname}
+                  </StyledCurrentLocationHostname>
+                )}
+              </StyledCurrentLocationCard>
+            )}
+
             {multihop && (
               <StyledScopeBar selectedIndex={locationType} onChange={changeLocationType}>
                 <ScopeBarItem>{messages.pgettext('select-location-view', 'Entry')}</ScopeBarItem>

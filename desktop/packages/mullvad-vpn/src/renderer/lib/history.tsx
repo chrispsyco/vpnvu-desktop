@@ -210,6 +210,13 @@ export default class History {
       expandedSections: state?.expandedSections ?? {},
       transition: state?.transition ?? TransitionType.none,
       options: state?.options,
+      // Forwarded by navigation sources (e.g. LoginView -> "Criar conta") so
+      // destination views can adapt their CTAs/copy. Without this the field
+      // was silently dropped here and PrivacyDisclaimerView always read
+      // `intent === undefined`, which broke the create-account path entirely
+      // (final CTA stayed "Aceitar e começar" instead of "Aceitar e criar
+      // conta" and never fired createNewAccount).
+      intent: state?.intent,
     };
   }
 

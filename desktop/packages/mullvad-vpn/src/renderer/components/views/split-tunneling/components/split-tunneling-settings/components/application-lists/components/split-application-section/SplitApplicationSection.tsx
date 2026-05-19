@@ -19,8 +19,10 @@ export function SplitApplicationSection() {
     [removeApplication],
   );
 
+  // `$thin` flips SectionTitle to the Geist Mono kicker style (matches the
+  // Figma `.mv-section-title` token: uppercase, tracked-out, muted color).
   const sectionTitle = (
-    <SectionTitle>{messages.pgettext('split-tunneling-view', 'Excluded apps')}</SectionTitle>
+    <SectionTitle $thin>{messages.pgettext('split-tunneling-view', 'Excluded apps')}</SectionTitle>
   );
 
   return (

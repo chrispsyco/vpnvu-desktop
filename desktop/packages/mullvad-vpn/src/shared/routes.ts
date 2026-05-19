@@ -1,5 +1,6 @@
 export enum RoutePath {
   launch = '/',
+  privacyDisclaimer = '/privacy-disclaimer',
   login = '/login',
   tooManyDevices = '/login/too-many-devices',
   deviceRevoked = '/login/device-revoked',

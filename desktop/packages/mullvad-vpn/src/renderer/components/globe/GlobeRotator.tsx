@@ -48,7 +48,11 @@ export function GlobeRotator() {
     }
 
     if (frame.locked) {
-      // Parked on destination — don't touch rotation, no idle drift.
+      // Parked on destination. We don't run idle drift here, but we DO write
+      // the focus frame's X so the dynamic-tilt parking lerp (driven by the
+      // viewport obstacle store) can subtly re-aim the camera as the
+      // connection panel expands or a notification banner appears.
+      setGlobeRotationX(frame.x);
       return;
     }
 

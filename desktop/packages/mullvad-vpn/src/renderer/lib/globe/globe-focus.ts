@@ -13,6 +13,7 @@
  */
 
 import { getGlobeRotationX, getGlobeRotationY } from './globe-rotation';
+import { computeFocusTargetY } from './globe-viewport';
 
 export interface GlobeFocus {
   lat: number;
@@ -53,11 +54,26 @@ const ZOOM_OUT_PEAK = 1.35;
 /**
  * Where the focused city should land vertically on the globe, in units of the
  * globe radius (0 = equator on screen, 1 = top of the globe). Translates into
- * an extra tilt of `asin(FOCUS_TARGET_Y)` radians, regardless of the city's
- * latitude — so São Paulo and Stockholm both park at the same screen height,
- * comfortably above the connection panel.
+ * an extra tilt of `asin(targetY)` radians, regardless of the city's latitude —
+ * so São Paulo and Stockholm both park at the same screen height.
+ *
+ * Slightly negative so the pin sits ~30px below the vertical centre of the
+ * visible band, giving the upper hemisphere a touch more breathing room above
+ * the active country. `computeFocusTargetY()` adds an obstacle-driven shift
+ * on top so the relative offset stays constant when the notification banner
+ * or expanded connection panel cover part of the globe.
  */
-const FOCUS_TARGET_Y = 0.4;
+const FOCUS_TARGET_Y_BASE = -0.05;
+
+/** Per-second rate at which parking tilt eases toward the dynamic target. */
+const PARKING_TILT_RATE = 3.5;
+/** Stop lerping once we're within this many radians of the target. */
+const PARKING_TILT_EPSILON = 0.0005;
+
+function desiredTargetX(latDeg: number): number {
+  const targetY = computeFocusTargetY(FOCUS_TARGET_Y_BASE);
+  return (latDeg * Math.PI) / 180 - Math.asin(targetY);
+}
 
 const STATE: {
   target: GlobeFocus | null;
@@ -104,17 +120,30 @@ function zoomBell(t: number): number {
  * Begin a focus transition to (lat, lng). Captures the current rotation as
  * the starting point so the animation continues smoothly from wherever the
  * globe is right now — including mid-transition re-targeting.
+ *
+ * No-op when the requested coordinate already matches the parked target
+ * (within 0.01°) and no timeline is in flight. Without this guard, returning
+ * to the main view from Account/Settings would re-run the full zoom-out → pan
+ * → zoom-in even though the destination didn't change.
  */
 export function requestFocus(target: GlobeFocus): void {
+  if (
+    STATE.target &&
+    STATE.timeline === null &&
+    Math.abs(STATE.target.lat - target.lat) < 0.01 &&
+    Math.abs(STATE.target.lng - target.lng) < 0.01
+  ) {
+    return;
+  }
   const currentY = getGlobeRotationY();
   const currentX = getGlobeRotationX();
   const desiredY = yForLng(target.lng);
   // Resolve shortest angular path (avoid spinning the long way around)
   const delta = wrapAngle(desiredY - currentY);
-  // Tilt so the target point ends up at view-y = FOCUS_TARGET_Y on the
-  // globe's surface. After rotating the (lat, 0) point by -X around X, its
-  // world-Y is sin(lat - X), so we want X = lat - asin(FOCUS_TARGET_Y).
-  const targetX = (target.lat * Math.PI) / 180 - Math.asin(FOCUS_TARGET_Y);
+  // Tilt so the target point ends up at the dynamic view-y on the globe's
+  // surface. After rotating the (lat, 0) point by -X around X, its world-Y is
+  // sin(lat - X), so we want X = lat - asin(targetY).
+  const targetX = desiredTargetX(target.lat);
   STATE.target = target;
   STATE.timeline = {
     startY: currentY,
@@ -143,9 +172,29 @@ export function tickFocus(dt: number): GlobeFocusFrame {
 
   if (!tl) {
     // No timeline in flight. If a target is still locked, hold the previous
-    // rotation/zoom so the globe parks on the destination. Otherwise mark
-    // inactive and unlocked so the rotator resumes idle drift.
-    if (locked) {
+    // rotation/zoom so the globe parks on the destination — but ease the X
+    // tilt toward the *current* dynamic target so the pin stays inside the
+    // visible band when the connection panel expands or a notification
+    // banner appears/disappears.
+    if (locked && STATE.target) {
+      const desiredX = desiredTargetX(STATE.target.lat);
+      const currentX = STATE.lastFrame.x;
+      const deltaX = desiredX - currentX;
+      let nextX = currentX;
+      if (Math.abs(deltaX) > PARKING_TILT_EPSILON) {
+        const stepFactor = 1 - Math.exp(-PARKING_TILT_RATE * dt);
+        nextX = currentX + deltaX * stepFactor;
+      } else if (currentX !== desiredX) {
+        nextX = desiredX;
+      }
+      STATE.lastFrame = {
+        ...STATE.lastFrame,
+        active: false,
+        locked: true,
+        zoom: 1,
+        x: nextX,
+      };
+    } else if (locked) {
       STATE.lastFrame = { ...STATE.lastFrame, active: false, locked: true, zoom: 1 };
     } else {
       STATE.lastFrame = { active: false, locked: false, progress: 1, y: 0, x: 0, zoom: 1 };

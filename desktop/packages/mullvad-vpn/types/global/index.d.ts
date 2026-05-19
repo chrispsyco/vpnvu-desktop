@@ -9,7 +9,19 @@ interface ViewTransition {
 declare global {
   interface Window {
     ipc: typeof IpcRendererEventChannel;
-    env: { platform: NodeJS.Platform; development: boolean; e2e: boolean };
+    env: {
+      platform: NodeJS.Platform;
+      development: boolean;
+      // True only inside the Playwright headless CI suite. Disables heavy
+      // visual surfaces (globe Canvas, map, view transitions) so the e2e
+      // pipeline stays fast and deterministic.
+      e2e: boolean;
+      // True for the interactive `build:test` mock build that we launch
+      // locally to QA the rebrand. Distinct from `e2e` so we can show
+      // dev-only affordances (Developer tools entry) without disabling
+      // the surfaces e2e turns off.
+      mock: boolean;
+    };
     e2e: { location: string };
   }
 

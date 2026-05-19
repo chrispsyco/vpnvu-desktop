@@ -122,6 +122,10 @@ export default class Settings implements Readonly<ISettings> {
       this.guiSettings.animateMap = animateMap;
     });
 
+    IpcMainEventChannel.guiSettings.handleSetHasAcceptedPrivacyDisclaimer((accepted: boolean) => {
+      this.guiSettings.hasAcceptedPrivacyDisclaimer = accepted;
+    });
+
     IpcMainEventChannel.currentVersion.handleDisplayedChangelog(() => {
       this.guiSettings.changelogDisplayedForVersion = this.currentVersion.gui;
     });

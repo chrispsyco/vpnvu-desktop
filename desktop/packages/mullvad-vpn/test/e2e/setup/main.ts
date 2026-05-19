@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import * as path from 'path';
 
 import { getDefaultSettings } from '../../../src/main/default-settings';
 import { changeIpcWebContents, IpcMainEventChannel } from '../../../src/main/ipc-event-channel';
 import { loadTranslations } from '../../../src/main/load-translations';
+import { urls } from '../../../src/shared/constants';
 import {
   DeviceState,
   IAccountData,
@@ -32,6 +33,9 @@ class ApplicationMain {
     changelogDisplayedForVersion: '',
     updateDismissedForVersion: '',
     animateMap: true,
+    // Mirrors production default so the mock build also routes through the
+    // privacy disclaimer on first launch.
+    hasAcceptedPrivacyDisclaimer: false,
   };
 
   private settings = (() => {
@@ -68,6 +72,12 @@ class ApplicationMain {
     suggestedUpgrade: undefined,
   };
 
+  /**
+   * Default disconnected location. Replaced at startup by `fetchGeoIpLocation`
+   * if the user has internet — so the globe focuses on the user's real city
+   * on first launch instead of always São Paulo. The BR/SP values stay as the
+   * offline fallback since the primary audience is pt-BR.
+   */
   private location: ILocation = {
     country: 'Brasil',
     city: 'São Paulo',
@@ -81,8 +91,56 @@ class ApplicationMain {
     app.on('ready', this.onReady);
   }
 
+  /**
+   * Resolve the user's approximate location via a free geo-IP service.
+   * Capped at 2s so a slow/offline network never blocks app boot — on failure
+   * we keep the hardcoded fallback. ipapi.co was picked over ip-api.com because
+   * the latter is HTTP-only on the free tier and Electron rejects mixed
+   * content from the file:// renderer.
+   */
+  private async fetchGeoIpLocation(): Promise<ILocation | null> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    try {
+      const response = await fetch('https://ipapi.co/json/', {
+        signal: controller.signal,
+      });
+      if (!response.ok) return null;
+      const data = (await response.json()) as {
+        latitude?: number;
+        longitude?: number;
+        country_name?: string;
+        city?: string;
+      };
+      if (
+        typeof data.latitude !== 'number' ||
+        typeof data.longitude !== 'number' ||
+        !isFinite(data.latitude) ||
+        !isFinite(data.longitude)
+      ) {
+        return null;
+      }
+      return {
+        country: data.country_name ?? 'Unknown',
+        city: data.city ?? 'Unknown',
+        latitude: data.latitude,
+        longitude: data.longitude,
+        mullvadExitIp: false,
+      };
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   private onReady = async () => {
     this.updateCurrentLocale('pt');
+
+    const geo = await this.fetchGeoIpLocation();
+    if (geo) {
+      this.location = geo;
+    }
 
     const window = new BrowserWindow({
       useContentSize: true,
@@ -163,9 +221,75 @@ class ApplicationMain {
       return Promise.resolve(this.translations);
     });
 
-    // Fake login: any 16-digit number works
+    // Persist the privacy disclaimer accept flag in the mock GUI settings and
+    // re-emit guiSettings so StateTriggeredNavigation re-evaluates the gate.
+    IpcMainEventChannel.guiSettings.handleSetHasAcceptedPrivacyDisclaimer((accepted) => {
+      console.log('[mock] setHasAcceptedPrivacyDisclaimer ->', accepted);
+      this.guiSettings = { ...this.guiSettings, hasAcceptedPrivacyDisclaimer: accepted };
+      IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);
+    });
+
+    // Mirror the 5 GUI setting toggles surfaced by the User-interface-settings
+    // view. Production registers these in src/main/settings.ts; the mock used
+    // to silently drop them which made the toggles look broken (redux value
+    // never updated even after click). Each handler mutates the local
+    // guiSettings snapshot and re-notifies so the renderer's selector flips.
+    IpcMainEventChannel.guiSettings.handleSetEnableSystemNotifications((flag: boolean) => {
+      this.guiSettings = { ...this.guiSettings, enableSystemNotifications: flag };
+      IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);
+    });
+    IpcMainEventChannel.guiSettings.handleSetMonochromaticIcon((flag: boolean) => {
+      this.guiSettings = { ...this.guiSettings, monochromaticIcon: flag };
+      IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);
+    });
+    IpcMainEventChannel.guiSettings.handleSetUnpinnedWindow((flag: boolean) => {
+      this.guiSettings = { ...this.guiSettings, unpinnedWindow: flag };
+      IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);
+    });
+    IpcMainEventChannel.guiSettings.handleSetStartMinimized((flag: boolean) => {
+      this.guiSettings = { ...this.guiSettings, startMinimized: flag };
+      IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);
+    });
+    IpcMainEventChannel.guiSettings.handleSetAnimateMap((flag: boolean) => {
+      this.guiSettings = { ...this.guiSettings, animateMap: flag };
+      IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);
+    });
+
+    // Fake login: any 16-digit number works.
+    // Account number prefix controls the mock expiry so we can exercise each
+    // post-login state without rebuilding:
+    //   - starts with `0` → expired 30 days ago → Out-of-time view
+    //   - starts with `9` → no expiry at all   → empty CTA state on Account
+    //   - anything else  → 30 days in the future → Main view (default)
+    // Always pushes a fresh accountData via `notify` so the renderer's
+    // expiry selector populates immediately (otherwise the Account row sits
+    // on "Currently unavailable" until the user redeems a voucher).
     IpcMainEventChannel.account.handleLogin(async (accountNumber: string) => {
       await new Promise((r) => setTimeout(r, 600));
+
+      if (accountNumber.startsWith('0')) {
+        this.accountData = {
+          expiry: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+      } else if (accountNumber.startsWith('9')) {
+        // Same intent as `0` — a fresh account without time. We use a brand-new
+        // expiry one second in the past instead of `undefined` so the renderer
+        // marks `expiredState='expired'` (via UPDATE_ACCOUNT_EXPIRY), which then
+        // routes via getNavigationBase → /main/expired. Setting `undefined`
+        // here used to let the user reach Main and click Connect successfully,
+        // which is wrong: an account with no time shouldn't tunnel.
+        // To preview the Account-view *empty CTA* (renders only on
+        // expiry===undefined), use the "Preview · Empty Account expiry" button
+        // in Developer tools.
+        this.accountData = {
+          expiry: new Date(Date.now() - 1000).toISOString(),
+        };
+      } else {
+        this.accountData = {
+          expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+      }
+
       this.deviceState = {
         type: 'logged in',
         accountAndDevice: {
@@ -181,11 +305,13 @@ class ApplicationMain {
         type: 'logged in',
         deviceState: this.deviceState as Extract<DeviceState, { type: 'logged in' }>,
       });
+      IpcMainEventChannel.account.notify?.(this.accountData);
       return undefined;
     });
 
     // Fake create account: generates random 16-digit number
     IpcMainEventChannel.account.handleCreate(async () => {
+      console.log('[mock] handleCreate called');
       await new Promise((r) => setTimeout(r, 800));
       const accountNumber = Array.from({ length: 16 }, () =>
         Math.floor(Math.random() * 10),
@@ -201,6 +327,7 @@ class ApplicationMain {
           },
         },
       };
+      console.log('[mock] handleCreate notifying device, returning', accountNumber);
       IpcMainEventChannel.account.notifyDevice?.({
         type: 'logged in',
         deviceState: this.deviceState as Extract<DeviceState, { type: 'logged in' }>,
@@ -239,15 +366,59 @@ class ApplicationMain {
         const baseMs = Math.max(currentExpiryMs, Date.now());
         const newExpiry = new Date(baseMs + secondsAdded * 1000).toISOString();
         this.accountData = { expiry: newExpiry };
-        // Note: NOT notifying via account.notify here — the success response
-        // already carries `newExpiry`, and double-notifying causes a flash of
-        // two success screens (account update + voucher redeemed).
+        // Notify so the AccountView re-reads expiry from Redux when the user
+        // closes the success dialog. Without this the success response shows
+        // the right new date but the account row stays on the stale value.
+        IpcMainEventChannel.account.notify?.(this.accountData);
         return { type: 'success' as const, newExpiry, secondsAdded };
       }
       return { type: 'invalid' as const };
     });
     IpcMainEventChannel.account.handleRemoveDevice(() => Promise.resolve());
     IpcMainEventChannel.accountHistory.handleClear(() => Promise.resolve());
+
+    // External URL handler — mirrors production behavior (src/main/index.ts).
+    // Without this, "Buy more credit" / "FAQ" / etc throw "No handler registered
+    // for 'app-openUrl'" and the openUrlWithAuth promise rejects unhandled.
+    // Allowlist restricts to vpn.vu URLs declared in shared/constants/urls.
+    IpcMainEventChannel.app.handleOpenUrl(async (url) => {
+      if (Object.values(urls).find((allowedUrl) => url.startsWith(allowedUrl))) {
+        await shell.openExternal(url);
+      }
+    });
+
+    // File picker stub for split tunneling "Find another app". Production
+    // proxies to Electron's `dialog.showOpenDialog`. In mock we always
+    // cancel so the UI flow completes without surfacing a real picker (and
+    // critically, without dropping an unhandled rejection that froze the
+    // renderer when the IPC handler was missing entirely).
+    IpcMainEventChannel.app.handleShowOpenDialog(async () => ({
+      canceled: true,
+      filePaths: [],
+    }));
+
+    // Split tunneling stubs — same rationale. The Settings view boots with
+    // Split tunneling visible (on Windows). Without these handlers the
+    // initial `getApplications` call rejects, the panel renders a broken
+    // state, and clicking "Find another app" deadlocks the whole renderer
+    // because the unhandled rejections pile up.
+    IpcMainEventChannel.splitTunneling.handleGetApplications(async () => ({
+      fromCache: false,
+      applications: [],
+    }));
+    IpcMainEventChannel.splitTunneling.handleSetState(async () => undefined);
+    IpcMainEventChannel.splitTunneling.handleAddApplication(async () => undefined);
+    IpcMainEventChannel.splitTunneling.handleRemoveApplication(async () => undefined);
+    IpcMainEventChannel.splitTunneling.handleForgetManuallyAddedApplication(
+      async () => undefined,
+    );
+    IpcMainEventChannel.macOsSplitTunneling.handleNeedFullDiskPermissions(
+      async () => false,
+    );
+    IpcMainEventChannel.linuxSplitTunneling.handleGetApplications(async () => []);
+    IpcMainEventChannel.linuxSplitTunneling.handleLaunchApplication(
+      async () => ({ success: true as const }),
+    );
 
     // Fake tunnel state machine: disconnected → connecting → connected
     const emitTunnelState = (state: 'disconnected' | 'connecting' | 'connected' | 'disconnecting') => {
@@ -282,13 +453,32 @@ class ApplicationMain {
       IpcMainEventChannel.tunnel.notify?.(tunnelState);
     };
 
+    // Treat connect/reconnect as a no-op when the mock account has no time
+    // left. The real daemon rejects unauthorized accounts before bringing the
+    // tunnel up; the mock previously let the user "connect" even with an
+    // expired account, which contradicts the Out-of-time UX. We also re-emit
+    // accountData so the renderer recomputes expiredState and the
+    // StateTriggeredNavigation pushes to /main/expired.
+    const isAccountUsable = () => {
+      const expiry = this.accountData.expiry;
+      return !!expiry && new Date(expiry).getTime() > Date.now();
+    };
+
     IpcMainEventChannel.tunnel.handleConnect(async () => {
+      if (!isAccountUsable()) {
+        IpcMainEventChannel.account.notify?.(this.accountData);
+        return;
+      }
       emitTunnelState('connecting');
       await new Promise((r) => setTimeout(r, 1200));
       emitTunnelState('connected');
     });
 
     IpcMainEventChannel.tunnel.handleReconnect(async () => {
+      if (!isAccountUsable()) {
+        IpcMainEventChannel.account.notify?.(this.accountData);
+        return;
+      }
       emitTunnelState('connecting');
       await new Promise((r) => setTimeout(r, 1200));
       emitTunnelState('connected');
@@ -350,6 +540,15 @@ class ApplicationMain {
           });
         }
       }
+      return Promise.resolve();
+    });
+
+    // DNS options (content blockers + custom DNS) are a native daemon feature
+    // in production. The mock just mirrors the new options into the settings
+    // snapshot and re-notifies so the UI reflects each toggle immediately.
+    IpcMainEventChannel.settings.handleSetDnsOptions((dns) => {
+      this.settings.tunnelOptions = { ...this.settings.tunnelOptions, dns };
+      IpcMainEventChannel.settings.notify?.(this.settings);
       return Promise.resolve();
     });
   }

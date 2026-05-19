@@ -478,6 +478,8 @@ export default class AppRenderer {
   public getMapData = () => IpcRendererEventChannel.map.getData();
   public setAnimateMap = (displayMap: boolean): void =>
     IpcRendererEventChannel.guiSettings.setAnimateMap(displayMap);
+  public setHasAcceptedPrivacyDisclaimer = (accepted: boolean): void =>
+    IpcRendererEventChannel.guiSettings.setHasAcceptedPrivacyDisclaimer(accepted);
   public daemonPrepareRestart = (shutdown: boolean): void => {
     IpcRendererEventChannel.daemon.prepareRestart(shutdown);
   };
@@ -600,7 +602,12 @@ export default class AppRenderer {
       const error = e as Error;
       log.error(`Failed to get the WWW auth token: ${error.message}`);
     }
-    void this.openUrl(`${url}?token=${token}`);
+    try {
+      await this.openUrl(`${url}?token=${token}`);
+    } catch (e) {
+      const error = e as Error;
+      log.error(`Failed to open external URL: ${error.message}`);
+    }
   };
 
   public setAllowLan = async (allowLan: boolean) => {

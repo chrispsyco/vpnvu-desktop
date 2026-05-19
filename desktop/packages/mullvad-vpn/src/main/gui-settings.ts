@@ -16,6 +16,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   changelogDisplayedForVersion: 'string',
   updateDismissedForVersion: 'string',
   animateMap: 'boolean',
+  hasAcceptedPrivacyDisclaimer: 'boolean',
 };
 
 const defaultSettings: IGuiSettingsState = {
@@ -29,6 +30,8 @@ const defaultSettings: IGuiSettingsState = {
   changelogDisplayedForVersion: '',
   updateDismissedForVersion: '',
   animateMap: true,
+  // Default false so first launch routes through the privacy disclaimer.
+  hasAcceptedPrivacyDisclaimer: false,
 };
 
 export default class GuiSettings {
@@ -134,6 +137,14 @@ export default class GuiSettings {
 
   get animateMap(): boolean {
     return this.stateValue.animateMap;
+  }
+
+  set hasAcceptedPrivacyDisclaimer(newValue: boolean) {
+    this.changeStateAndNotify({ ...this.stateValue, hasAcceptedPrivacyDisclaimer: newValue });
+  }
+
+  get hasAcceptedPrivacyDisclaimer(): boolean {
+    return this.stateValue.hasAcceptedPrivacyDisclaimer;
   }
 
   public load() {

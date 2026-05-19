@@ -1,15 +1,17 @@
+import { useRef } from 'react';
 import styled from 'styled-components';
 
-import { Spinner } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
-import { useSelector } from '../../../redux/store';
+import { useReportGlobeObstacle } from '../../../lib/globe/useReportGlobeObstacle';
 import { AppMainHeader } from '../../app-main-header';
-import { GlobeBackgroundLazy } from '../../globe/GlobeBackgroundLazy';
 import NotificationArea from '../../NotificationArea';
 import { ConnectionPanel } from './components';
 
-const StyledContent = styled(FlexColumn)`
+const StyledContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
   position: relative;
   overflow: hidden;
 `;
@@ -28,7 +30,7 @@ const SpinnerSlot = styled.div`
   pointer-events: none;
 `;
 
-const StyledNotificationArea = styled(NotificationArea)`
+const NotificationObstacleWrap = styled.div`
   position: absolute;
   left: 0;
   top: 0;
@@ -43,24 +45,39 @@ const StyledMain = styled.main`
 `;
 
 export function MainView() {
-  const connection = useSelector((state) => state.connection);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  const showSpinner =
-    connection.status.state === 'connecting' || connection.status.state === 'disconnecting';
+  useReportGlobeObstacle(notificationRef, containerRef, 'top');
+  useReportGlobeObstacle(panelRef, containerRef, 'bottom');
 
   return (
+    // NOTE: the globe is NOT rendered here — it lives in <PersistentGlobeLayer/>
+    // mounted at the router root so the WebGL context survives navigation away
+    // from this view. Without that, every pop back from select-location showed
+    // a black background → globe pop-in → borders pop-in sequence as R3F had
+    // to rebuild the scene from scratch.
+    //
+    // <View> uses `background-color: darkerBlue50` (semi-transparent) by
+    // default so the persistent globe is visible behind this view's content.
     <View>
       <AppMainHeader size="basedOnLoginStatus" variant="basedOnConnectionStatus">
         <AppMainHeader.AccountButton />
         <AppMainHeader.SettingsButton />
       </AppMainHeader>
-      <StyledContent flexGrow={1}>
-        <GlobeBackgroundLazy />
+      <StyledContent ref={containerRef}>
         <StyledMapOverlay flexGrow={1}>
-          <StyledNotificationArea />
+          <NotificationObstacleWrap ref={notificationRef}>
+            <NotificationArea />
+          </NotificationObstacleWrap>
           <StyledMain>
-            <SpinnerSlot>{showSpinner ? <Spinner size="big" /> : null}</SpinnerSlot>
-            <ConnectionPanel />
+            {/* Spacer keeps the connection panel anchored at the bottom of
+                the view. The connecting/disconnecting state is already
+                communicated by the panel's status text and the globe pin
+                color, so no spinner is shown here. */}
+            <SpinnerSlot />
+            <ConnectionPanel ref={panelRef} />
           </StyledMain>
         </StyledMapOverlay>
       </StyledContent>

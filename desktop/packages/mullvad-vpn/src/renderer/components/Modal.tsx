@@ -28,8 +28,8 @@ const ModalContent = styled.div({
 });
 
 const ModalBackground = styled.div<{ $visible: boolean }>((props) => ({
-  backgroundColor: props.$visible ? colors.blackAlpha50 : colors.transparent,
-  backdropFilter: props.$visible ? 'blur(1.5px)' : '',
+  backgroundColor: props.$visible ? 'rgba(4, 14, 22, 0.55)' : colors.transparent,
+  backdropFilter: props.$visible ? 'blur(10px) saturate(120%)' : '',
   position: 'absolute',
   display: 'flex',
   flexDirection: 'column',
@@ -38,7 +38,7 @@ const ModalBackground = styled.div<{ $visible: boolean }>((props) => ({
   left: 0,
   right: 0,
   bottom: 0,
-  transition: 'background-color 150ms ease-out',
+  transition: 'background-color 180ms ease-out, backdrop-filter 180ms ease-out',
   pointerEvents: props.$visible ? 'auto' : 'none',
   zIndex: 2,
 }));
@@ -128,14 +128,18 @@ const StyledModalAlert = styled.div<{ $visible: boolean; $closing: boolean }>((p
   return {
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: colors.darkBlue,
-    borderRadius: '11px',
+    background:
+      'linear-gradient(180deg, rgba(15, 46, 58, 0.78) 0%, rgba(7, 28, 38, 0.82) 100%)',
+    backdropFilter: 'blur(28px) saturate(140%)',
+    border: '1px solid rgba(91, 200, 218, 0.22)',
+    borderRadius: '14px',
     padding: '16px 0 16px 16px',
     maxHeight: '80vh',
     opacity: props.$visible && !props.$closing ? 1 : 0,
     transform,
-    boxShadow: `0px 15px 35px 5px ${colors.blackAlpha50}`,
-    transition: 'all 150ms ease-out',
+    boxShadow:
+      '0 24px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(91, 200, 218, 0.08), 0 0 32px rgba(91, 200, 218, 0.12)',
+    transition: 'opacity 180ms ease-out, transform 180ms ease-out',
   };
 });
 

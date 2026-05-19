@@ -5,13 +5,13 @@ import styled from 'styled-components';
 import { Url } from '../../../../shared/constants';
 import { AccountDataError, AccountNumber } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
+import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
 import { formatAccountNumber } from '../../../lib/account';
 import useActions from '../../../lib/actionsHook';
+import { TransitionType, useHistory } from '../../../lib/history';
 import { Box, Button, Flex, Icon, Spinner, Text, TitleMedium } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
-import { Label } from '../../../lib/components/label';
-import { Link } from '../../../lib/components/link';
 import { View } from '../../../lib/components/view';
 import { colors } from '../../../lib/foundations';
 import { formatHtml } from '../../../lib/html-formatter';
@@ -19,6 +19,7 @@ import { IconBadge } from '../../../lib/icon-badge';
 import accountActions from '../../../redux/account/actions';
 import { LoginState } from '../../../redux/account/reducers';
 import { useSelector } from '../../../redux/store';
+import userInterfaceActions from '../../../redux/userinterface/actions';
 import Accordion from '../../Accordion';
 import { AppMainHeader } from '../../app-main-header';
 import ClearAccountHistoryDialog from './ClearAccountHistoryDialog';
@@ -30,18 +31,30 @@ import {
   StyledAccountDropdownItemIconButton,
   StyledAccountInputBackdrop,
   StyledAccountInputGroup,
+  StyledActionsStagger,
   StyledBlockMessage,
   StyledBlockMessageContainer,
   StyledBlockTitle,
-  StyledDropdownSpacer,
   StyledInput,
-  StyledLine,
+  StyledInputMessage,
+  StyledLoginAtmosphere,
+  StyledLoginDescription,
+  StyledLoginDivider,
+  StyledLoginFieldLabel,
+  StyledLoginFooter,
+  StyledLoginFormStagger,
+  StyledLoginHero,
+  StyledLoginKicker,
+  StyledLoginRoot,
+  StyledSecondaryAction,
   StyledStatusIcon,
 } from './LoginStyles';
 
 export function LoginView() {
-  const { openUrl, login, clearAccountHistory, createNewAccount } = useAppContext();
+  const { openUrl, login, clearAccountHistory } = useAppContext();
   const { resetLoginError, updateAccountNumber } = useActions(accountActions);
+  const { setPendingCreateAccount } = useActions(userInterfaceActions);
+  const history = useHistory();
 
   const { accountNumber, accountHistory, status } = useSelector((state) => state.account);
 
@@ -54,6 +67,20 @@ export function LoginView() {
     (state) => state.userInterface.isPerformingPostUpgrade,
   );
 
+  // "Criar conta" always routes through the privacy disclaimer first — even
+  // for users who already accepted it on a previous account. We set a Redux
+  // flag (read by getNavigationBase) so StateTriggeredNavigation pins the
+  // user on /privacy-disclaimer until the wizard finishes. The disclaimer
+  // also reads `intent: 'create-account'` from history state to flip the
+  // step-3 CTA label and fire the actual `createNewAccount` IPC on accept.
+  const requestCreateNewAccount = useCallback(() => {
+    setPendingCreateAccount(true);
+    history.push(RoutePath.privacyDisclaimer, {
+      transition: TransitionType.push,
+      intent: 'create-account',
+    });
+  }, [history, setPendingCreateAccount]);
+
   return (
     <Login
       accountNumber={accountNumber}
@@ -65,7 +92,7 @@ export function LoginView() {
       resetLoginError={resetLoginError}
       updateAccountNumber={updateAccountNumber}
       clearAccountHistory={clearAccountHistory}
-      createNewAccount={createNewAccount}
+      createNewAccount={requestCreateNewAccount}
       isPerformingPostUpgrade={isPerformingPostUpgrade}
     />
   );
@@ -125,48 +152,115 @@ class Login extends React.Component<IProps, IState> {
 
   public render() {
     const allowInteraction = this.allowInteraction();
+    const isTransitioning = this.isTransitioning();
     return (
       <View>
-        <AppMainHeader>
-          <AppMainHeader.SettingsButton disabled={!allowInteraction} />
-        </AppMainHeader>
-        <View.Content>
-          <View.Container flexDirection="column" horizontalMargin="medium" justifyContent="center">
-            <FlexColumn gap="medium">
-              <Flex justifyContent="center">
-                {this.props.showBlockMessage ? <BlockMessage /> : this.getStatusIcon()}
-              </Flex>
-
-              <View.Container
-                gap="large"
-                horizontalMargin="small"
-                justifyContent="center"
-                flexDirection="column">
-                <FlexColumn gap="small">
-                  <Text as="h1" variant="titleBig" aria-live="polite">
-                    {this.formTitle()}
-                  </Text>
-
-                  {this.createLoginForm()}
-                </FlexColumn>
-                <Flex justifyContent="center">
-                  <StyledLine margin={{ vertical: 'small', right: 'small' }} />
-                  <Text variant="labelTinySemiBold">
-                    {
-                      // TRANSLATORS: Text shown between two horizontal lines above the "create account" button.
-                      // TRANSLATORS: In this context it is used to separate the users alternative of logging in
-                      // TRANSLATORS: or creating a new account, "Login or Create a new account".
-                      messages.pgettext('login-view', 'Or')
-                    }
-                  </Text>
-                  <StyledLine margin={{ vertical: 'small', left: 'small' }} />
-                </Flex>
-              </View.Container>
-              {this.createFooter()}
-            </FlexColumn>
-          </View.Container>
-        </View.Content>
+        <StyledLoginRoot>
+          <StyledLoginAtmosphere aria-hidden="true" />
+          <AppMainHeader>
+            <AppMainHeader.SettingsButton disabled={!allowInteraction} />
+          </AppMainHeader>
+          <View.Content>
+            <View.Container
+              flexDirection="column"
+              horizontalMargin="medium"
+              justifyContent="flex-start">
+              <FlexColumn gap="medium">
+                {this.props.showBlockMessage ? (
+                  <Flex justifyContent="center">
+                    <BlockMessage />
+                  </Flex>
+                ) : isTransitioning ? (
+                  this.renderTransitionState()
+                ) : (
+                  this.renderDefaultState()
+                )}
+              </FlexColumn>
+            </View.Container>
+          </View.Content>
+        </StyledLoginRoot>
       </View>
+    );
+  }
+
+  private isTransitioning(): boolean {
+    if (this.props.isPerformingPostUpgrade) {
+      return true;
+    }
+    return (
+      this.props.loginState.type === 'logging in' || this.props.loginState.type === 'ok'
+    );
+  }
+
+  private renderTransitionState() {
+    return (
+      <View.Container
+        gap="large"
+        horizontalMargin="medium"
+        justifyContent="flex-start"
+        flexDirection="column"
+        style={{ paddingTop: '30px' }}>
+        <Flex justifyContent="center">{this.getStatusIcon()}</Flex>
+        <FlexColumn gap="tiny" alignItems="center">
+          <StyledLoginKicker
+            // TRANSLATORS: Kicker eyebrow shown above the login title.
+            data-testid="login-kicker">
+            {messages.pgettext('login-view', 'Secure access')}
+          </StyledLoginKicker>
+          <Text as="h1" variant="titleLarge" aria-live="polite">
+            {this.formTitle()}
+          </Text>
+          <Text variant="bodySmall" color="whiteOnDarkBlue60">
+            {this.formSubtitle()}
+          </Text>
+        </FlexColumn>
+      </View.Container>
+    );
+  }
+
+  private renderDefaultState() {
+    return (
+      <View.Container
+        gap="large"
+        horizontalMargin="medium"
+        justifyContent="flex-start"
+        flexDirection="column"
+        style={{ paddingTop: '30px' }}>
+        <StyledLoginHero>
+          <StyledLoginKicker data-testid="login-kicker">
+            {
+              // TRANSLATORS: Kicker eyebrow shown above the login title.
+              messages.pgettext('login-view', 'Secure access')
+            }
+          </StyledLoginKicker>
+          <Text as="h1" variant="titleBig" aria-live="polite">
+            {this.formTitle()}
+          </Text>
+          <StyledLoginDescription>{this.heroDescription()}</StyledLoginDescription>
+        </StyledLoginHero>
+
+        {this.createLoginForm()}
+
+        <StyledLoginDivider aria-hidden="true" />
+
+        {this.createFooter()}
+      </View.Container>
+    );
+  }
+
+  private heroDescription() {
+    if (this.props.loginState.type === 'failed') {
+      // TRANSLATORS: Helper text shown below the login title when the previous attempt failed.
+      return messages.pgettext(
+        'login-view',
+        'Double-check that you typed all 16 digits correctly.',
+      );
+    }
+
+    // TRANSLATORS: Helper text shown below the login title in the default empty state.
+    return messages.pgettext(
+      'login-view',
+      'Use your 16-digit account number to sign in. No email, no password, no trace.',
     );
   }
 
@@ -357,6 +451,7 @@ class Login extends React.Component<IProps, IState> {
 
   private createLoginForm() {
     const inputId = 'account-number-input';
+    const errorId = 'account-number-error';
     const allowInteraction = this.allowInteraction();
     const allowLogin = allowInteraction && this.accountNumberValid();
     const hasError =
@@ -365,66 +460,79 @@ class Login extends React.Component<IProps, IState> {
 
     return (
       <>
-        <Flex flexDirection="column" gap="tiny">
-          <Label
-            htmlFor={inputId}
-            variant="labelTinySemiBold"
-            color="whiteAlpha60"
-            data-testid="subtitle">
-            {this.formSubtitle()}
-          </Label>
-          <form onSubmit={this.onSubmit}>
-            <FlexColumn gap="large">
-              <StyledAccountInputGroup
-                $active={allowInteraction && this.state.isActive}
-                $editable={allowInteraction}
-                $error={hasError}>
-                <StyledAccountInputBackdrop>
-                  <StyledInput
-                    id={inputId}
-                    allowedCharacters="[0-9]"
-                    separator=" "
-                    groupLength={4}
-                    maxLength={16}
-                    placeholder="0000 0000 0000 0000"
-                    value={this.props.accountNumber || ''}
-                    disabled={!allowInteraction}
-                    onFocus={this.onFocus}
-                    onBlur={this.onBlur}
-                    handleChange={this.onInputChange}
-                    autoFocus={true}
-                    ref={this.accountInput}
-                    aria-autocomplete="list"
-                  />
-                </StyledAccountInputBackdrop>
-                <Accordion expanded={this.shouldShowAccountHistory()}>
-                  <StyledAccountDropdownContainer>
-                    <AccountDropdown
-                      item={this.props.accountHistory}
-                      onSelect={this.onSelectAccountFromHistory}
-                      onRemove={this.onClearAccountHistory}
+        <StyledLoginFormStagger>
+          <Flex flexDirection="column" gap="tiny">
+            <StyledLoginFieldLabel htmlFor={inputId} data-testid="subtitle">
+              {
+                // TRANSLATORS: Label shown above the account number input field.
+                messages.pgettext('login-view', 'Account number')
+              }
+            </StyledLoginFieldLabel>
+            <form onSubmit={this.onSubmit}>
+              <FlexColumn gap="medium">
+                <StyledAccountInputGroup
+                  $active={allowInteraction && this.state.isActive}
+                  $editable={allowInteraction}
+                  $error={hasError}>
+                  <StyledAccountInputBackdrop>
+                    <StyledInput
+                      id={inputId}
+                      allowedCharacters="[0-9]"
+                      separator=" "
+                      groupLength={4}
+                      maxLength={16}
+                      placeholder="0000 0000 0000 0000"
+                      value={this.props.accountNumber || ''}
+                      disabled={!allowInteraction}
+                      onFocus={this.onFocus}
+                      onBlur={this.onBlur}
+                      handleChange={this.onInputChange}
+                      autoFocus={true}
+                      ref={this.accountInput}
+                      aria-autocomplete="list"
+                      aria-invalid={hasError}
+                      aria-describedby={hasError ? errorId : undefined}
                     />
-                  </StyledAccountDropdownContainer>
-                </Accordion>
-              </StyledAccountInputGroup>
-              <Button
-                type="submit"
-                variant="success"
-                disabled={!allowLogin}
-                aria-label={
-                  // TRANSLATORS: This is used by screenreaders to communicate the login button.
-                  messages.pgettext('accessibility', 'Login')
-                }>
-                <Button.Text>
-                  {
-                    // TRANSLATORS: Label for the login button.
-                    messages.pgettext('login-view', 'Login')
-                  }
-                </Button.Text>
-              </Button>
-            </FlexColumn>
-          </form>
-        </Flex>
+                  </StyledAccountInputBackdrop>
+                  <Accordion expanded={this.shouldShowAccountHistory()}>
+                    <StyledAccountDropdownContainer>
+                      <AccountDropdown
+                        item={this.props.accountHistory}
+                        onSelect={this.onSelectAccountFromHistory}
+                        onRemove={this.onClearAccountHistory}
+                      />
+                    </StyledAccountDropdownContainer>
+                  </Accordion>
+                </StyledAccountInputGroup>
+                {hasError && this.props.loginState.type === 'failed' &&
+                this.props.loginState.method === 'existing_account' ? (
+                  <StyledInputMessage id={errorId} role="alert">
+                    <Icon icon="info-circle" size="small" color="red" />
+                    <span>{this.errorString(this.props.loginState.error)}</span>
+                  </StyledInputMessage>
+                ) : null}
+                <StyledActionsStagger>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={!allowLogin}
+                    aria-label={
+                      // TRANSLATORS: This is used by screenreaders to communicate the login button.
+                      messages.pgettext('accessibility', 'Login')
+                    }>
+                    <Button.Text>
+                      {hasError
+                        ? // TRANSLATORS: Label for the login retry button after a failed attempt.
+                          messages.pgettext('login-view', 'Try again')
+                        : // TRANSLATORS: Label for the login button.
+                          messages.pgettext('login-view', 'Login')}
+                    </Button.Text>
+                  </Button>
+                </StyledActionsStagger>
+              </FlexColumn>
+            </form>
+          </Flex>
+        </StyledLoginFormStagger>
 
         <ClearAccountHistoryDialog
           visible={this.state.clearAccountHistoryDialogVisible}
@@ -438,16 +546,17 @@ class Login extends React.Component<IProps, IState> {
   private createFooter() {
     return (
       <>
-        <Flex flexDirection="column" gap="small" alignItems="center">
-          <Link as="button" onClick={this.onCreateNewAccount} disabled={!this.allowCreateAccount()}>
-            <Link.Text>
-              {
-                // TRANSLATORS: Text in button that allows user to create a new account.
-                messages.pgettext('login-view', 'Create a new account')
-              }
-            </Link.Text>
-          </Link>
-        </Flex>
+        <StyledLoginFooter>
+          <StyledSecondaryAction
+            type="button"
+            onClick={this.onCreateNewAccount}
+            disabled={!this.allowCreateAccount()}>
+            {
+              // TRANSLATORS: Text in button that allows user to create a new account.
+              messages.pgettext('login-view', 'Create a new account')
+            }
+          </StyledSecondaryAction>
+        </StyledLoginFooter>
         <CreateAccountDialog
           visible={this.state.createAccountDialogVisible}
           onConfirm={this.onConfirmCreateNewAccount}
@@ -508,9 +617,7 @@ function AccountDropdownItem({ label, onRemove, onSelect, value }: AccountDropdo
   const itemId = React.useId();
 
   return (
-    <>
-      <StyledDropdownSpacer />
-      <StyledAccountDropdownItem>
+    <StyledAccountDropdownItem>
         <Flex alignItems="center" justifyContent="space-between" flexGrow={1}>
           <StyledAccountDropdownItemButton
             id={itemId}
@@ -546,7 +653,6 @@ function AccountDropdownItem({ label, onRemove, onSelect, value }: AccountDropdo
           </Box>
         </Flex>
       </StyledAccountDropdownItem>
-    </>
   );
 }
 
