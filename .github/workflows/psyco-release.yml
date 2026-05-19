@@ -227,7 +227,11 @@ jobs:
           name: VPN.vu Desktop ${{ steps.tag.outputs.tag }}
           prerelease: ${{ steps.tag.outputs.prerelease }}
           generate_release_notes: true
-          fail_on_unmatched_files: true
+          # Why false: Linux/Mac build jobs are scaffolded but commented out
+          # (see build-linux-x64 / build-macos above). Until they're enabled,
+          # .deb/.rpm/.pkg patterns won't match any files and a strict check
+          # fails the release even when the Windows .exe built successfully.
+          fail_on_unmatched_files: false
           files: |
             artifacts/**/*.exe
             artifacts/**/*.deb
