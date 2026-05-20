@@ -98,7 +98,8 @@
     "update-translations": "node scripts/extract-translations.cjs",
     "pack:mac": "node tasks/pack-mac.cjs",
     "pack:win": "node tasks/pack-windows.cjs",
-    "pack:linux": "node tasks/pack-linux.cjs"
+    "pack:linux": "node tasks/pack-linux.cjs",
+    "pack:demo": "node tasks/build-demo.cjs"
   },
   "volta": {
     "extends": "../../package.json"

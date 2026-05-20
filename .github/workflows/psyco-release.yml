@@ -3,7 +3,9 @@ name: VPN.vu Desktop - Release Build
 on:
   push:
     tags:
-      - "v*"
+      # Real-daemon release tags only. Demo (mock) builds use v*-demo,
+      # which is matched by psyco-demo.yml so the two workflows don't fight.
+      - "v*-dev"
   workflow_dispatch:
     inputs:
       version:
