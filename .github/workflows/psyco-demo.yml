@@ -1,0 +1,155 @@
+---
+name: VPN.vu Desktop - Demo Build (mock-packed)
+# Builds a side-by-side NSIS installer that runs the mock entrypoint
+# (test/e2e/setup/main.ts) so QA can exercise the GUI without the real
+# Rust daemon or the api.vpn.vu backend being live. Installs as
+# "VPN.vu Demo" — does not conflict with the real release.
+on:
+  push:
+    tags:
+      - "v*-demo"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to build (e.g. 0.1.2-demo). Embedded in artifact filename."
+        type: string
+        required: true
+        default: "0.0.0-demo"
+
+permissions: {}
+
+concurrency:
+  group: psyco-demo-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-windows-x64-demo:
+    name: Build Windows x64 demo installer
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set git config for long paths
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Demo only needs the Electron GUI — no Rust submodules.
+          submodules: false
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Demo version: $VERSION"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Pinned to match the volta field in desktop/package.json.
+          node-version: '22.22.1'
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Cache desktop node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            desktop/node_modules
+            desktop/packages/*/node_modules
+          key: ${{ runner.os }}-demo-node-${{ hashFiles('desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-demo-node-
+            ${{ runner.os }}-desktop-node-
+
+      - name: Install desktop dependencies
+        working-directory: desktop
+        shell: bash
+        run: npm run ci
+
+      - name: Build + pack demo installer
+        working-directory: desktop/packages/mullvad-vpn
+        shell: bash
+        env:
+          # Picked up by tasks/pack-windows-demo.cjs to embed in artifactName.
+          PSYCO_DEMO_VERSION: ${{ steps.version.outputs.version }}
+        run: npm run pack:demo
+
+      - name: Locate demo installer artifact
+        id: artifact
+        shell: bash
+        run: |
+          INSTALLER=$(ls -1 dist-demo/*_x64.exe 2>/dev/null | head -n1 || true)
+          if [[ -z "$INSTALLER" ]]; then
+            echo "ERROR: No x64 demo installer found in dist-demo/"
+            ls -la dist-demo/ || true
+            exit 1
+          fi
+          echo "Found installer: $INSTALLER"
+          echo "path=$INSTALLER" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$INSTALLER")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload demo installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vpnvu-demo-windows-x64-${{ steps.version.outputs.version }}
+          path: ${{ steps.artifact.outputs.path }}
+          if-no-files-found: error
+          retention-days: 30
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      artifact_name: ${{ steps.artifact.outputs.name }}
+
+  release-demo:
+    name: Create GitHub Release (demo)
+    needs: [build-windows-x64-demo]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download demo artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Artifacts downloaded:"
+          find artifacts -type f -printf "%P\n"
+
+      - name: Resolve tag name
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=v${{ needs.build-windows-x64-demo.outputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: VPN.vu Demo ${{ steps.tag.outputs.tag }}
+          # Mark demo as prerelease so it never appears as the "Latest" tag.
+          prerelease: true
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+          body: |
+            Mock-packed QA build. Installs side-by-side with the real VPN.vu
+            release (`VPN.vu Demo` in Programs and Features). The mock
+            voucher `1111 1111 1111 1111` works here and any 16-digit
+            number logs in — there is no real daemon, no real network
+            traffic, and no connection to `api.vpn.vu`. Use this for
+            UI/QA only.
+          files: |
+            artifacts/**/*.exe
