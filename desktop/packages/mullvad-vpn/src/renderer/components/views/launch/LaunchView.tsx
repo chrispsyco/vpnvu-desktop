@@ -10,7 +10,6 @@ import { useBoolean } from '../../../lib/utility-hooks';
 import { useUserInterfaceDaemonStatus } from '../../../redux/hooks';
 import { useSelector } from '../../../redux/store';
 import { useVersionCurrent } from '../../../redux/version/hooks/useVersionCurrent';
-import { AppMainHeader } from '../../app-main-header';
 import { TroubleshootingModal } from './components/troubleshooting-modal';
 
 /* ------------------------------------------------------------------ */
@@ -31,7 +30,8 @@ const StyledSplash = styled(Flex)`
     radial-gradient(circle at 50% 120%, rgba(14, 72, 80, 0.55), transparent 60%);
 `;
 
-/* Soft glow blobs behind the logo */
+/* Soft glow blobs behind the logo — toned down so they read as ambient
+   atmosphere rather than competing with the wordmark and status text. */
 const GlowTopRight = styled.div`
   position: absolute;
   top: -22%;
@@ -39,7 +39,7 @@ const GlowTopRight = styled.div`
   width: 520px;
   height: 520px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(91, 200, 218, 0.22), transparent 70%);
+  background: radial-gradient(circle at 30% 30%, rgba(91, 200, 218, 0.10), transparent 70%);
   filter: blur(40px);
   pointer-events: none;
 `;
@@ -51,7 +51,7 @@ const GlowBottomLeft = styled.div`
   width: 420px;
   height: 420px;
   border-radius: 50%;
-  background: radial-gradient(circle at 60% 60%, rgba(9, 158, 180, 0.18), transparent 70%);
+  background: radial-gradient(circle at 60% 60%, rgba(9, 158, 180, 0.08), transparent 70%);
   filter: blur(40px);
   pointer-events: none;
 `;
@@ -112,10 +112,14 @@ const SplashInner = styled.div`
   max-width: 360px;
 `;
 
+/* StyledMark: container do logo. Antes era um quadrado teal vibrante
+   que dominava a tela; agora é só uma moldura sutil/transparente que
+   serve pra ancorar a posição do logo sem competir visualmente com o
+   wordmark e o status. O variant "ready"/"error" continua tonalizando
+   o anel de pulso pra dar feedback de cor sem encher o centro. */
 const StyledMark = styled.div<{ $variant: 'idle' | 'ready' | 'error' }>`
   width: 112px;
   height: 112px;
-  border-radius: 32px;
   position: relative;
   display: flex;
   align-items: center;
@@ -123,53 +127,22 @@ const StyledMark = styled.div<{ $variant: 'idle' | 'ready' | 'error' }>`
   color: rgb(255, 255, 255);
   animation: ${markEnter} 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
 
-  background: ${({ $variant }) =>
-    $variant === 'error'
-      ? 'linear-gradient(140deg, rgb(242, 97, 103) 0%, rgb(227, 67, 73) 55%, rgb(146, 40, 45) 100%)'
-      : $variant === 'ready'
-        ? 'linear-gradient(140deg, rgb(111, 211, 119) 0%, rgb(68, 173, 77) 55%, rgb(46, 135, 54) 100%)'
-        : 'linear-gradient(140deg, rgb(91, 200, 218) 0%, rgb(9, 158, 180) 55%, rgb(14, 72, 80) 100%)'};
+  background: transparent;
 
-  box-shadow:
-    0 28px 64px -16px
-      ${({ $variant }) =>
-        $variant === 'error'
-          ? 'rgba(227, 67, 73, 0.55)'
-          : $variant === 'ready'
-            ? 'rgba(68, 173, 77, 0.55)'
-            : 'rgba(9, 158, 180, 0.55)'},
-    inset 0 0 0 1px rgba(255, 255, 255, 0.10),
-    inset 0 -8px 24px rgba(255, 255, 255, 0.08);
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: -12px;
-    border-radius: 40px;
-    border: 1px solid
-      ${({ $variant }) =>
-        $variant === 'error'
-          ? 'rgba(227, 67, 73, 0.40)'
-          : $variant === 'ready'
-            ? 'rgba(68, 173, 77, 0.40)'
-            : 'rgba(91, 200, 218, 0.28)'};
-    opacity: 0.7;
-    pointer-events: none;
-  }
-
-  /* Pulsing ring while in idle state */
+  /* Pulsing halo while in idle state — sai do anel direto pro contorno
+     do logo branco. Sem quadrado de fundo, sem brilho forte. */
   &::after {
     content: '';
     position: absolute;
-    inset: -12px;
-    border-radius: 40px;
+    inset: -10px;
+    border-radius: 50%;
     border: 1px solid
       ${({ $variant }) =>
         $variant === 'error'
-          ? 'rgba(227, 67, 73, 0.40)'
+          ? 'rgba(242, 97, 103, 0.35)'
           : $variant === 'ready'
-            ? 'rgba(68, 173, 77, 0.40)'
-            : 'rgba(91, 200, 218, 0.45)'};
+            ? 'rgba(111, 211, 119, 0.35)'
+            : 'rgba(91, 200, 218, 0.30)'};
     pointer-events: none;
     ${({ $variant }) =>
       $variant === 'idle'
@@ -190,11 +163,15 @@ const StyledMark = styled.div<{ $variant: 'idle' | 'ready' | 'error' }>`
   }
 `;
 
+/* Logo do VPN.vu deixado em branco puro pra contrastar com o background
+   escuro sem brigar com cores. `brightness(0) invert(1)` força toda a
+   imagem (cores originais do PNG) a virar branca sólida, mantendo a
+   silhueta intacta. drop-shadow sutil pra dar profundidade sem halo. */
 const MarkImage = styled(Image)`
-  width: 72%;
-  height: 72%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+  filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
   pointer-events: none;
 `;
 
@@ -428,9 +405,9 @@ export function LaunchView() {
 
   return (
     <View>
-      <AppMainHeader logoVariant="none">
-        <AppMainHeader.SettingsButton />
-      </AppMainHeader>
+      {/* No header on the launch splash — the settings button only makes
+          sense once the daemon is connected. Showing it here also
+          competes visually with the centred wordmark and status text. */}
       <StyledSplash flexDirection="column" flexGrow={1}>
           <GlowTopRight />
           <GlowBottomLeft />
