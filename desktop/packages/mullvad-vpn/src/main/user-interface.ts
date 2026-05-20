@@ -329,9 +329,19 @@ export default class UserInterface implements WindowControllerDelegate {
           // https://github.com/electron/electron/issues/25915
           alwaysOnTop: !unpinnedWindow,
           skipTaskbar: !unpinnedWindow,
-          // Workaround for sub-pixel anti-aliasing
-          // https://github.com/electron/electron/blob/main/docs/faq.md#the-font-looks-blurry-what-is-this-and-what-can-i-do
-          backgroundColor: '#fff',
+          // PSYCO: transparent window when pinned (popup-style), so the CSS-side
+          // rounded corners of #app (border-radius: 16px in Theme.tsx) can peek
+          // through at the four corners. The app surface itself is fully opaque
+          // — no acrylic, no see-through. Mirrors the mock setup in
+          // test/e2e/setup/main.ts; without this, the packaged .exe shows white
+          // nibbles in the four corners on Windows 10 (no DWM corner smoothing).
+          // Upstream Mullvad used `backgroundColor: '#fff'` here as a workaround
+          // for sub-pixel anti-aliasing, but the opaque #app covers the whole
+          // viewport so font smoothing keeps working.
+          transparent: !unpinnedWindow,
+          backgroundColor: '#00000000',
+          roundedCorners: true,
+          hasShadow: true,
         });
         const WM_DEVICECHANGE = 0x0219;
         const DBT_DEVICEARRIVAL = 0x8000n;
