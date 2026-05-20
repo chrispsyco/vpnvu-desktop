@@ -1922,6 +1922,26 @@ msgctxt "login-view"
 msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
 msgstr "Já tem um número de conta salvo. Ao criar uma nova conta, o número de conta salvo será removido deste dispositivo. Esta ação não pode ser anulada."
 
+#. Label shown above the account number input field.
+msgctxt "login-view"
+msgid "Account number"
+msgstr "Número de conta"
+
+#. Helper text shown below the login title when the previous attempt failed.
+msgctxt "login-view"
+msgid "Double-check that you typed all 16 digits correctly."
+msgstr "Confira se digitou os 16 dígitos corretamente."
+
+#. Kicker eyebrow shown above the login title.
+msgctxt "login-view"
+msgid "Secure access"
+msgstr "Acesso seguro"
+
+#. Helper text shown below the login title in the default empty state.
+msgctxt "login-view"
+msgid "Use your 16-digit account number to sign in. No email, no password, no trace."
+msgstr "Use seu número de conta de 16 dígitos para entrar. Sem email, sem senha, sem rastro."
+
 #. The title for the LWO port selector.
 msgctxt "lwo-settings-view"
 msgid "Port"
