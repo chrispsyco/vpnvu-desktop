@@ -64,7 +64,14 @@ function getRelayName(
       return 'Automatic';
     } else if ('customList' in location) {
       return customLists.find((list) => list.id === location.customList)?.name ?? 'Unknown';
-    } else if ('hostname' in location) {
+    }
+
+    // Branch guards check both presence AND a usable string value. `'city' in loc`
+    // alone is true when the key exists with `undefined`, which used to send the
+    // resolver into the city branch with no code to look up — falling straight
+    // through to 'Unknown' even though a country was still present. Order
+    // matters: hostname > city > country (most specific first).
+    if ('hostname' in location && typeof location.hostname === 'string') {
       const country = locations.find(({ code }) => code === location.country);
       if (country) {
         const city = country.cities.find(({ code }) => code === location.city);
@@ -83,7 +90,9 @@ function getRelayName(
           );
         }
       }
-    } else if ('city' in location) {
+    }
+
+    if ('city' in location && typeof location.city === 'string') {
       const country = locations.find(({ code }) => code === location.country);
       if (country) {
         const city = country.cities.find(({ code }) => code === location.city);
@@ -91,7 +100,9 @@ function getRelayName(
           return relayLocations.gettext(city.name);
         }
       }
-    } else if ('country' in location) {
+    }
+
+    if ('country' in location && typeof location.country === 'string') {
       const country = locations.find(({ code }) => code === location.country);
       if (country) {
         return relayLocations.gettext(country.name);
