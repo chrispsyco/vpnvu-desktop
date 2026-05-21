@@ -376,6 +376,14 @@ function resolveSplashState(args: {
   return 'connecting';
 }
 
+// Minimum time the splash is kept on screen even if the daemon is already
+// connected. The daemon often comes back in <300ms which makes the splash
+// flash for a fraction of a second — bad UX and zero perceived effort.
+// 5s gives the boot ritual room to feel intentional.
+const MIN_SPLASH_MS = 5000;
+const PHASE_COUNT = 4;
+const PHASE_INTERVAL_MS = MIN_SPLASH_MS / PHASE_COUNT;
+
 export function LaunchView() {
   const { tryStartDaemon, showLaunchDaemonSettings } = useAppContext();
   const platform = window.env.platform;
@@ -384,12 +392,35 @@ export function LaunchView() {
   const connectedToDaemon = useSelector((state) => state.userInterface.connectedToDaemon);
   const { current } = useVersionCurrent();
 
-  const splashState = resolveSplashState({
+  // Track whether MIN_SPLASH_MS has elapsed. While it hasn't, we override
+  // a `ready` daemon state back to `connecting` so the user can actually
+  // see the splash. Error states bypass this gate — there's no point
+  // padding bad news.
+  const [minTimeElapsed, setMinTimeElapsed] = React.useState(false);
+  const [phase, setPhase] = React.useState(0);
+
+  React.useEffect(() => {
+    const min = setTimeout(() => setMinTimeElapsed(true), MIN_SPLASH_MS);
+    const phaseTick = setInterval(() => {
+      setPhase((p) => (p + 1 < PHASE_COUNT ? p + 1 : p));
+    }, PHASE_INTERVAL_MS);
+    return () => {
+      clearTimeout(min);
+      clearInterval(phaseTick);
+    };
+  }, []);
+
+  const rawSplashState = resolveSplashState({
     platform,
     daemonStatus,
     daemonAllowed,
     connectedToDaemon,
   });
+
+  // Hold on the connecting view until the minimum splash time has
+  // elapsed; let error / mac-permission propagate immediately.
+  const splashState: SplashState =
+    rawSplashState === 'ready' && !minTimeElapsed ? 'connecting' : rawSplashState;
 
   const [dialogOpen, showDialog, hideDialog] = useBoolean();
 
@@ -433,6 +464,7 @@ export function LaunchView() {
             <StatusBlock role="status" aria-live="polite">
               <StatusContent
                 state={splashState}
+                phase={phase}
                 onRetry={handleRetry}
                 onOpenMacSettings={handleOpenMacSettings}
                 onShowDetails={showDialog}
@@ -461,14 +493,37 @@ export function LaunchView() {
 
 interface StatusContentProps {
   state: SplashState;
+  phase: number;
   canRetry: boolean;
   onRetry: () => void;
   onOpenMacSettings: () => void;
   onShowDetails: () => void;
 }
 
+// Rotating boot messages shown during the connecting state. Strings are
+// individually `pgettext`'d so each one ends up in the .po catalogue.
+// Order matters — phase increments are 1.25s apart and the sequence is
+// meant to read as a tiny boot ritual, not a list.
+function connectingMessage(phase: number): string {
+  switch (phase) {
+    case 0:
+      // TRANSLATORS: First message shown while the app is booting up.
+      return messages.pgettext('launch-view', 'Initializing security');
+    case 1:
+      // TRANSLATORS: Second message shown while the app is booting up.
+      return messages.pgettext('launch-view', 'Connecting to service');
+    case 2:
+      // TRANSLATORS: Third message shown while the app is booting up.
+      return messages.pgettext('launch-view', 'Loading relays');
+    default:
+      // TRANSLATORS: Final message shown while the app is booting up, right before the main view.
+      return messages.pgettext('launch-view', 'Almost ready');
+  }
+}
+
 function StatusContent({
   state,
+  phase,
   canRetry,
   onRetry,
   onOpenMacSettings,
@@ -479,12 +534,7 @@ function StatusContent({
       return (
         <>
           <SpinnerRing />
-          <StatusMessage>
-            {
-              // TRANSLATORS: Status shown while the app is trying to reach the VPN.vu system service.
-              messages.pgettext('launch-view', 'Connecting to system service')
-            }
-          </StatusMessage>
+          <StatusMessage>{connectingMessage(phase)}</StatusMessage>
         </>
       );
 
