@@ -1,5 +1,6 @@
 //! Provides a TLS 1.3 stream, accepting only LE for root cert.
-//! SNI is disabled.
+//! SNI is enabled (PSYCO fork) so Vercel/CDN backends serve the correct
+//! certificate for our API hostname instead of a generic no-SNI fallback.
 use std::{
     io::{self, ErrorKind},
     pin::Pin,
@@ -30,8 +31,11 @@ static TLS_CONFIG: LazyLock<Arc<ClientConfig>> = LazyLock::new(|| {
                 .expect("ring crypt-prover should support TLS 1.3")
                 .with_root_certificates(read_cert_store().expect("Failed to parse pem file"))
                 .with_no_client_auth();
-        // This assumes that the server hello/certificates will include certificate for the domain.
-        config.enable_sni = false;
+        // PSYCO fork: enable SNI. api.vpn.vu (and any CDN-backed mullvad-compat
+        // host) needs SNI in the ClientHello to receive its own leaf cert. The
+        // upstream Mullvad behavior assumes a fixed-IP server that ignores SNI,
+        // which does not hold for shared CDNs like Vercel.
+        config.enable_sni = true;
         config
     };
     Arc::new(config)
