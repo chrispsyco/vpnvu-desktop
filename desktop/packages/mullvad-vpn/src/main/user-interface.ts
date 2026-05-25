@@ -19,7 +19,7 @@ import {
 import { WebContentsConsoleInput } from './logging';
 import { isMacOs11OrNewer } from './platform-version';
 import { resolveBin } from './proc';
-import { createTray } from './tray';
+import { createTray, updateTrayContextMenu } from './tray';
 import TrayIconController, { TrayIconType } from './tray-icon-controller';
 import WindowController, { WindowControllerDelegate } from './window-controller';
 
@@ -33,6 +33,11 @@ export interface UserInterfaceDelegate {
   disconnectTunnel(source: DisconnectSource): void;
   disconnectAndQuit(source: DisconnectSource): void;
   isUnpinnedWindow(): boolean;
+  // PSYCO: read-only flag set by the AppDelegate when a real quit (Sair menu,
+  // app.quit, signal) is in flight. The close-to-tray handler in createWindow
+  // uses this to distinguish "user clicked X" (hide window) from "app is
+  // shutting down" (allow close).
+  isQuitting(): boolean;
   isLoggedIn(): boolean;
   getAccountData(): IAccountData | undefined;
   getTunnelState(): TunnelState;
@@ -61,7 +66,20 @@ export default class UserInterface implements WindowControllerDelegate {
     const window = this.createWindow();
 
     this.windowController = this.createWindowController(window);
-    this.tray = createTray();
+    this.tray = createTray(
+      {
+        // Left-click toggles. Most users expect clicking the tray icon to
+        // bring the app forward or send it away again.
+        onClick: () => this.windowController.toggle(),
+        // Right-click "Abrir VPN.vu" — always shows, even if already visible.
+        onShow: () => this.windowController.show(),
+        // Right-click "Sair" — runs the same teardown as quitting via app
+        // menu: disconnect tunnel, then quit the process. Source 'user'
+        // marks it as an explicit action so daemon logs reflect intent.
+        onQuit: () => this.delegate.disconnectAndQuit('user'),
+      },
+      this.delegate.getTunnelState(),
+    );
   }
 
   public registerIpcListeners() {
@@ -252,6 +270,14 @@ export default class UserInterface implements WindowControllerDelegate {
   public updateTrayIcon(tunnelState: TunnelState) {
     const type = this.trayIconType(tunnelState);
     this.trayIconController?.animateToIcon(type);
+    // Keep the right-click menu's "Status:" label and the tooltip in sync
+    // with the icon color so users don't see e.g. green icon + "Desconectado"
+    // tooltip during a quick state transition.
+    updateTrayContextMenu(this.tray, tunnelState, {
+      onClick: () => this.windowController.toggle(),
+      onShow: () => this.windowController.show(),
+      onQuit: () => this.delegate.disconnectAndQuit('user'),
+    });
   }
 
   public dispose = () => {
@@ -359,6 +385,19 @@ export default class UserInterface implements WindowControllerDelegate {
         });
 
         appWindow.removeMenu();
+
+        // PSYCO: close-to-tray. When the user clicks the X button, hide the
+        // window instead of quitting. The app keeps running, the tunnel
+        // stays up (or down — whatever state it was in), and the tray icon
+        // remains the entry point. A real quit (Sair menu, app.quit, signal)
+        // sets isQuitting=true on the delegate so this handler lets it
+        // through.
+        appWindow.on('close', (event) => {
+          if (!this.delegate.isQuitting()) {
+            event.preventDefault();
+            appWindow.hide();
+          }
+        });
 
         return appWindow;
       }
