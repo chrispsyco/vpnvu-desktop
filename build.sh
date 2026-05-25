@@ -39,6 +39,18 @@ while [[ "$#" -gt 0 ]]; do
         --optimize) OPTIMIZE="true";;
         --sign)     SIGN="true";;
         --notarize) NOTARIZE="true";;
+        # PSYCO: explicit single-target build (alternative to env-var TARGETS).
+        # Use --target aarch64-pc-windows-msvc to cross-compile for Windows ARM64
+        # from an x86_64 runner. Bash arrays don't propagate via env vars, so this
+        # flag is the only reliable way to ask CI for a single non-host target.
+        --target)
+            shift
+            if [[ -z "${1:-}" ]]; then
+                log_error "--target requires a value (e.g. aarch64-pc-windows-msvc)"
+                exit 1
+            fi
+            TARGETS=("$1")
+            ;;
         --universal)
             if [[ "$(uname -s)" != "Darwin" && "$(uname -s)" != "MINGW"* ]]; then
                 log_error "--universal only works on macOS and Windows"
