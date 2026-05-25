@@ -94,14 +94,15 @@ jobs:
         shell: bash
         run: npm run ci
 
-      # build.sh reads TARGETS (bash array) to know which target triple to build.
-      # For x64 we leave it empty so HOST = x86_64-pc-windows-msvc is used directly.
-      # For arm64 we cross-compile from the x64 runner via MSVC ARM64 toolchain.
+      # For x64 we leave --target unset so HOST = x86_64-pc-windows-msvc is used directly.
+      # For arm64 we pass --target so build.sh cross-compiles via MSVC ARM64 toolchain.
+      # We can't use `TARGETS=(...) ./build.sh` because bash arrays don't propagate
+      # via env vars, so the PSYCO --target flag was added to build.sh for this.
       - name: Build daemon + GUI installer (release, unsigned) for ${{ matrix.arch }}
         shell: bash
         run: |
           if [[ "${{ matrix.arch }}" == "arm64" ]]; then
-            TARGETS=("${{ matrix.target-triple }}") ./build.sh --optimize
+            ./build.sh --optimize --target ${{ matrix.target-triple }}
           else
             ./build.sh --optimize
           fi
