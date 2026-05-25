@@ -76,7 +76,7 @@ export default class UserInterface implements WindowControllerDelegate {
         // Right-click "Sair" — runs the same teardown as quitting via app
         // menu: disconnect tunnel, then quit the process. Source 'user'
         // marks it as an explicit action so daemon logs reflect intent.
-        onQuit: () => this.delegate.disconnectAndQuit('user'),
+        onQuit: () => this.delegate.disconnectAndQuit('tray-disconnect-quit'),
       },
       this.delegate.getTunnelState(),
     );
@@ -276,7 +276,7 @@ export default class UserInterface implements WindowControllerDelegate {
     updateTrayContextMenu(this.tray, tunnelState, {
       onClick: () => this.windowController.toggle(),
       onShow: () => this.windowController.show(),
-      onQuit: () => this.delegate.disconnectAndQuit('user'),
+      onQuit: () => this.delegate.disconnectAndQuit('tray-disconnect-quit'),
     });
   }
 
