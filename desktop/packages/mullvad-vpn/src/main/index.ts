@@ -1186,7 +1186,18 @@ class ApplicationMain
   // UserInterfaceDelegate
   public dismissActiveNotifications = () =>
     this.notificationController.dismissActiveNotifications();
-  public isUnpinnedWindow = () => this.settings.gui.unpinnedWindow;
+  // PSYCO: always render a standalone window (frame, taskbar, minimize, close
+  // button) instead of the Mullvad-default tray-anchored popover. The setting
+  // `gui.unpinnedWindow` is ignored — Chris wants a "real" app window that
+  // shows up in the taskbar and stays open until explicitly closed (close
+  // sends it to the tray, doesn't quit). See close-to-tray handler in
+  // user-interface.ts.
+  public isUnpinnedWindow = () => true;
+
+  // PSYCO: exposed to the UserInterface so the close-to-tray handler can
+  // tell user-initiated close ("X" button) from real quit (Sair menu /
+  // app.quit / signal). quitInitiated is set in onBeforeQuit + prepareToQuit.
+  public isQuitting = () => this.quitInitiated;
   public updateAccountData = () => this.account.updateAccountData();
   public getAccountData = () => this.account.accountData;
   public getVersionInfo = () => this.version.fetchLatestVersion();
