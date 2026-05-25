@@ -60,6 +60,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-desktop-node-
 
+      - name: Install Rust target aarch64-pc-windows-msvc (for arm64 cross-compile check)
+        shell: bash
+        run: rustup target add aarch64-pc-windows-msvc
+
       - name: Build Windows C++ modules (winfw only — fastest smoke)
         shell: bash
         run: ./build-windows-modules.sh build winfw
@@ -67,6 +71,12 @@ jobs:
       - name: Cargo check daemon (no-default-features, fast)
         shell: bash
         run: cargo check --workspace --no-default-features --exclude windows-installer
+
+      # Smoke-check arm64 cross-compile of the daemon crate only.
+      # Catches breakage in PRs without paying the cost of a full arm64 build.
+      - name: Cargo check daemon for arm64 (cross)
+        shell: bash
+        run: cargo check -p mullvad-daemon --target aarch64-pc-windows-msvc --no-default-features
 
       - name: Install desktop dependencies
         working-directory: desktop
