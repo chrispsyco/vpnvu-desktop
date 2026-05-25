@@ -26,11 +26,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-windows-x64:
-    name: Build Windows x64 installer
+  build-windows:
+    name: Build Windows ${{ matrix.arch }} installer
     runs-on: windows-latest
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            target-triple: x86_64-pc-windows-msvc
+            artifact-suffix: x64
+          - arch: arm64
+            target-triple: aarch64-pc-windows-msvc
+            artifact-suffix: arm64
     steps:
       - name: Set git config for long paths
         run: git config --system core.longpaths true
@@ -73,7 +83,7 @@ jobs:
             VERSION="${{ inputs.version }}"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Building VPN.vu Desktop version: $VERSION"
+          echo "Building VPN.vu Desktop ${{ matrix.arch }} version: $VERSION"
 
       - name: Build Windows C++ modules (winfw + nsis-plugins)
         shell: bash
@@ -84,17 +94,25 @@ jobs:
         shell: bash
         run: npm run ci
 
-      - name: Build daemon + GUI installer (release, unsigned)
+      # build.sh reads TARGETS (bash array) to know which target triple to build.
+      # For x64 we leave it empty so HOST = x86_64-pc-windows-msvc is used directly.
+      # For arm64 we cross-compile from the x64 runner via MSVC ARM64 toolchain.
+      - name: Build daemon + GUI installer (release, unsigned) for ${{ matrix.arch }}
         shell: bash
-        run: ./build.sh --optimize
+        run: |
+          if [[ "${{ matrix.arch }}" == "arm64" ]]; then
+            TARGETS=("${{ matrix.target-triple }}") ./build.sh --optimize
+          else
+            ./build.sh --optimize
+          fi
 
       - name: Locate installer artifact
         id: artifact
         shell: bash
         run: |
-          INSTALLER=$(ls -1 dist/*_x64.exe 2>/dev/null | head -n1 || true)
+          INSTALLER=$(ls -1 dist/*_${{ matrix.artifact-suffix }}.exe 2>/dev/null | head -n1 || true)
           if [[ -z "$INSTALLER" ]]; then
-            echo "ERROR: No x64 installer found in dist/"
+            echo "ERROR: No ${{ matrix.arch }} installer found in dist/"
             ls -la dist/ || true
             exit 1
           fi
@@ -128,14 +146,13 @@ jobs:
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vpnvu-windows-x64-${{ steps.version.outputs.version }}
+          name: vpnvu-windows-${{ matrix.artifact-suffix }}-${{ steps.version.outputs.version }}
           path: ${{ steps.artifact.outputs.path }}
           if-no-files-found: error
           retention-days: 30
 
     outputs:
       version: ${{ steps.version.outputs.version }}
-      artifact_name: ${{ steps.artifact.outputs.name }}
 
   # ----------------------------------------------------------------------
   # Future: Linux x64 build (scaffolding, commented until needed).
@@ -196,7 +213,7 @@ jobs:
 
   release:
     name: Create GitHub Release
-    needs: [build-windows-x64]
+    needs: [build-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -218,7 +235,7 @@ jobs:
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
             echo "prerelease=false" >> "$GITHUB_OUTPUT"
           else
-            echo "tag=v${{ needs.build-windows-x64.outputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "tag=v${{ needs.build-windows.outputs.version }}" >> "$GITHUB_OUTPUT"
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
           fi
 
