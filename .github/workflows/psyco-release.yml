@@ -28,18 +28,25 @@ concurrency:
 jobs:
   build-windows:
     name: Build Windows ${{ matrix.arch }} installer
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: read
     strategy:
+      # If x64 succeeds and arm64 fails (or vice versa), still publish the one
+      # that worked instead of cancelling both.
       fail-fast: false
       matrix:
         include:
+          # x64 cross-compiles fine on the standard runner.
           - arch: x64
-            target-triple: x86_64-pc-windows-msvc
+            os: windows-latest
             artifact-suffix: x64
+          # arm64 needs the native windows-11-arm runner because the .vcxproj
+          # files pin PlatformToolset=v143 (VS 2022) which is no longer present
+          # on windows-latest (which now redirects to VS 2026 / v180). Mullvad
+          # upstream uses the same approach in .github/workflows/daemon.yml.
           - arch: arm64
-            target-triple: aarch64-pc-windows-msvc
+            os: windows-11-arm
             artifact-suffix: arm64
     steps:
       - name: Set git config for long paths
@@ -85,27 +92,27 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Building VPN.vu Desktop ${{ matrix.arch }} version: $VERSION"
 
+      # On the arm64 runner (4 cores), cap MSBuild concurrency to avoid OOM,
+      # matching what Mullvad upstream does in .github/workflows/daemon.yml.
       - name: Build Windows C++ modules (winfw + nsis-plugins)
         shell: bash
-        run: ./build-windows-modules.sh build winfw nsis-plugins
+        run: |
+          if [[ "${{ matrix.arch }}" == "arm64" ]]; then
+            ./build-windows-modules.sh --max-concurrent-processes 2 build winfw nsis-plugins
+          else
+            ./build-windows-modules.sh build winfw nsis-plugins
+          fi
 
       - name: Install desktop dependencies
         working-directory: desktop
         shell: bash
         run: npm run ci
 
-      # For x64 we leave --target unset so HOST = x86_64-pc-windows-msvc is used directly.
-      # For arm64 we pass --target so build.sh cross-compiles via MSVC ARM64 toolchain.
-      # We can't use `TARGETS=(...) ./build.sh` because bash arrays don't propagate
-      # via env vars, so the PSYCO --target flag was added to build.sh for this.
+      # Both jobs build natively (HOST == target). No cross-compile needed because
+      # arm64 uses a native windows-11-arm runner.
       - name: Build daemon + GUI installer (release, unsigned) for ${{ matrix.arch }}
         shell: bash
-        run: |
-          if [[ "${{ matrix.arch }}" == "arm64" ]]; then
-            ./build.sh --optimize --target ${{ matrix.target-triple }}
-          else
-            ./build.sh --optimize
-          fi
+        run: ./build.sh --optimize
 
       - name: Locate installer artifact
         id: artifact
