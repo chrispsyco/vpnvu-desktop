@@ -255,7 +255,19 @@ function newConfig() {
 }
 
 async function packWin() {
-  const DEFAULT_ARCH = targets === 'aarch64-pc-windows-msvc' ? 'arm64' : 'x64';
+  // Decide the electron-builder arch:
+  //  1. --targets wins (used during cross-compile / --universal).
+  //  2. --host-target-triple is the fallback for native builds where
+  //     no --targets is provided (e.g. building arm64 on a windows-11-arm
+  //     runner). Without this fallback the build defaulted to x64 even on
+  //     ARM hosts, then electron-builder looked for winfw\bin\x64-Release
+  //     and failed with ENOENT.
+  function archFromTriple(triple) {
+    if (triple === 'aarch64-pc-windows-msvc') return 'arm64';
+    if (triple === 'x86_64-pc-windows-msvc') return 'x64';
+    return null;
+  }
+  const DEFAULT_ARCH = archFromTriple(targets) || archFromTriple(hostTargetTriple) || 'x64';
 
   function prepareWinConfig(arch) {
     const config = newConfig();
