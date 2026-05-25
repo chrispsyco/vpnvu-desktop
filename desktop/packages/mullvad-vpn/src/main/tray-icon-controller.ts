@@ -1,4 +1,4 @@
-import { NativeImage, Tray } from 'electron';
+import { Tray } from 'electron';
 
 import log from '../shared/logging';
 import { TrayIcon } from './tray-icon';
@@ -30,7 +30,6 @@ const PULSE_FRAME = 'tray-connecting-pulse';
 // of the system theme. macOS Template convention doesn't apply because the
 // color encodes connection state, not just shape.
 export default class TrayIconController {
-  private currentImage?: NativeImage;
   private pulseTimer?: NodeJS.Timeout;
   // Alternates between the bright connecting frame and the dim pulse frame.
   private pulseShowsDimFrame = false;
@@ -108,7 +107,6 @@ export default class TrayIconController {
   private setImage(fileName: string) {
     try {
       const image = new TrayIcon(fileName).toNativeImage();
-      this.currentImage = image;
       this.tray.setImage(image);
     } catch (e) {
       const error = e as Error;
