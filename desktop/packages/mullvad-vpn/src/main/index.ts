@@ -1186,16 +1186,15 @@ class ApplicationMain
   // UserInterfaceDelegate
   public dismissActiveNotifications = () =>
     this.notificationController.dismissActiveNotifications();
-  // PSYCO: render a frameless real-app window. We don't want the Mullvad
-  // popover (tray-anchored, alwaysOnTop, hidden from taskbar) and we also
-  // don't want native Windows chrome (title bar, OS-painted min/max/close
-  // buttons) — the renderer already paints its own header controls. So we
-  // return false here to keep the base options (frame: false, no OS chrome)
-  // and then user-interface.ts hardcodes skipTaskbar=false and
-  // alwaysOnTop=false in the win32 branch so the window still appears in
-  // the taskbar and behaves like a normal app window. See close-to-tray
-  // handler in user-interface.ts for the X-hides-instead-of-quits behavior.
-  public isUnpinnedWindow = () => false;
+  // PSYCO: render the app as a standalone real-app window — visible in the
+  // taskbar, Start menu and Alt-Tab, free-floating (not glued to the tray),
+  // and remembers its last position. Returning `true` switches the window
+  // controller to `StandaloneWindowPositioning`, disables the hide-on-blur
+  // handler, and registers the close-to-tray handler in
+  // `installWindowCloseHandler`. Native Windows chrome is still disabled by
+  // forcing `frame: false` in the win32 branch of `user-interface.ts`, so
+  // the renderer keeps painting its own header controls.
+  public isUnpinnedWindow = () => true;
 
   // PSYCO: exposed to the UserInterface so the close-to-tray handler can
   // tell user-initiated close ("X" button) from real quit (Sair menu /

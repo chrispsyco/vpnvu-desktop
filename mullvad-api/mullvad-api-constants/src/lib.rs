@@ -18,8 +18,14 @@ pub mod env {
 // working automatically. Until then expect harmless 404s on version checks.
 pub const API_HOST_DEFAULT: &str = "api.vpn.vu";
 
-// Reserved IP — forces the daemon to skip the hardcoded seed and go straight
-// to DNS resolution via api_address_updater on the first API call. Avoids
-// pinning a stale Vercel/Cloudflare IP into the binary.
-pub const API_IP_DEFAULT: IpAddr = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
+// Vercel A record for api.vpn.vu — used as the seed for the AddressCache on
+// first run (before `api-ip-address.txt` has been written) and after the
+// cache file has been wiped by the installer's preinst script. The seed has
+// to be a real routable IP because the firewall allow-list is built from
+// whatever is currently in the cache; 0.0.0.0 here means every API request
+// the daemon makes while lockdown is active gets dropped before the address
+// updater can refresh the cache, surfacing as "api.vpn.vu is blocked" on
+// the login screen. `api_address_updater` still runs on startup and will
+// overwrite this value with the live IP returned by the API itself.
+pub const API_IP_DEFAULT: IpAddr = IpAddr::V4(Ipv4Addr::new(76, 76, 21, 21));
 pub const API_PORT_DEFAULT: u16 = 443;
