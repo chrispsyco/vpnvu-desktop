@@ -351,7 +351,17 @@ if [[ "$(uname -s)" == "MINGW"* ]]; then
         esac
 
         log_header "Building C++ code in $CPP_BUILD_MODE mode for $CPP_BUILD_TARGET"
-        CPP_BUILD_MODES=$CPP_BUILD_MODE CPP_BUILD_TARGETS=$CPP_BUILD_TARGET ./build-windows-modules.sh
+        # PSYCO: on the 4-core windows-11-arm CI runner, msbuild's default /m
+        # (= core count) launches enough parallel cl.exe instances to exhaust
+        # memory during PCH allocation, producing C1076 + C3859. /Zm400 (set
+        # inside build-windows-modules.sh) helped but isn't enough on its own.
+        # Mirror what the workflow's dedicated C++ module step already does
+        # and cap msbuild to 2 concurrent processes for ARM64.
+        CPP_MODULES_ARGS=()
+        if [[ "$CPP_BUILD_TARGET" == "ARM64" ]]; then
+            CPP_MODULES_ARGS+=(--max-concurrent-processes 2)
+        fi
+        CPP_BUILD_MODES=$CPP_BUILD_MODE CPP_BUILD_TARGETS=$CPP_BUILD_TARGET ./build-windows-modules.sh "${CPP_MODULES_ARGS[@]}"
 
         if [[ "$SIGN" == "true" ]]; then
             CPP_BINARIES=(
