@@ -83,12 +83,12 @@ jobs:
         shell: bash
         run: npm run ci
 
-      - name: TypeScript type-check (mullvad-vpn package)
+      - name: TypeScript type-check (vpnvu-desktop package)
         working-directory: desktop
         shell: bash
-        run: npm run type-check -w mullvad-vpn
+        run: npm run type-check -w vpnvu-desktop
 
       - name: Build test bundle (Electron renderer)
         working-directory: desktop
         shell: bash
-        run: npm run build:test -w mullvad-vpn
+        run: npm run build:test -w vpnvu-desktop
