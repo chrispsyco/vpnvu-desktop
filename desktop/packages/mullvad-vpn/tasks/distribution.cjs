@@ -298,9 +298,21 @@ async function packWin() {
             break;
           case 'arm64':
             process.env.TARGET_TRIPLE = 'aarch64-pc-windows-msvc';
-            process.env.SETUP_SUBDIR = 'aarch64-pc-windows-msvc';
             process.env.TARGET_SUBDIR = 'aarch64-pc-windows-msvc';
-            process.env.DIST_SUBDIR = 'aarch64-pc-windows-msvc';
+            // PSYCO: when arm64 is built natively on a windows-11-arm runner
+            // (no --targets, only --host-target-triple), build.sh writes the
+            // daemon/setup binaries to dist-assets/ root — same as x64 native.
+            // Only when cross-compiling (--targets=aarch64-pc-windows-msvc
+            // passed from build.sh because TARGETS was set) does build.sh
+            // shove them under dist-assets/aarch64-pc-windows-msvc/. The
+            // subdir env vars below have to match what build.sh actually did.
+            if (targets) {
+              process.env.SETUP_SUBDIR = 'aarch64-pc-windows-msvc';
+              process.env.DIST_SUBDIR = 'aarch64-pc-windows-msvc';
+            } else {
+              process.env.SETUP_SUBDIR = '.';
+              process.env.DIST_SUBDIR = '';
+            }
 
             execFileSync('npm', ['-w', 'windows-utils', 'run', 'build-arm'], { shell: true });
             break;
