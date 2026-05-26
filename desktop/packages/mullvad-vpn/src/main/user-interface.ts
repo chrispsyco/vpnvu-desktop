@@ -347,24 +347,22 @@ export default class UserInterface implements WindowControllerDelegate {
       }
 
       case 'win32': {
-        // setup window flags to mimic an overlay window
+        // PSYCO: frameless real-app window. isUnpinnedWindow() returns false
+        // (see index.ts), so `frame: false` from the base options applies and
+        // the renderer paints its own header chrome. We do NOT want the rest
+        // of the Mullvad popover behavior though — the window has to show in
+        // the taskbar and must not be alwaysOnTop, so we hardcode both flags
+        // independent of unpinnedWindow.
         const appWindow = new BrowserWindow({
           ...options,
-          // Due to a bug in Electron the app is sometimes placed behind other apps when opened.
-          // Setting alwaysOnTop to true ensures that the app is placed on top. Electron issue:
-          // https://github.com/electron/electron/issues/25915
-          alwaysOnTop: !unpinnedWindow,
-          skipTaskbar: !unpinnedWindow,
-          // PSYCO: transparent window when pinned (popup-style), so the CSS-side
-          // rounded corners of #app (border-radius: 16px in Theme.tsx) can peek
-          // through at the four corners. The app surface itself is fully opaque
-          // — no acrylic, no see-through. Mirrors the mock setup in
-          // test/e2e/setup/main.ts; without this, the packaged .exe shows white
-          // nibbles in the four corners on Windows 10 (no DWM corner smoothing).
-          // Upstream Mullvad used `backgroundColor: '#fff'` here as a workaround
-          // for sub-pixel anti-aliasing, but the opaque #app covers the whole
-          // viewport so font smoothing keeps working.
-          transparent: !unpinnedWindow,
+          alwaysOnTop: false,
+          skipTaskbar: false,
+          // Transparency stays on so the CSS rounded corners of #app
+          // (border-radius: 16px in Theme.tsx) can peek through at the
+          // four corners — without this, the packaged .exe shows white
+          // nibbles in the four corners on Windows 10 (no DWM corner
+          // smoothing). The #app surface itself is fully opaque.
+          transparent: true,
           backgroundColor: '#00000000',
           roundedCorners: true,
           hasShadow: true,

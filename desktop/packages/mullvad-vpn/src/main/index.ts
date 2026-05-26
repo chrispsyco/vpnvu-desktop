@@ -1186,13 +1186,16 @@ class ApplicationMain
   // UserInterfaceDelegate
   public dismissActiveNotifications = () =>
     this.notificationController.dismissActiveNotifications();
-  // PSYCO: always render a standalone window (frame, taskbar, minimize, close
-  // button) instead of the Mullvad-default tray-anchored popover. The setting
-  // `gui.unpinnedWindow` is ignored — Chris wants a "real" app window that
-  // shows up in the taskbar and stays open until explicitly closed (close
-  // sends it to the tray, doesn't quit). See close-to-tray handler in
-  // user-interface.ts.
-  public isUnpinnedWindow = () => true;
+  // PSYCO: render a frameless real-app window. We don't want the Mullvad
+  // popover (tray-anchored, alwaysOnTop, hidden from taskbar) and we also
+  // don't want native Windows chrome (title bar, OS-painted min/max/close
+  // buttons) — the renderer already paints its own header controls. So we
+  // return false here to keep the base options (frame: false, no OS chrome)
+  // and then user-interface.ts hardcodes skipTaskbar=false and
+  // alwaysOnTop=false in the win32 branch so the window still appears in
+  // the taskbar and behaves like a normal app window. See close-to-tray
+  // handler in user-interface.ts for the X-hides-instead-of-quits behavior.
+  public isUnpinnedWindow = () => false;
 
   // PSYCO: exposed to the UserInterface so the close-to-tray handler can
   // tell user-initiated close ("X" button) from real quit (Sair menu /
