@@ -14,5 +14,5 @@ pub fn get_default_rpc_socket_path() -> PathBuf {
 
 #[cfg(windows)]
 pub fn get_default_rpc_socket_path() -> PathBuf {
-    PathBuf::from("//./pipe/Mullvad VPN")
+    PathBuf::from("//./pipe/VPN.vu")
 }
