@@ -2,14 +2,14 @@
 name = "mullvad-daemon"
 edition.workspace = true
 rust-version.workspace = true
-description = "Mullvad VPN daemon. Runs and controls the VPN tunnels"
+description = "VPN.vu daemon. Runs and controls the VPN tunnels"
 repository.workspace = true
 license.workspace = true
 
 [package.metadata.winres]
-ProductName = "Mullvad VPN"
-CompanyName = "Mullvad VPN AB"
-LegalCopyright = "(c) 2026 Mullvad VPN AB"
+ProductName = "VPN.vu"
+CompanyName = "VPN.vu"
+LegalCopyright = "(c) 2026 VPN.vu"
 InternalName = "mullvad-daemon"
 OriginalFilename = "mullvad-daemon.exe"
 

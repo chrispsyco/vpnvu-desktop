@@ -283,7 +283,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	Pop $1
 
 	${If} $0 != 0
-		StrCpy $R0 "Failed to install Mullvad service"
+		StrCpy $R0 "Failed to install VPN.vu service"
 		mullvad_nsis::LogWithDetails $R0 $1
 
 		#
@@ -302,7 +302,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	${EndIf}
 
 	mullvad_nsis::Log "Starting service"
-	nsExec::ExecToStack '"$SYSDIR\sc.exe" start mullvadvpn'
+	nsExec::ExecToStack '"$SYSDIR\sc.exe" start vpnvu'
 
 	Pop $0
 	Pop $1
@@ -310,9 +310,9 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	${If} $0 != ${SERVICE_STARTED}
 	${AndIf} $0 != ${SERVICE_START_PENDING}
 		${If} $0 == ${ERROR_SERVICE_DEPENDENCY_DELETED}
-			StrCpy $R0 'Failed to start Mullvad service: The firewall service "Base Filtering Engine" is missing or unavailable.'
+			StrCpy $R0 'Failed to start VPN.vu service: The firewall service "Base Filtering Engine" is missing or unavailable.'
 		${Else}
-			StrCpy $R0 "Failed to start Mullvad service: error $0"
+			StrCpy $R0 "Failed to start VPN.vu service: error $0"
 		${EndIf}
 		mullvad_nsis::LogWithDetails $R0 $1
 		Goto InstallService_return
@@ -822,7 +822,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	# Therefore we have to break the installed application to
 	# prevent users from running a half-installed product
 	#
-	Delete "$INSTDIR\mullvad vpn.exe"
+	Delete "$INSTDIR\VPN.vu.exe"
 
 	${FirewallWarningCheck}
 	${ExtractMullvadSetup}
@@ -941,7 +941,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	Push $0
 	Push $1
 
-	nsExec::ExecToStack '"$SYSDIR\sc.exe" query mullvadvpn'
+	nsExec::ExecToStack '"$SYSDIR\sc.exe" query vpnvu'
 
 	Pop $0
 	Pop $1
@@ -950,9 +950,9 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 		Goto StopAndDeleteService_success
 	${EndIf}
 
-	mullvad_nsis::Log "Stopping Mullvad service"
+	mullvad_nsis::Log "Stopping VPN.vu service"
 
-	nsExec::ExecToStack '"$SYSDIR\net.exe" stop mullvadvpn'
+	nsExec::ExecToStack '"$SYSDIR\net.exe" stop vpnvu'
 
 	Pop $0
 	Pop $1
@@ -966,10 +966,10 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	# Copy over the daemon log from the old install for debugging purposes
 	SetShellVarContext all
-	CopyFiles /SILENT /FILESONLY "$LOCALAPPDATA\Mullvad VPN\daemon.log" "$LOCALAPPDATA\Mullvad VPN\old-install-daemon.log"
+	CopyFiles /SILENT /FILESONLY "$LOCALAPPDATA\VPN.vu\daemon.log" "$LOCALAPPDATA\VPN.vu\old-install-daemon.log"
 
-	mullvad_nsis::Log "Removing Mullvad service"
-	nsExec::ExecToStack '"$SYSDIR\sc.exe" delete mullvadvpn'
+	mullvad_nsis::Log "Removing VPN.vu service"
+	nsExec::ExecToStack '"$SYSDIR\sc.exe" delete vpnvu'
 
 	Pop $0
 	Pop $R0
@@ -992,15 +992,15 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	StopAndDeleteService_check_delete:
 
-	nsExec::ExecToStack '"$SYSDIR\sc.exe" query mullvadvpn'
+	nsExec::ExecToStack '"$SYSDIR\sc.exe" query vpnvu'
 
 	Pop $0
 	Pop $1
 
 	${If} $0 != ${ERROR_SERVICE_DOES_NOT_EXIST}
-		mullvad_nsis::Log "Attempting to forcibly kill Mullvad service"
+		mullvad_nsis::Log "Attempting to forcibly kill VPN.vu service"
 
-		nsExec::ExecToStack '"$SYSDIR\taskkill.exe" /f /fi "SERVICES eq mullvadvpn"'
+		nsExec::ExecToStack '"$SYSDIR\taskkill.exe" /f /fi "SERVICES eq vpnvu"'
 		Pop $0
 		Pop $1
 
@@ -1011,7 +1011,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 			Goto StopAndDeleteService_check_delete
 		${EndIf}
 
-		StrCpy $R0 "Failed to kill Mullvad service"
+		StrCpy $R0 "Failed to kill VPN.vu service"
 		mullvad_nsis::Log $R0
 		Goto StopAndDeleteService_return_only
 	${EndIf}
@@ -1179,7 +1179,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	customRemoveFiles_abort:
 
 	# Break the install due to inconsistent state
-	Delete "$INSTDIR\mullvad vpn.exe"
+	Delete "$INSTDIR\VPN.vu.exe"
 
 	# If an error occurs during a downgrade or full uninstall, clear the firewall rules anyway
 	${If} $FullUninstall == 1
@@ -1223,14 +1223,14 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 		${EndIf}
 
 		${RemoveSettings}
-		DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "net.mullvad.vpn"
+		DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "vu.vpn.app"
 
 		customRemoveFiles_after_remove_settings:
 	${Else}
 		mullvad_nsis::SetLogTarget ${LOG_VOID}
 
 		SetShellVarContext all
-		Delete "$LOCALAPPDATA\Mullvad VPN\uninstall.log"
+		Delete "$LOCALAPPDATA\VPN.vu\uninstall.log"
 	${EndIf}
 
 	${UnloadPlugins}
