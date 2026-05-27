@@ -18,8 +18,14 @@ pub mod env {
 // working automatically. Until then expect harmless 404s on version checks.
 pub const API_HOST_DEFAULT: &str = "api.vpn.vu";
 
-// Reserved IP — forces the daemon to skip the hardcoded seed and go straight
-// to DNS resolution via api_address_updater on the first API call. Avoids
-// pinning a stale Vercel/Cloudflare IP into the binary.
-pub const API_IP_DEFAULT: IpAddr = IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0));
+// Vercel A record for api.vpn.vu — used as the seed address for the very
+// first API call before api_address_updater finishes resolving DNS and
+// caches the live IP. Using 0.0.0.0 here is a footgun: the daemon's
+// "Direct" access method tries to connect to that address verbatim, gets
+// WSAEADDRNOTAVAIL, and then falls back to Encrypted-DNS-Proxy / Domain-
+// Fronting (both hardcoded to api.mullvad.net), which then fails with a
+// TLS cert mismatch ("certificate not valid for name api.vpn.vu"). Pinning
+// 76.76.21.21 keeps Direct working from the first request; api_address_-
+// updater still kicks in afterwards if Vercel's anycast IP rotates.
+pub const API_IP_DEFAULT: IpAddr = IpAddr::V4(Ipv4Addr::new(76, 76, 21, 21));
 pub const API_PORT_DEFAULT: u16 = 443;
