@@ -180,6 +180,10 @@ export const ipcSchema = {
     upgradeError: notifyRenderer<AppUpgradeError>(),
     upgradeInstallerStart: send<void>(),
     getUpgradeCacheDir: invoke<void, string>(),
+    // VPN.vu · easter-egg trigger from AppInfoView (5× version chip tap).
+    // Wraps webContents.openDevTools so the renderer doesn't need a separate
+    // privileged surface — the main process is the only place that can.
+    openDevTools: invoke<void, void>(),
   },
   tunnel: {
     '': notifyRenderer<TunnelState>(),

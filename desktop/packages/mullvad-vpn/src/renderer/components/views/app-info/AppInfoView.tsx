@@ -1,6 +1,8 @@
+import { useCallback, useRef, useState } from 'react';
 import styled, { css, keyframes } from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
+import { useAppContext } from '../../../context';
 import { Image } from '../../../lib/components/image';
 import { View } from '../../../lib/components/view';
 import { colors, spacings } from '../../../lib/foundations';
@@ -13,6 +15,13 @@ import { SettingsNavigationScrollbars } from '../../Layout';
 import { NavigationContainer } from '../../NavigationContainer';
 import { ChangelogListItem, UpdateAvailableListItem, VersionListItem } from './components';
 import { useShowUpdateAvailable } from './hooks';
+
+// VPN.vu · Android-style devtools easter egg. Five taps on the version chip
+// within DEVTOOLS_WINDOW_MS open Chrome DevTools (via main process IPC since
+// renderers can't do it themselves). Counter resets on idle to prevent
+// accidental triggers across separate visits.
+const DEVTOOLS_TAP_TARGET = 5;
+const DEVTOOLS_WINDOW_MS = 2000;
 
 // =============================================================================
 // MOTION · same easing + curves as SettingsView so AppInfo lands in the same
@@ -159,7 +168,7 @@ const StyledHeroTagline = styled.div({
   textAlign: 'center',
 });
 
-const StyledHeroVersionChip = styled.div({
+const StyledHeroVersionChip = styled.button({
   position: 'relative',
   zIndex: 1,
   marginTop: '4px',
@@ -173,6 +182,12 @@ const StyledHeroVersionChip = styled.div({
   letterSpacing: '0.06em',
   color: colors.blue80,
   fontVariantNumeric: 'tabular-nums',
+  cursor: 'default',
+  appearance: 'none',
+  outline: 'none',
+  '&:focus-visible': {
+    boxShadow: '0 0 0 2px rgba(91, 200, 218, 0.45)',
+  },
 });
 
 // =============================================================================
@@ -228,8 +243,31 @@ const StyledFooterAccent = styled.span({
 
 export function AppInfoView() {
   const { pop } = useHistory();
+  const { openDevTools } = useAppContext();
   const showUpdateAvailable = useShowUpdateAvailable();
   const { current } = useVersionCurrent();
+
+  // 5× tap on version chip → DevTools. Counter + timer live in refs so the
+  // re-render storm from chip text doesn't reset progress; we only set state
+  // for the visible "almost there" affordance via aria-pressed.
+  const tapCount = useRef(0);
+  const tapResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pressedHint, setPressedHint] = useState(false);
+  const handleVersionTap = useCallback(() => {
+    if (tapResetTimer.current) clearTimeout(tapResetTimer.current);
+    tapCount.current += 1;
+    if (tapCount.current >= DEVTOOLS_TAP_TARGET) {
+      tapCount.current = 0;
+      setPressedHint(false);
+      void openDevTools();
+      return;
+    }
+    setPressedHint(tapCount.current >= 3);
+    tapResetTimer.current = setTimeout(() => {
+      tapCount.current = 0;
+      setPressedHint(false);
+    }, DEVTOOLS_WINDOW_MS);
+  }, [openDevTools]);
 
   return (
     <View backgroundColor="darkBlue">
@@ -261,7 +299,13 @@ export function AppInfoView() {
                           messages.pgettext('app-info-view', 'Your VPN · no name, no trace')
                         }
                       </StyledHeroTagline>
-                      <StyledHeroVersionChip>{current}</StyledHeroVersionChip>
+                      <StyledHeroVersionChip
+                        type="button"
+                        onClick={handleVersionTap}
+                        aria-pressed={pressedHint}
+                        aria-label={current}>
+                        {current}
+                      </StyledHeroVersionChip>
                     </StyledHero>
 
                     {showUpdateAvailable && <UpdateAvailableListItem />}

@@ -449,6 +449,8 @@ export default class AppRenderer {
   public viewLog = (path: string) => IpcRendererEventChannel.problemReport.viewLog(path);
   public quit = (source: DisconnectSource) => IpcRendererEventChannel.app.quit(source);
   public openUrl = (url: Url) => IpcRendererEventChannel.app.openUrl(url);
+  // VPN.vu · proxy to main process devtools opener (easter egg from AppInfoView).
+  public openDevTools = () => IpcRendererEventChannel.app.openDevTools();
   public getPathBaseName = (path: string) => IpcRendererEventChannel.app.getPathBaseName(path);
   public showOpenDialog = (options: Electron.OpenDialogOptions) =>
     IpcRendererEventChannel.app.showOpenDialog(options);
