@@ -541,7 +541,11 @@ fn cache_is_stale(cache: &VersionCache, current_version: &Version) -> bool {
 fn dev_version_cache() -> VersionCache {
     VersionCache {
         cache_version: mullvad_version::VERSION.parse().unwrap(),
-        current_version_supported: false,
+        // PSYCO: keep dev builds reported as supported until VPN.vu has a real
+        // /app/releases endpoint + code-signing cert. Upstream defaults to
+        // false so unsigned dev binaries trigger the "UNSUPPORTED VERSION"
+        // banner; for our internal QA flow that banner is just noise.
+        current_version_supported: true,
         #[cfg(not(target_os = "android"))]
         version_info: VersionInfo {
             stable: Metadata {
