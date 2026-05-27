@@ -13,7 +13,7 @@ export function MacOsSplitTunnelingAvailability() {
       <HeaderSubTitle>
         {messages.pgettext(
           'split-tunneling-view',
-          'To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings.',
+          'To use split tunneling please enable “Full disk access” for “VPN.vu” in the macOS system settings.',
         )}
       </HeaderSubTitle>
       <Flex flexDirection="column" gap="small">

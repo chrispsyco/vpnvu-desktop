@@ -117,8 +117,8 @@ use tokio::io;
 
 #[cfg(target_os = "windows")]
 pub mod service {
-    pub const SERVICE_NAME: &str = "MullvadVPN";
-    pub const SERVICE_DISPLAY_NAME: &str = "Mullvad VPN Service";
+    pub const SERVICE_NAME: &str = "VPNvu";
+    pub const SERVICE_DISPLAY_NAME: &str = "VPN.vu Service";
 }
 
 /// Delay between generating a new WireGuard key and reconnecting

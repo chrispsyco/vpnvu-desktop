@@ -23,21 +23,11 @@ function latLngToVec3(lat: number, lng: number, r: number): THREE.Vector3 {
  * Server-to-server arcs, balanced across continents. Indexed by stable server
  * IDs from `vpnvu-servers.ts` so reordering the canonical list does not
  * silently rewire which arcs render.
+ *
+ * Phase 1 launch: only BR-SAO is provisioned, so no arcs render. Add pairs
+ * here as new relays come online.
  */
-const ARC_PAIRS: Array<[string, string]> = [
-  ['br-sp-1', 'us-nyc-1'], // SP → NY
-  ['br-sp-1', 'gb-lon-1'], // SP → London
-  ['us-nyc-1', 'gb-lon-1'], // NY → London
-  ['us-nyc-1', 'ca-yyz-1'], // NY → Toronto
-  ['us-lax-1', 'jp-tyo-1'], // LA → Tokyo
-  ['gb-lon-1', 'nl-ams-1'], // London → Amsterdam
-  ['nl-ams-1', 'de-fra-1'], // Amsterdam → Frankfurt
-  ['de-fra-1', 'se-sto-1'], // Frankfurt → Stockholm
-  ['de-fra-1', 'ch-zrh-1'], // Frankfurt → Zurich
-  ['jp-tyo-1', 'sg-sin-1'], // Tokyo → Singapore
-  ['br-rj-1', 'br-sp-1'], // RJ → SP (regional)
-  ['ca-yyz-1', 'gb-lon-1'], // Toronto → London
-];
+const ARC_PAIRS: Array<[string, string]> = [];
 
 interface ArcData {
   geometry: THREE.BufferGeometry;

@@ -1247,8 +1247,8 @@ class ApplicationMain
 }
 
 if (CommandLineOptions.help.match) {
-  console.log('Mullvad VPN');
-  console.log('Graphical interface for managing the Mullvad VPN daemon');
+  console.log('VPN.vu');
+  console.log('Graphical interface for managing the VPN.vu daemon');
 
   console.log('');
   console.log('OPTIONS:');

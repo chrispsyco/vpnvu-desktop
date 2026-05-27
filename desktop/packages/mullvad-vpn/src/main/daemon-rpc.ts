@@ -52,7 +52,7 @@ import {
 } from './grpc-type-convertions';
 
 const DAEMON_RPC_PATH =
-  process.platform === 'win32' ? '//./pipe/Mullvad VPN' : '/var/run/mullvad-vpn';
+  process.platform === 'win32' ? '//./pipe/VPN.vu' : '/var/run/mullvad-vpn';
 
 export class SubscriptionListener<T> {
   // Only meant to be used by DaemonRpc
