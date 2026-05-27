@@ -44,7 +44,7 @@ use windows_sys::{
     core::GUID,
 };
 
-pub const PRODUCT_NAME: &str = "Mullvad VPN";
+pub const PRODUCT_NAME: &str = "VPN.vu";
 
 pub fn get_allusersprofile_dir() -> Result<PathBuf> {
     match std::env::var_os("ALLUSERSPROFILE") {

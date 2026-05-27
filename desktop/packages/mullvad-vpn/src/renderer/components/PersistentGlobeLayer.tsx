@@ -19,15 +19,15 @@ const GLOBE_ROUTES: ReadonlySet<string> = new Set<string>([
 
 /**
  * Header height (px) matches `<MainHeader size="2">` — the logged-in variant
- * used by the main view, which is the only place the globe is visible. The
- * launch view uses size="1" (68px) but lives for only a few hundred ms; an
- * extra 12px of black band there is invisible in practice.
+ * used by the main view, which is the only place the globe sits under a
+ * header. The launch view has no header and gets the full viewport so the
+ * globe reads as the ambient background instead of competing with a band.
  */
 const HEADER_OFFSET_PX = 80;
 
-const Wrap = styled.div<{ $visible: boolean }>`
+const Wrap = styled.div<{ $visible: boolean; $topOffsetPx: number }>`
   position: fixed;
-  top: ${HEADER_OFFSET_PX}px;
+  top: ${({ $topOffsetPx }) => $topOffsetPx}px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -44,8 +44,9 @@ interface Props {
 
 export function PersistentGlobeLayer({ currentLocation }: Props) {
   const visible = GLOBE_ROUTES.has(currentLocation.pathname);
+  const topOffsetPx = currentLocation.pathname === RoutePath.launch ? 0 : HEADER_OFFSET_PX;
   return (
-    <Wrap $visible={visible} aria-hidden="true">
+    <Wrap $visible={visible} $topOffsetPx={topOffsetPx} aria-hidden="true">
       <GlobeBackgroundLazy />
     </Wrap>
   );

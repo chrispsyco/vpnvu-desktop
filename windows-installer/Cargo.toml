@@ -2,16 +2,16 @@
 name = "windows-installer"
 edition.workspace = true
 rust-version.workspace = true
-description = "Pack the Mullvad VPN installer for several platforms into a one executable"
+description = "Pack the VPN.vu installer for several platforms into a one executable"
 repository.workspace = true
 license.workspace = true
 
 [package.metadata.winres]
-ProductName = "Mullvad VPN"
-CompanyName = "Mullvad VPN AB"
-LegalCopyright = "(c) 2026 Mullvad VPN AB"
-InternalName = "mullvad-installer"
-OriginalFilename = "MullvadVPN.exe"
+ProductName = "VPN.vu"
+CompanyName = "VPN.vu"
+LegalCopyright = "(c) 2026 VPN.vu"
+InternalName = "vpnvu-installer"
+OriginalFilename = "VPNvu.exe"
 
 [build-dependencies]
 anyhow.workspace = true

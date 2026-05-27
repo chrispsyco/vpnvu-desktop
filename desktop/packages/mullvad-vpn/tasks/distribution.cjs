@@ -226,7 +226,7 @@ function newConfig() {
         // same across all electron-builder applications, which causes package
         // conflicts
         '--rpm-rpmbuild-define=_build_id_links none',
-        '--directories=/opt/Mullvad VPN/',
+        '--directories=/opt/VPN.vu/',
         '--before-install',
         distAssets('linux/before-install.sh'),
         '--before-remove',

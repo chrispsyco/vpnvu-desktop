@@ -16,6 +16,10 @@ import { TroubleshootingModal } from './components/troubleshooting-modal';
 /* Splash background atmosphere                                       */
 /* ------------------------------------------------------------------ */
 
+/* O splash agora deixa o globo (via PersistentGlobeLayer) ser o protagonista
+   visual. O background do StyledSplash é um deep navy quase preto com um
+   leve vinhetar radial para empurrar o foco pro centro, sem competir com
+   o globo nem com o logo branco. */
 const StyledSplash = styled(Flex)`
   position: relative;
   flex: 1;
@@ -25,35 +29,26 @@ const StyledSplash = styled(Flex)`
   padding: 32px;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 1200px 800px at 18% 14%, rgba(9, 158, 180, 0.18), transparent 62%),
-    radial-gradient(ellipse 900px 700px at 88% 88%, rgba(91, 200, 218, 0.09), transparent 62%),
-    radial-gradient(circle at 50% 120%, rgba(14, 72, 80, 0.55), transparent 60%);
+    radial-gradient(circle at 50% 50%, rgba(7, 19, 25, 0.20), rgba(2, 6, 10, 0.85) 70%),
+    rgb(2, 6, 10);
 `;
 
-/* Soft glow blobs behind the logo — toned down so they read as ambient
-   atmosphere rather than competing with the wordmark and status text. */
-const GlowTopRight = styled.div`
+/* GlobeDimmer: véu escuro semi-transparente *acima* do globo persistente,
+   que abaixa a saturação cyan do oceano e faz o continente/grid sumirem
+   gentilmente atrás do logo. radial-gradient mais opaco no centro (onde
+   o logo + tagline ficam) e mais translúcido nas bordas, pra preservar
+   alguma sensação de globo girando. */
+const GlobeDimmer = styled.div`
   position: absolute;
-  top: -22%;
-  right: -14%;
-  width: 520px;
-  height: 520px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(91, 200, 218, 0.10), transparent 70%);
-  filter: blur(40px);
+  inset: 0;
   pointer-events: none;
-`;
-
-const GlowBottomLeft = styled.div`
-  position: absolute;
-  bottom: -18%;
-  left: -16%;
-  width: 420px;
-  height: 420px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 60% 60%, rgba(9, 158, 180, 0.08), transparent 70%);
-  filter: blur(40px);
-  pointer-events: none;
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 45%,
+    rgba(0, 0, 0, 0.78),
+    rgba(0, 0, 0, 0.55) 55%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+  z-index: 0;
 `;
 
 /* Subtle SVG noise grain */
@@ -182,6 +177,10 @@ const Wordmark = styled.div`
   letter-spacing: -0.035em;
   color: rgb(255, 255, 255);
   line-height: 1;
+  /* Sombra ampla preta para destacar o wordmark sobre o globo escurecido,
+     mantendo o contorno do logo legível mesmo em pontos mais claros do
+     mapa. */
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.75);
   animation: ${fadeUp} 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: 120ms;
 
@@ -200,7 +199,10 @@ const Tagline = styled.div`
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.24em;
-  color: rgb(155, 174, 182);
+  /* Contraste mais firme sobre o globo escurecido. drop-shadow sutil
+     evita que a tagline desapareça caso o globo cruze um ponto claro. */
+  color: rgba(220, 234, 240, 0.92);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
   margin-top: 10px;
   text-align: center;
   animation: ${fadeUp} 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -440,8 +442,7 @@ export function LaunchView() {
           sense once the daemon is connected. Showing it here also
           competes visually with the centred wordmark and status text. */}
       <StyledSplash flexDirection="column" flexGrow={1}>
-          <GlowTopRight />
-          <GlowBottomLeft />
+          <GlobeDimmer />
           <Grain />
 
           <SplashInner>

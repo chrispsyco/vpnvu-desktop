@@ -6,8 +6,8 @@
     "packages/*"
   ],
   "author": {
-    "name": "Mullvad VPN",
-    "email": "support@mullvadvpn.net"
+    "name": "VPN.vu",
+    "email": "support@vpn.vu"
   },
   "repository": "https://github.com/mullvad/mullvadvpn-app",
   "license": "GPL-3.0-or-later",
