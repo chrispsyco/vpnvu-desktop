@@ -26,8 +26,9 @@ export type RecentGeographicalLocationProps = {
 
 // VPN.vu · recent geographical card. Same surface as `CountryLocation` so the
 // Recents section sits visually consistent with the All locations stack.
-// The clock badge replaces the country flag since recent items can be a
-// city or relay, not just a country.
+// The flag pill reuses GeographicalLocation's 22x22 country-code tile so
+// recent rows visually align with the "Todas as localizações" list below
+// instead of dropping a tiny clock glyph into the same slot.
 const StyledLocationContainer = styled.div<{ $selected: boolean }>`
   position: relative;
   margin-bottom: ${spacings.tiny};
@@ -64,23 +65,35 @@ const StyledLocationContainer = styled.div<{ $selected: boolean }>`
   }
 `;
 
-const StyledClockBadge = styled.span`
+// Mirror of GeographicalLocation's StyledFlagPill so recent rows render
+// the same 2-letter country tile as the "Todas as localizações" list.
+// Kept inline rather than extracted to a shared primitive because the two
+// call sites are the only consumers — promote when a third appears.
+const StyledFlagPill = styled.span`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  margin-right: 8px;
-  border-radius: 8px;
-  background: rgba(91, 200, 218, 0.08);
-  border: 1px solid rgba(91, 200, 218, 0.18);
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: rgba(91, 200, 218, 0.12);
+  border: 1px solid rgba(91, 200, 218, 0.25);
   color: rgb(121, 200, 211);
+  font-family: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   flex-shrink: 0;
+  line-height: 1;
+`;
 
-  svg {
-    width: 13px;
-    height: 13px;
-  }
+const StyledLeftCluster = styled.span`
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 1;
+  gap: 10px;
 `;
 
 const StyledTitleWithPing = styled.span`
@@ -98,11 +111,21 @@ function RecentGeographicalLocationImpl({
   const { handleSelect } = useLocationListsContext();
 
   const locationBreadcrumbs = useLocationBreadcrumbs(location);
-  const breadcrumbsSubLabel = locationBreadcrumbs.join(', ');
 
   const disabled = location.disabled || disabledProp;
 
-  const showParents = location.type !== 'country';
+  // VPN.vu: when a country has a single city (current state of the network),
+  // surface the city as the main label and the country as the sub-label so
+  // Recents reads "São Paulo / Brasil" instead of a lonely "Brasil".
+  const collapsedSingleCity =
+    location.type === 'country' && location.cities.length === 1 ? location.cities[0] : null;
+
+  const displayLabel = collapsedSingleCity ? collapsedSingleCity.label : location.label;
+  const subLabel = collapsedSingleCity
+    ? location.label
+    : location.type !== 'country'
+      ? locationBreadcrumbs.join(', ')
+      : null;
 
   const handleClick = useCallback(() => {
     void handleSelect(location);
@@ -121,29 +144,28 @@ function RecentGeographicalLocationImpl({
                 // TRANSLATORS: %(location)s - The name of the location that will be connected to when the button is clicked.
                 messages.pgettext('accessibility', 'Connect to %(location)s'),
                 {
-                  location: location.label,
+                  location: displayLabel,
                 },
               )}>
               <Location.Accordion.Header.Item>
-                <StyledClockBadge aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                    <circle cx="12" cy="12" r="9" />
-                    <polyline points="12 7 12 12 16 14" />
-                  </svg>
-                </StyledClockBadge>
-                <FlexColumn>
-                  <StyledTitleWithPing>
-                    <Location.Accordion.Header.Item.Title>
-                      {location.label}
-                    </Location.Accordion.Header.Item.Title>
-                    <PingBadge location={location} />
-                  </StyledTitleWithPing>
-                  {showParents && (
-                    <FootnoteMiniSemiBold color="whiteAlpha60">
-                      {breadcrumbsSubLabel}
-                    </FootnoteMiniSemiBold>
+                <StyledLeftCluster>
+                  {location.details.country && (
+                    <StyledFlagPill aria-hidden="true">
+                      {location.details.country.slice(0, 2)}
+                    </StyledFlagPill>
                   )}
-                </FlexColumn>
+                  <FlexColumn>
+                    <StyledTitleWithPing>
+                      <Location.Accordion.Header.Item.Title>
+                        {displayLabel}
+                      </Location.Accordion.Header.Item.Title>
+                      <PingBadge location={location} />
+                    </StyledTitleWithPing>
+                    {subLabel && (
+                      <FootnoteMiniSemiBold color="whiteAlpha60">{subLabel}</FootnoteMiniSemiBold>
+                    )}
+                  </FlexColumn>
+                </StyledLeftCluster>
               </Location.Accordion.Header.Item>
             </Location.Accordion.Header.ItemTrigger>
             <RecentGeographicalLocationTrailingActions location={location} />
