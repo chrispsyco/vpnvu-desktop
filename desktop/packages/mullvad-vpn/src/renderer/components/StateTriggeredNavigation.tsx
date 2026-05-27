@@ -7,6 +7,15 @@ import { TransitionType, useHistory } from '../lib/history';
 import { useEffectEvent } from '../lib/utility-hooks';
 import { useSelector } from '../redux/store';
 
+// VPN.vu · minimum dwell on the launch splash. Without this, the splash
+// flashes for a few frames when the daemon was already running before the
+// GUI started, because connectedToDaemon flips true before the user can
+// register the brand moment. We measure from module load (which fires once
+// per renderer process boot) so the wall-clock is consistent across mount
+// cycles of this component.
+const LAUNCH_MIN_DWELL_MS = 5000;
+const APP_BOOT_AT = Date.now();
+
 export default function StateTriggeredNavigation() {
   const { location, reset } = useHistory();
 
@@ -79,6 +88,14 @@ function getNavigationDelay(currentPath: RoutePath, nextPath: RoutePath): number
     (nextPath === RoutePath.main || nextPath === RoutePath.expired)
   ) {
     return 1000;
+  }
+  // Hold the splash for at least LAUNCH_MIN_DWELL_MS since boot. If the daemon
+  // came back in 80ms, this still gives the brand moment 5 full seconds; if it
+  // took 3s, only ~2s of padding gets added.
+  if (currentPath === RoutePath.launch) {
+    const elapsed = Date.now() - APP_BOOT_AT;
+    const remaining = LAUNCH_MIN_DWELL_MS - elapsed;
+    if (remaining > 0) return remaining;
   }
 }
 
