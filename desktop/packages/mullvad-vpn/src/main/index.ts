@@ -940,6 +940,12 @@ class ApplicationMain
     IpcMainEventChannel.app.handleGetPathBaseName((filePath) =>
       Promise.resolve(path.basename(filePath)),
     );
+    // VPN.vu · DevTools easter egg trigger from AppInfoView (5× version chip tap).
+    // Renderers can't open DevTools themselves — proxy through main.
+    IpcMainEventChannel.app.handleOpenDevTools(() => {
+      this.userInterface?.windowController?.window?.webContents.openDevTools({ mode: 'detach' });
+      return Promise.resolve();
+    });
 
     IpcMainEventChannel.navigation.handleSetHistory((history) => {
       this.navigationHistory = history;
