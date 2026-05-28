@@ -943,7 +943,7 @@ class ApplicationMain
     // VPN.vu · DevTools easter egg trigger from AppInfoView (5× version chip tap).
     // Renderers can't open DevTools themselves — proxy through main.
     IpcMainEventChannel.app.handleOpenDevTools(() => {
-      this.userInterface?.windowController?.window?.webContents.openDevTools({ mode: 'detach' });
+      this.userInterface?.openDevTools();
       return Promise.resolve();
     });
 
@@ -1106,7 +1106,14 @@ class ApplicationMain
   }
 
   private shouldShowWindowOnStart(): boolean {
-    return this.settings.gui.unpinnedWindow && !this.settings.gui.startMinimized;
+    // VPN.vu · open the window in foreground whenever the user launched the
+    // app from the icon. The upstream Mullvad check also required
+    // `unpinnedWindow` to be true, but that flag is about positioning style
+    // (standalone window vs tray popover) and has no business gating initial
+    // visibility — it caused the app to silently land in the tray on first
+    // launch of the standalone-window builds. Only respect the explicit
+    // user preference of "start minimized" here.
+    return !this.settings.gui.startMinimized;
   }
 
   private checkMacOsLaunchDaemon(): Promise<void> {

@@ -29,8 +29,8 @@ const StyledSplash = styled(Flex)`
   padding: 32px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 50%, rgba(7, 19, 25, 0.20), rgba(2, 6, 10, 0.85) 70%),
-    rgb(2, 6, 10);
+    radial-gradient(circle at 50% 50%, rgba(20, 52, 68, 0.35), rgba(8, 22, 30, 0.85) 70%),
+    rgb(10, 24, 32);
 `;
 
 /* GlobeDimmer: véu escuro semi-transparente *acima* do globo persistente,
