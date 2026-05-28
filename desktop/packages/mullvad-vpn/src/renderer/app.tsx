@@ -54,7 +54,6 @@ import MacOsScrollbarDetection from './components/MacOsScrollbarDetection';
 import { ModalContainer } from './components/Modal';
 import { AppContext } from './context';
 import { Theme } from './lib/components';
-import { getNavigationBase } from './lib/functions/navigation-base';
 import History from './lib/history';
 import { loadTranslations } from './lib/load-translations';
 import IpcOutput from './lib/logging';
@@ -119,7 +118,6 @@ export default class AppRenderer {
   private tunnelState!: TunnelState;
   private settings!: ISettings;
   private loginState: LoginState = 'none';
-  private connectedToDaemon = false;
 
   private loginScheduler = new Scheduler();
   private expiryScheduler = new Scheduler();
@@ -791,14 +789,12 @@ export default class AppRenderer {
   }
 
   private onDaemonConnected() {
-    this.connectedToDaemon = true;
     this.reduxActions.userInterface.setConnectedToDaemon(true);
     this.reduxActions.userInterface.setDaemonAllowed(true);
     this.reduxActions.userInterface.setDaemonStatus('running');
   }
 
   private onDaemonDisconnected() {
-    this.connectedToDaemon = false;
     this.reduxActions.userInterface.setConnectedToDaemon(false);
     this.reduxActions.userInterface.setDaemonStatus('stopped');
     log.info('Daemon is disconnected. Resetting UI state.');
