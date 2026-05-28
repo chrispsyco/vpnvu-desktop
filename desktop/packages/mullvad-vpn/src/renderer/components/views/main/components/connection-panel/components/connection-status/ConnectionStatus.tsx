@@ -25,6 +25,12 @@ export function ConnectionStatus() {
   );
 }
 
+// VPN.vu · "desconectado" used Mullvad's saturated red (#E36F6F-ish). On the
+// dark teal panel it screamed warning instead of reading as "idle, waiting".
+// A muted terracotta still telegraphs the disconnected state at a glance but
+// no longer competes with the green Connect button or actual error red.
+const DISCONNECTED_COLOR = '#cf8a7a';
+
 function getConnectionSTatusLabelColor(tunnelState: TunnelState) {
   switch (tunnelState.state) {
     case 'connected':
@@ -33,7 +39,7 @@ function getConnectionSTatusLabelColor(tunnelState: TunnelState) {
     case 'disconnecting':
       return colors.white;
     case 'disconnected':
-      return tunnelState.lockedDown ? colors.white : colors.red;
+      return tunnelState.lockedDown ? colors.white : DISCONNECTED_COLOR;
     case 'error':
       return tunnelState.details.blockingError ? colors.red : colors.white;
   }
