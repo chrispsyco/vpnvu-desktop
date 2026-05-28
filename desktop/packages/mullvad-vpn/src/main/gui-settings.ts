@@ -2,7 +2,7 @@ import { app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { IGuiSettingsState, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
+import { IGuiSettingsState } from '../shared/gui-settings-state';
 import log from '../shared/logging';
 
 const settingsSchema: Record<keyof IGuiSettingsState, string> = {
@@ -20,7 +20,11 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
 };
 
 const defaultSettings: IGuiSettingsState = {
-  preferredLocale: SYSTEM_PREFERRED_LOCALE_KEY,
+  // VPN.vu · default to pt-BR. The upstream "system preferred" fallback
+  // resolved to en-US even on PT-BR Windows in some builds (Electron's
+  // app.getLocale returns the build's locale, not the user's). User can
+  // still override via Settings · Interface · Idioma.
+  preferredLocale: 'pt-BR',
   autoConnect: false,
   enableSystemNotifications: true,
   monochromaticIcon: false,

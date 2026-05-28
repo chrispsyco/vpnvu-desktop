@@ -28,9 +28,10 @@ const StyledSplash = styled(Flex)`
   justify-content: center;
   padding: 32px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(20, 52, 68, 0.35), rgba(8, 22, 30, 0.85) 70%),
-    rgb(10, 24, 32);
+  /* Transparent so the PersistentGlobeLayer behind us reads through as a
+     subtle rotating detail. The GlobeDimmer below paints a soft vignette
+     on top of the globe so the centred lockup still has dark backing. */
+  background: transparent;
 `;
 
 /* GlobeDimmer: véu escuro semi-transparente *acima* do globo persistente,
@@ -42,11 +43,13 @@ const GlobeDimmer = styled.div`
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* Softer vignette · globe stays as a subtle rotating background detail,
+     centred lockup still readable but the dim doesn't crush the canvas. */
   background: radial-gradient(
-    ellipse 60% 50% at 50% 45%,
-    rgba(0, 0, 0, 0.78),
-    rgba(0, 0, 0, 0.55) 55%,
-    rgba(0, 0, 0, 0.35) 100%
+    ellipse 70% 60% at 50% 45%,
+    rgba(2, 8, 12, 0.55),
+    rgba(2, 8, 12, 0.30) 55%,
+    rgba(2, 8, 12, 0.10) 100%
   );
   z-index: 0;
 `;
