@@ -30,14 +30,12 @@ export default function StateTriggeredNavigation() {
 
   const delayScheduler = useScheduler();
 
-  const prevPath = useRef<RoutePath>(
-    getNavigationBase(
-      connectedToDaemon,
-      loginState,
-      hasAcceptedPrivacyDisclaimer,
-      pendingCreateAccount,
-    ),
-  );
+  // VPN.vu · seed prevPath as /launch (the route we force history to start at)
+  // not as getNavigationBase(...). When the daemon is already connected at
+  // mount time, getNavigationBase returned the *destination* (e.g. /login),
+  // and since nextPath equalled prevPath the effect never fired updatePath,
+  // so location.pathname stayed at /launch forever — splash hard-froze.
+  const prevPath = useRef<RoutePath>(RoutePath.launch);
   const nextPath = useMemo(
     () =>
       getNavigationBase(
