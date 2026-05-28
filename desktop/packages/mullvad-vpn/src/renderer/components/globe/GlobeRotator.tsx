@@ -1,5 +1,7 @@
 import { useFrame } from '@react-three/fiber';
+import { useLocation } from 'react-router';
 
+import { RoutePath } from '../../../shared/routes';
 import {
   getGlobeRotationX,
   getGlobeRotationY,
@@ -23,6 +25,10 @@ function continentDensity(lngDeg: number): number {
 
 const BASE_SPEED = 0.085; // average rad/s (matches the previous constant feel)
 const VARIATION = 0.32; // ±32% — subtle enough to read as "constant"
+// VPN.vu · the splash uses a calmer half-speed rotation so the brand moment
+// feels deliberate. Once the user lands on /main the globe picks up to the
+// normal pace.
+const SPLASH_SPEED_MULTIPLIER = 0.5;
 
 /** How fast pitch relaxes back to 0 when idle (per second). */
 const PITCH_RELAX_RATE = 0.8;
@@ -33,6 +39,9 @@ function visibleLngFromY(y: number): number {
 }
 
 export function GlobeRotator() {
+  const location = useLocation();
+  const isSplash = location.pathname === RoutePath.launch;
+
   useFrame((_, delta) => {
     // Clamp delta so a long stall (window minimised, GC pause) doesn't make
     // the focus animation snap forward by a full second.
@@ -61,8 +70,9 @@ export function GlobeRotator() {
     const x = getGlobeRotationX();
     const density = continentDensity(visibleLngFromY(y));
     const speedMult = 1 + VARIATION - density * VARIATION * 2;
+    const routeMult = isSplash ? SPLASH_SPEED_MULTIPLIER : 1;
 
-    setGlobeRotationY(y + dt * BASE_SPEED * speedMult);
+    setGlobeRotationY(y + dt * BASE_SPEED * speedMult * routeMult);
 
     // Slowly relax pitch back to 0 when nothing is steering.
     if (Math.abs(x) > PITCH_EPSILON) {

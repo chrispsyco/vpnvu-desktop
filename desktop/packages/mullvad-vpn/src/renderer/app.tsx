@@ -998,9 +998,13 @@ export default class AppRenderer {
   private updateLocation() {
     switch (this.tunnelState.state) {
       case 'disconnected':
-        if (this.tunnelState.location) {
-          this.setLocation(this.tunnelState.location);
-        }
+        // VPN.vu · point the map at the relay we WOULD connect to, not at the
+        // user's IP-geolocation. Two reasons:
+        //   1. Showing the user's real city on a VPN app feels off — the
+        //      whole product premise is "hide where you are".
+        //   2. The map should *preview* the destination so the lockup reads
+        //      coherently with the "Trocar servidor · Brasil" CTA below.
+        this.setLocation(this.getLocationFromConstraints());
         break;
       case 'disconnecting':
         if (this.tunnelState.location) {
@@ -1070,6 +1074,21 @@ export default class AppRenderer {
           return { country: country?.name, city: city?.name, ...coordinates };
         } else if ('country' in constraint) {
           const country = relayLocations.find(({ code }) => constraint.country === code);
+
+          // VPN.vu · when the country has a single city (current state, BR-SAO
+          // is the only relay), zoom to that city instead of the country
+          // centroid. Centroid for Brazil lands in central Mato Grosso where
+          // we have no server — confusing UX. Collapse to the only city so
+          // disconnected map matches what Connect would actually do.
+          if (country && country.cities.length === 1) {
+            const onlyCity = country.cities[0];
+            return {
+              country: country.name,
+              city: onlyCity.name,
+              latitude: onlyCity.latitude,
+              longitude: onlyCity.longitude,
+            };
+          }
 
           return { country: country?.name, ...coordinates };
         }
