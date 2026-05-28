@@ -358,15 +358,12 @@ export default class AppRenderer {
 
     this.updateLocation();
 
-    if (initialState.navigationHistory) {
-      // Set last action to POP to trigger automatic scrolling to saved coordinates.
-      initialState.navigationHistory.lastAction = 'POP';
-      this.history = History.fromSavedHistory(initialState.navigationHistory);
-    } else {
-      const loginState = this.reduxStore.getState().account.status;
-      const navigationBase = getNavigationBase(this.connectedToDaemon, loginState);
-      this.history = new History(navigationBase);
-    }
+    // VPN.vu · always boot at /launch so the splash gets its full LAUNCH_MIN_DWELL_MS
+    // moment of fame. The previous behaviour seeded history with whatever
+    // getNavigationBase() returned at first paint, which collapsed straight to /main
+    // when the daemon service was already running — user never saw the splash.
+    // StateTriggeredNavigation will route us forward once the boot ritual completes.
+    this.history = new History(RoutePath.launch);
 
     if (window.env.e2e) {
       // Make the current location available to the tests if running e2e tests
