@@ -14,6 +14,7 @@ import { GlobeCore } from './GlobeCore';
 import { GlobeGrid } from './GlobeGrid';
 import { GlobeMesh } from './GlobeMesh';
 import { GlobeRotator } from './GlobeRotator';
+import { Stars } from './Stars';
 import { VolcanoMarkers } from './VolcanoMarkers';
 
 /**
@@ -162,6 +163,11 @@ export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeScene
       frameloop={hidden ? 'never' : 'always'}
     >
       <ambientLight intensity={0.4} />
+      {/* Starfield · sits at world-origin (not behind the GLOBE_OFFSET_Y group)
+          so it's centred on the camera instead of pinned to the globe. Renders
+          before everything else and writes no depth, so the globe always paints
+          on top of it. */}
+      <Stars />
       <Suspense fallback={null}>
         <GlobeRotator />
         <CameraZoomController baseZ={cameraZ} />
