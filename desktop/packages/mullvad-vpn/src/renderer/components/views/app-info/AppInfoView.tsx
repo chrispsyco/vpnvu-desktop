@@ -2,11 +2,11 @@ import { useCallback, useRef, useState } from 'react';
 import styled, { css, keyframes } from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
-import { useAppContext } from '../../../context';
+import { RoutePath } from '../../../../shared/routes';
 import { Image } from '../../../lib/components/image';
 import { View } from '../../../lib/components/view';
 import { colors, spacings } from '../../../lib/foundations';
-import { useHistory } from '../../../lib/history';
+import { TransitionType, useHistory } from '../../../lib/history';
 import { useVersionCurrent } from '../../../redux/hooks';
 import { AppNavigationHeader } from '../../';
 import { geistMono } from '../../common-styles';
@@ -16,12 +16,14 @@ import { NavigationContainer } from '../../NavigationContainer';
 import { ChangelogListItem, UpdateAvailableListItem, VersionListItem } from './components';
 import { useShowUpdateAvailable } from './hooks';
 
-// VPN.vu · Android-style devtools easter egg. Five taps on the version chip
-// within DEVTOOLS_WINDOW_MS open Chrome DevTools (via main process IPC since
-// renderers can't do it themselves). Counter resets on idle to prevent
-// accidental triggers across separate visits.
+// VPN.vu · Android-style developer-tools easter egg. Five taps on the version
+// chip within DEVTOOLS_WINDOW_MS navigates to the hidden Debug view (the
+// upstream "Developer tools" page with previews of Welcome/Out-of-time, error
+// triggers, etc.) — useful for QA without exposing it in the normal settings
+// tree. 3000ms window gives a relaxed ~600ms per tap so it's reachable
+// without making your wrist hurt.
 const DEVTOOLS_TAP_TARGET = 5;
-const DEVTOOLS_WINDOW_MS = 2000;
+const DEVTOOLS_WINDOW_MS = 3000;
 
 // =============================================================================
 // MOTION · same easing + curves as SettingsView so AppInfo lands in the same
@@ -242,12 +244,11 @@ const StyledFooterAccent = styled.span({
 });
 
 export function AppInfoView() {
-  const { pop } = useHistory();
-  const { openDevTools } = useAppContext();
+  const { pop, push } = useHistory();
   const showUpdateAvailable = useShowUpdateAvailable();
   const { current } = useVersionCurrent();
 
-  // 5× tap on version chip → DevTools. Counter + timer live in refs so the
+  // 5× tap on version chip → /debug. Counter + timer live in refs so the
   // re-render storm from chip text doesn't reset progress; we only set state
   // for the visible "almost there" affordance via aria-pressed.
   const tapCount = useRef(0);
@@ -259,7 +260,7 @@ export function AppInfoView() {
     if (tapCount.current >= DEVTOOLS_TAP_TARGET) {
       tapCount.current = 0;
       setPressedHint(false);
-      void openDevTools();
+      push(RoutePath.debug, { transition: TransitionType.push });
       return;
     }
     setPressedHint(tapCount.current >= 3);
@@ -267,7 +268,7 @@ export function AppInfoView() {
       tapCount.current = 0;
       setPressedHint(false);
     }, DEVTOOLS_WINDOW_MS);
-  }, [openDevTools]);
+  }, [push]);
 
   return (
     <View backgroundColor="darkBlue">
