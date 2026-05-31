@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -780,18 +781,15 @@ fun TunnelState.toMarker(location: GeoIpLocation?): Marker? {
 
 @Composable
 fun TunnelState.topBarColor(): Color =
-    // PSYCO · header escuro (surface) quando desconectado em vez do vermelho
-    // sólido, que ficava forte demais. Como o desktop · o estado "desligado"
-    // segue sinalizado no card e no globo. Conectado mantém o verde.
-    if (isSecured()) MaterialTheme.colorScheme.positive else MaterialTheme.colorScheme.surface
+    // PSYCO · conectado mantém o verde mas escurecido/suave (positive puxado em
+    // direção ao surface) em vez do verde forte · desconectado fica escuro
+    // (surface), sem o vermelho gritante de antes.
+    if (isSecured())
+        lerp(MaterialTheme.colorScheme.positive, MaterialTheme.colorScheme.surface, 0.5f)
+    else MaterialTheme.colorScheme.surface
 
 @Composable
-fun TunnelState.iconTintColor(): Color =
-    if (isSecured()) {
-        MaterialTheme.colorScheme.onTertiary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
+fun TunnelState.iconTintColor(): Color = MaterialTheme.colorScheme.onSurface
 
 fun GeoIpLocation.toLatLong() =
     LatLong(Latitude(latitude.toFloat()), Longitude(longitude.toFloat()))
