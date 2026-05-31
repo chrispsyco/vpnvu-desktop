@@ -48,10 +48,10 @@ import vu.vpn.common.compose.createOpenAccountPageHook
 import vu.vpn.common.compose.showSnackbarImmediately
 import vu.vpn.core.Navigator
 import vu.vpn.feature.account.api.AccountNavKey
-import vu.vpn.feature.addtime.api.AddTimeNavKey
 import vu.vpn.feature.addtime.api.VerificationPendingNavKey
 import vu.vpn.feature.home.api.ConnectNavKey
 import vu.vpn.feature.home.api.DeviceNameInfoNavKey
+import vu.vpn.feature.redeemvoucher.api.RedeemVoucherNavKey
 import vu.vpn.feature.settings.api.SettingsNavKey
 import vu.vpn.lib.common.Lc
 import vu.vpn.lib.common.util.groupWithSpaces
@@ -80,7 +80,8 @@ private fun PreviewWelcomeScreen(
             onSettingsClick = {},
             onAccountClick = {},
             navigateToDeviceInfoDialog = {},
-            onAddMoreTimeClick = {},
+            onBuyCreditClick = {},
+            onRedeemVoucherClick = {},
             onDisconnectClick = {},
             onPlayPaymentInfoClick = {},
         )
@@ -128,7 +129,8 @@ fun Welcome(navigator: Navigator) {
         onAccountClick = dropUnlessResumed { navigator.navigate(AccountNavKey) },
         navigateToDeviceInfoDialog = dropUnlessResumed { navigator.navigate(DeviceNameInfoNavKey) },
         onDisconnectClick = vm::onDisconnectClick,
-        onAddMoreTimeClick = dropUnlessResumed { navigator.navigate(AddTimeNavKey) },
+        onBuyCreditClick = vm::onSitePaymentClick,
+        onRedeemVoucherClick = dropUnlessResumed { navigator.navigate(RedeemVoucherNavKey) },
         onPlayPaymentInfoClick = dropUnlessResumed { navigator.navigate(VerificationPendingNavKey) },
     )
 }
@@ -139,7 +141,8 @@ fun WelcomeScreen(
     snackbarHostState: SnackbarHostState = SnackbarHostState(),
     onSettingsClick: () -> Unit,
     onAccountClick: () -> Unit,
-    onAddMoreTimeClick: () -> Unit,
+    onBuyCreditClick: () -> Unit,
+    onRedeemVoucherClick: () -> Unit,
     onDisconnectClick: () -> Unit,
     onPlayPaymentInfoClick: () -> Unit,
     navigateToDeviceInfoDialog: () -> Unit,
@@ -174,7 +177,8 @@ fun WelcomeScreen(
                 ButtonPanel(
                     showDisconnectButton = state.value.tunnelState.isSecured(),
                     verificationPending = state.value.verificationPending,
-                    onAddMoreTimeClick = onAddMoreTimeClick,
+                    onBuyCreditClick = onBuyCreditClick,
+                    onRedeemVoucherClick = onRedeemVoucherClick,
                     onDisconnectClick = onDisconnectClick,
                     onInfoClick = onPlayPaymentInfoClick,
                 )
@@ -193,7 +197,7 @@ private fun WelcomeInfo(
         // PSYCO · porta do desktop WelcomeView · kicker cyan acima do "Congrats!"
         // espelha o `StyledKicker $variant="brand"` do ExpiredAccountErrorView.
         Text(
-            text = "BEM-VINDA · SUA CONTA TÁ PRONTA",
+            text = stringResource(id = R.string.psyco_welcome_kicker),
             modifier =
                 Modifier.fillMaxWidth()
                     .padding(
@@ -220,7 +224,7 @@ private fun WelcomeInfo(
         )
         // PSYCO · description PT-BR estilo desktop · contextualiza o "add time" CTA.
         Text(
-            text = "Pra começar a usar o app, você precisa primeiro adicionar tempo à sua conta.",
+            text = stringResource(id = R.string.psyco_welcome_description),
             modifier =
                 Modifier.fillMaxWidth()
                     .padding(
@@ -353,7 +357,8 @@ fun DeviceNameRow(deviceName: String?, navigateToDeviceInfoDialog: () -> Unit) {
 private fun ButtonPanel(
     showDisconnectButton: Boolean,
     verificationPending: Boolean,
-    onAddMoreTimeClick: () -> Unit,
+    onBuyCreditClick: () -> Unit,
+    onRedeemVoucherClick: () -> Unit,
     onDisconnectClick: () -> Unit,
     onInfoClick: () -> Unit,
 ) {
@@ -393,9 +398,17 @@ private fun ButtonPanel(
                 )
             }
         }
+        // PSYCO · botões diretos na tela (sem o bottom sheet de add-time):
+        // "Comprar crédito" abre a página da conta no navegador (site payment),
+        // "Resgatar voucher" vai direto pra tela de voucher.
         VariantButton(
-            onClick = onAddMoreTimeClick,
-            text = stringResource(id = R.string.add_time),
+            onClick = onBuyCreditClick,
+            text = stringResource(id = R.string.buy_credit),
+            modifier = Modifier.padding(bottom = Dimens.buttonSpacing),
+        )
+        VariantButton(
+            onClick = onRedeemVoucherClick,
+            text = stringResource(id = R.string.redeem_voucher),
             modifier = Modifier.padding(bottom = Dimens.buttonSpacing),
         )
     }

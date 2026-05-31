@@ -194,7 +194,7 @@ private fun LazyListScope.content(
     onAppObfuscationClick: () -> Unit = {},
 ) {
     if (state.isLoggedIn) {
-        item { SectionKicker("Conexão") }
+        item { SectionKicker(stringResource(id = R.string.psyco_connection)) }
         itemWithDivider {
             DaitaListItem(isDaitaEnabled = state.isDaitaEnabled, onDaitaClick = onDaitaClick)
         }
@@ -206,32 +206,32 @@ private fun LazyListScope.content(
         }
         itemWithDivider {
             NavigationListItem(
-                title = "Configurações de VPN",
+                title = stringResource(id = R.string.settings_vpn),
                 onClick = onVpnSettingCellClick,
                 testTag = VPN_SETTINGS_CELL_TEST_TAG,
                 position = Position.Bottom,
             )
         }
         item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
-        item { SectionKicker("Tunelamento dividido") }
+        item { SectionKicker(stringResource(id = R.string.psyco_split_tunneling_kicker)) }
         item { SplitTunneling(onSplitTunnelingCellClick) }
         item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
     }
 
-    item { SectionKicker("Avançado") }
+    item { SectionKicker(stringResource(id = R.string.psyco_advanced)) }
     item {
         NavigationListItem(
-            title = "Acesso à API",
+            title = stringResource(id = R.string.settings_api_access),
             onClick = onApiAccessClick,
         )
     }
 
     item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
 
-    item { SectionKicker("Aparência & alertas") }
+    item { SectionKicker(stringResource(id = R.string.psyco_appearance_alerts)) }
     itemWithDivider {
         NavigationListItem(
-            title = "Aparência",
+            title = stringResource(id = R.string.appearance),
             onClick = onAppObfuscationClick,
             position = Position.Top,
         )
@@ -239,7 +239,7 @@ private fun LazyListScope.content(
 
     itemWithDivider {
         NavigationListItem(
-            title = "Notificações",
+            title = stringResource(id = R.string.settings_notifications),
             onClick = onNotificationSettingsCellClick,
             position = Position.Middle,
         )
@@ -263,7 +263,7 @@ private fun LazyListScope.content(
 @Composable
 private fun SplitTunneling(onSplitTunnelingCellClick: () -> Unit) {
     NavigationListItem(
-        title = "Divisão do túnel",
+        title = stringResource(id = R.string.psyco_split_tunneling),
         onClick = onSplitTunnelingCellClick,
     )
 }
@@ -271,7 +271,7 @@ private fun SplitTunneling(onSplitTunnelingCellClick: () -> Unit) {
 @Composable
 private fun AppInfo(navigateToAppInfo: () -> Unit, state: SettingsUiState) {
     NavigationListItem(
-        title = "Sobre o app",
+        title = stringResource(id = R.string.psyco_about_app),
         subtitle = state.appVersion,
         subTitleTextDirection = TextDirection.Ltr,
         showWarning = !state.isSupportedVersion,
@@ -283,7 +283,7 @@ private fun AppInfo(navigateToAppInfo: () -> Unit, state: SettingsUiState) {
 @Composable
 private fun ReportProblem(onReportProblemCellClick: () -> Unit) {
     NavigationListItem(
-        title = "Relatar um problema",
+        title = stringResource(id = R.string.report_a_problem),
         onClick = { onReportProblemCellClick() },
         position = Position.Top,
     )

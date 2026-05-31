@@ -260,10 +260,10 @@ fun SearchLocationScreen(
                             onToggleExpand = onToggleExpand,
                             onUpdateBottomSheetState = navigateToBottomSheet,
                             customListHeader = {
-                                SectionKicker(label = "Listas personalizadas")
+                                SectionKicker(label = stringResource(id = R.string.psyco_custom_lists))
                             },
                             locationHeader = {
-                                SectionKicker(label = "Localizações")
+                                SectionKicker(label = stringResource(id = R.string.psyco_locations))
                             },
                         )
                     }

@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -80,6 +81,7 @@ import vu.vpn.lib.ui.designsystem.NegativeButton
 import vu.vpn.lib.ui.designsystem.PrimaryTextButton
 import vu.vpn.lib.ui.designsystem.VariantButton
 import vu.vpn.lib.ui.tag.MANAGE_DEVICES_BUTTON_TEST_TAG
+import vu.vpn.lib.ui.resource.R
 import vu.vpn.lib.ui.theme.AppTheme
 import vu.vpn.lib.ui.theme.Dimens
 import vu.vpn.lib.ui.theme.color.AlphaDisabled
@@ -116,7 +118,7 @@ fun Account(navigator: Navigator) {
 
     val snackbarHostState = remember { SnackbarHostState() }
     val copyTextString = "Número da conta copiado"
-    val errorString = "Ocorreu um erro."
+    val errorString = stringResource(id = R.string.error_occurred)
     val copyToClipboard =
         createCopyToClipboardHandle(snackbarHostState = snackbarHostState, isSensitive = true)
     val openAccountPage = LocalUriHandler.current.createOpenAccountPageHook()
@@ -203,7 +205,7 @@ fun AccountScreen(
                 // PSYCO · ordem batendo o desktop (AccountView.tsx):
                 // Nome do dispositivo → Número da conta → Pago até.
                 AccountCard {
-                    SectionKicker("Nome do dispositivo")
+                    SectionKicker(stringResource(id = R.string.device_name))
                     DeviceNameRow(
                         deviceName = state?.deviceName ?: "",
                         onManageDevicesClick = onManageDevicesClick,
@@ -211,7 +213,7 @@ fun AccountScreen(
                 }
 
                 AccountCard {
-                    SectionKicker("Número da conta")
+                    SectionKicker(stringResource(id = R.string.account_number))
                     AccountNumberRow(
                         accountNumber = state?.accountNumber?.value ?: "",
                         onCopyAccountNumber = onCopyAccountNumber,
@@ -219,7 +221,7 @@ fun AccountScreen(
                 }
 
                 AccountCard {
-                    SectionKicker("Pago até")
+                    SectionKicker(stringResource(id = R.string.psyco_paid_until))
                     PaidUntilRow(
                         accountExpiry = state?.accountExpiry,
                         verificationPending = state?.verificationPending == true,
@@ -235,7 +237,7 @@ fun AccountScreen(
             // "Resgatar voucher" (verde/success) · "Encerrar sessão" (vermelho/destructive).
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing)) {
                 VariantButton(
-                    text = "Comprar mais crédito",
+                    text = stringResource(id = R.string.buy_credit),
                     onClick = onBuyCreditClick,
                     modifier = Modifier.fillMaxWidth(),
                     icon = {
@@ -246,12 +248,12 @@ fun AccountScreen(
                     },
                 )
                 VariantButton(
-                    text = "Resgatar voucher",
+                    text = stringResource(id = R.string.redeem_voucher),
                     onClick = navigateToRedeemVoucher,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 NegativeButton(
-                    text = "Encerrar sessão",
+                    text = stringResource(id = R.string.log_out),
                     onClick = onLogoutClick,
                     isLoading = state?.showLogoutLoading == true,
                     modifier = Modifier.fillMaxWidth(),
@@ -299,7 +301,7 @@ private fun AccountDropdownMenu(navigateToDeleteAccount: () -> Unit) {
     IconButton(onClick = { showMenu = !showMenu }) {
         Icon(
             imageVector = Icons.Rounded.MoreVert,
-            contentDescription = "Mais ações",
+            contentDescription = stringResource(id = R.string.psyco_more_actions),
         )
     }
     DropdownMenu(
@@ -315,7 +317,7 @@ private fun AccountDropdownMenu(navigateToDeleteAccount: () -> Unit) {
             )
 
         DropdownMenuItem(
-            text = { Text(text = "Excluir conta") },
+            text = { Text(text = stringResource(id = R.string.delete_account)) },
             onClick = {
                 showMenu = false
                 navigateToDeleteAccount()
@@ -340,7 +342,7 @@ private fun DeviceNameRow(deviceName: String, onManageDevicesClick: () -> Unit) 
                 PrimaryTextButton(
                     modifier = Modifier.testTag(MANAGE_DEVICES_BUTTON_TEST_TAG),
                     onClick = onManageDevicesClick,
-                    text = "Gerenciar dispositivos",
+                    text = stringResource(id = R.string.manage_devices),
                     textDecoration = TextDecoration.Underline,
                 )
             }
@@ -392,7 +394,7 @@ private fun PaidUntilRow(
                 Text(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface,
-                    text = "Pagamento do Google Play pendente",
+                    text = stringResource(id = R.string.payment_status_pending_short),
                 )
             }
         }

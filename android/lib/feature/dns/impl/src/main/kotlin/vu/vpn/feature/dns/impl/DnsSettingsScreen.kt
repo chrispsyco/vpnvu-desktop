@@ -1,5 +1,7 @@
 package vu.vpn.feature.dns.impl
 
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
@@ -116,19 +118,16 @@ fun SharedTransitionScope.DnsSettings(
         }
     }
 
+    // PSYCO · resolve fora do lambda de side-effect (stringResource só roda em @Composable).
+    val applyWarningMsg = stringResource(id = R.string.psyco_dns_changes_delay)
+    val genericErrorMsg = stringResource(id = R.string.error_occurred)
     CollectSideEffectWithLifecycle(vm.uiSideEffect) {
         when (it) {
             DnsSettingsSideEffect.NavigateToDnsDialog -> navigator.navigate(CustomDnsNavKey())
             DnsSettingsSideEffect.ShowToast.ApplySettingWarning ->
-                launch {
-                    snackbarHostState.showSnackbarImmediately(
-                        message = "As alterações podem levar um tempo para entrar em vigor."
-                    )
-                }
+                launch { snackbarHostState.showSnackbarImmediately(message = applyWarningMsg) }
             DnsSettingsSideEffect.ShowToast.GenericError ->
-                launch {
-                    snackbarHostState.showSnackbarImmediately(message = "Ocorreu um erro.")
-                }
+                launch { snackbarHostState.showSnackbarImmediately(message = genericErrorMsg) }
         }
     }
 
@@ -248,7 +247,7 @@ private fun LazyListScope.content(
                     .widthIn(max = Dimens.settingsDetailsImageMaxWidth)
                     .fillMaxWidth(),
             painter = painterResource(id = R.drawable.dns_content_blockers_illustration),
-            contentDescription = "Bloqueadores de conteúdo DNS",
+            contentDescription = stringResource(id = R.string.dns_content_blockers),
         )
     }
 
@@ -286,13 +285,13 @@ private fun LazyListScope.content(
         item { Spacer(modifier = Modifier.height(Dimens.mediumPadding).animateItem()) }
     }
 
-    item { SectionKicker(label = "DNS personalizado") }
+    item { SectionKicker(label = stringResource(id = R.string.psyco_custom_dns)) }
 
     item {
         SwitchListItem(
             modifier = Modifier.animateItem(),
             position = if (state.customDnsEnabled) Position.Top else Position.Single,
-            title = "Usar servidor DNS personalizado",
+            title = stringResource(id = R.string.psyco_use_custom_dns),
             isToggled = state.customDnsEnabled,
             isEnabled = !state.defaultDnsOptions.isAnyBlockerEnabled,
             onCellClicked = { newValue -> onToggleDnsClick(newValue) },
@@ -324,7 +323,7 @@ private fun LazyListScope.content(
                     hierarchy = Hierarchy.Child1,
                     position = Position.Bottom,
                     onClick = { navigateToDns(null, null) },
-                    content = { Text(text = "Adicionar um servidor") },
+                    content = { Text(text = stringResource(id = R.string.add_a_server)) },
                     trailingContent = {
                         Icon(imageVector = Icons.Rounded.Add, contentDescription = null)
                     },
@@ -366,7 +365,7 @@ private fun LazyItemScope.ContentBlockersHeader(numberOfBlockersEnabled: Int) {
             Row {
                 Text(
                     modifier = Modifier.weight(1f),
-                    text = "Bloqueadores de conteúdo DNS",
+                    text = stringResource(id = R.string.dns_content_blockers),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -396,8 +395,8 @@ private fun LazyListScope.contentBlockers(
 ) {
     item {
         ContentBlocker(
-            title = "Tudo",
-            subtitle = "Bloquear todas as categorias",
+            title = stringResource(id = R.string.psyco_block_all),
+            subtitle = stringResource(id = R.string.psyco_block_all_subtitle),
             isToggled = defaultDnsOptions.isAllBlockersEnabled,
             isEnabled = contentBlockersEnabled,
             onClicked = onToggleAllBlockers,
@@ -405,8 +404,8 @@ private fun LazyListScope.contentBlockers(
     }
     item {
         ContentBlocker(
-            title = "Anúncios",
-            subtitle = "Banners, pop-ups, anúncios nativos",
+            title = stringResource(id = R.string.block_ads_title),
+            subtitle = stringResource(id = R.string.psyco_dns_ads_subtitle),
             isToggled = defaultDnsOptions.blockAds,
             isEnabled = contentBlockersEnabled,
             onClicked = onToggleBlockAds,
@@ -414,8 +413,8 @@ private fun LazyListScope.contentBlockers(
     }
     item {
         ContentBlocker(
-            title = "Rastreadores",
-            subtitle = "Analytics, fingerprinting, telemetria",
+            title = stringResource(id = R.string.block_trackers_title),
+            subtitle = stringResource(id = R.string.psyco_dns_trackers_subtitle),
             isToggled = defaultDnsOptions.blockTrackers,
             isEnabled = contentBlockersEnabled,
             onClicked = onToggleBlockTrackers,
@@ -423,8 +422,8 @@ private fun LazyListScope.contentBlockers(
     }
     item {
         ContentBlocker(
-            title = "Malware",
-            subtitle = "Domínios maliciosos conhecidos",
+            title = stringResource(id = R.string.block_malware_title),
+            subtitle = stringResource(id = R.string.psyco_dns_malware_subtitle),
             isToggled = defaultDnsOptions.blockMalware,
             isEnabled = contentBlockersEnabled,
             onClicked = onToggleBlockMalware,
@@ -433,8 +432,8 @@ private fun LazyListScope.contentBlockers(
     }
     item {
         ContentBlocker(
-            title = "Conteúdo adulto",
-            subtitle = "Sites NSFW",
+            title = stringResource(id = R.string.block_adult_content_title),
+            subtitle = stringResource(id = R.string.psyco_dns_adult_subtitle),
             isToggled = defaultDnsOptions.blockAdultContent,
             isEnabled = contentBlockersEnabled,
             onClicked = onToggleBlockAdultContent,
@@ -442,8 +441,8 @@ private fun LazyListScope.contentBlockers(
     }
     item {
         ContentBlocker(
-            title = "Apostas",
-            subtitle = "Cassinos online, apostas",
+            title = stringResource(id = R.string.block_gambling_title),
+            subtitle = stringResource(id = R.string.psyco_dns_gambling_subtitle),
             isToggled = defaultDnsOptions.blockGambling,
             isEnabled = contentBlockersEnabled,
             onClicked = onToggleBlockGambling,
@@ -451,8 +450,8 @@ private fun LazyListScope.contentBlockers(
     }
     item {
         ContentBlocker(
-            title = "Redes sociais",
-            subtitle = "Twitter, Facebook, TikTok, Instagram",
+            title = stringResource(id = R.string.block_social_media_title),
+            subtitle = stringResource(id = R.string.psyco_dns_social_subtitle),
             isToggled = defaultDnsOptions.blockSocialMedia,
             isEnabled = contentBlockersEnabled,
             onClicked = onToggleBlockSocialMedia,

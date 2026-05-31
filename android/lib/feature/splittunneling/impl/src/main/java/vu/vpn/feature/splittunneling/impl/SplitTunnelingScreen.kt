@@ -1,5 +1,8 @@
 package vu.vpn.feature.splittunneling.impl
 
+import androidx.compose.ui.res.stringResource
+import vu.vpn.lib.ui.resource.R
+
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -131,7 +134,7 @@ fun SplitTunnelingScreen(
 
     ScaffoldWithSmallTopBar(
         modifier = modifier.fillMaxSize(),
-        appBarTitle = "Divisão do túnel",
+        appBarTitle = stringResource(id = R.string.psyco_split_tunneling),
         navigationIcon = {
             if (state.isModal()) {
                 NavigateCloseIconButton(onNavigateClose = onBackClick)
@@ -142,6 +145,9 @@ fun SplitTunnelingScreen(
         actions = { SearchButton(onClick = navigateToSearch, enabled = state.enabled()) },
     ) { modifier ->
         val lazyListState = rememberLazyListState()
+        // PSYCO · resolve em escopo @Composable (LazyListScope.appList não é @Composable).
+        val excludedHeader = stringResource(id = R.string.psyco_excluded_from_vpn)
+        val otherAppsHeader = stringResource(id = R.string.psyco_other_apps)
         LazyColumn(
             modifier =
                 modifier
@@ -177,6 +183,8 @@ fun SplitTunnelingScreen(
                         onExcludeAppClick = onExcludeAppClick,
                         onIncludeAppClick = onIncludeAppClick,
                         onResolveIcon = onResolveIcon,
+                        excludedHeader = excludedHeader,
+                        otherAppsHeader = otherAppsHeader,
                     )
                 }
             }
@@ -190,7 +198,7 @@ private fun LazyListScope.enabledToggle(
 ) {
     item {
         SwitchListItem(
-            title = "Ativar",
+            title = stringResource(id = R.string.psyco_enable),
             isToggled = enabled,
             onCellClicked = onEnableSplitTunneling,
             position = Position.Top,
@@ -220,11 +228,13 @@ private fun LazyListScope.appList(
     onExcludeAppClick: (packageName: PackageName) -> Unit,
     onIncludeAppClick: (packageName: PackageName) -> Unit,
     onResolveIcon: (PackageName) -> Drawable?,
+    excludedHeader: String,
+    otherAppsHeader: String,
 ) {
     if (state.excludedApps.isNotEmpty()) {
         excludedAppsHeaderItem(
             key = SplitTunnelingContentKey.EXCLUDED_APPLICATIONS,
-            text = "Excluído da VPN",
+            text = excludedHeader,
             enabled = state.enabled,
             exludedAppsCount = state.excludedApps.size,
             includedAppsCount = state.includedApps.size,
@@ -241,7 +251,7 @@ private fun LazyListScope.appList(
     spacer()
     headerItem(
         key = SplitTunnelingContentKey.INCLUDED_APPLICATIONS,
-        text = "Outros apps",
+        text = otherAppsHeader,
         enabled = state.enabled,
     )
     appItems(
@@ -348,7 +358,7 @@ internal fun LazyListScope.systemAppsToggle(
         contentType = ContentType.OTHER_ITEM,
     ) {
         SwitchListItem(
-            title = "Mostrar apps do sistema",
+            title = stringResource(id = R.string.psyco_show_system_apps),
             isToggled = showSystemApps,
             onCellClicked = { newValue -> onShowSystemAppsClick(newValue) },
             isEnabled = enabled,

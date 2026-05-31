@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -48,7 +49,6 @@ import vu.vpn.common.compose.createOpenAccountPageHook
 import vu.vpn.common.compose.showSnackbarImmediately
 import vu.vpn.core.Navigator
 import vu.vpn.feature.account.api.AccountNavKey
-import vu.vpn.feature.addtime.api.AddTimeNavKey
 import vu.vpn.feature.addtime.api.VerificationPendingNavKey
 import vu.vpn.feature.home.api.ConnectNavKey
 import vu.vpn.feature.redeemvoucher.api.RedeemVoucherNavKey
@@ -82,7 +82,7 @@ private fun PreviewOutOfTimeScreen(
             onDisconnectClick = {},
             onSettingsClick = {},
             onAccountClick = {},
-            onAddMoreTimeClick = {},
+            onBuyCreditClick = {},
             onPlayPaymentInfoClick = {},
         )
     }
@@ -114,7 +114,7 @@ fun OutOfTime(navigator: Navigator) {
         snackbarHostState = snackbarHostState,
         onSettingsClick = dropUnlessResumed { navigator.navigate(SettingsNavKey) },
         onAccountClick = dropUnlessResumed { navigator.navigate(AccountNavKey) },
-        onAddMoreTimeClick = dropUnlessResumed { navigator.navigate(AddTimeNavKey) },
+        onBuyCreditClick = vm::onSitePaymentClick,
         onPlayPaymentInfoClick =
             dropUnlessResumed { navigator.navigate(VerificationPendingNavKey) },
         onRedeemVoucherClick = dropUnlessResumed { navigator.navigate(RedeemVoucherNavKey) },
@@ -129,7 +129,7 @@ fun OutOfTimeScreen(
     onDisconnectClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onAccountClick: () -> Unit,
-    onAddMoreTimeClick: () -> Unit,
+    onBuyCreditClick: () -> Unit,
     onPlayPaymentInfoClick: () -> Unit,
     onRedeemVoucherClick: () -> Unit = {},
 ) {
@@ -181,7 +181,7 @@ fun OutOfTimeScreen(
                     ButtonPanel(
                         state = state.value,
                         onDisconnectClick = onDisconnectClick,
-                        onAddMoreTimeClick = onAddMoreTimeClick,
+                        onBuyCreditClick = onBuyCreditClick,
                         onInfoClick = onPlayPaymentInfoClick,
                         onRedeemVoucherClick = onRedeemVoucherClick,
                     )
@@ -205,7 +205,7 @@ private fun ColumnScope.Content() {
     // PSYCO · kicker negativo eyebrow (vermelho · Geist Mono) espelhando o
     // .oot-hero__kicker do Figma ($variant="negative"), acima do título.
     Text(
-        text = "TEMPO EXPIRADO",
+        text = stringResource(id = R.string.psyco_out_of_time_kicker),
         style = MaterialTheme.typography.labelSmall,
         fontFamily = GeistMonoFontFamily,
         letterSpacing = 2.sp,
@@ -213,23 +213,13 @@ private fun ColumnScope.Content() {
         modifier = Modifier.padding(bottom = Dimens.smallPadding),
     )
     Text(
-        text = "Sua conta acabou. Renove pra voltar a navegar.",
+        text = stringResource(id = R.string.psyco_out_of_time_title),
         style = MaterialTheme.typography.headlineSmall,
         color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.testTag(OUT_OF_TIME_SCREEN_TITLE_TEST_TAG),
     )
     Text(
-        text =
-            buildAnnotatedString {
-                append("Sua privacidade ")
-                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                    append("não tá protegida")
-                }
-                append(
-                    " agora. Sem VPN ativa, seu provedor vê tudo que você acessa. " +
-                        "Renove em segundos."
-                )
-            },
+        text = stringResource(id = R.string.psyco_out_of_time_body),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(top = Dimens.mediumPadding),
@@ -240,13 +230,16 @@ private fun ColumnScope.Content() {
 private fun ButtonPanel(
     state: OutOfTimeUiState,
     onDisconnectClick: () -> Unit,
-    onAddMoreTimeClick: () -> Unit,
+    onBuyCreditClick: () -> Unit,
     onInfoClick: () -> Unit,
     onRedeemVoucherClick: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.buttonSpacing)) {
         if (state.tunnelState.isSecured()) {
-            NegativeButton(onClick = onDisconnectClick, text = "Desconectar")
+            NegativeButton(
+                onClick = onDisconnectClick,
+                text = stringResource(id = R.string.disconnect),
+            )
         }
         if (state.verificationPending) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -263,14 +256,15 @@ private fun ButtonPanel(
                 Text(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface,
-                    text = "Pagamento do Google Play pendente",
+                    text = stringResource(id = R.string.payment_status_pending_short),
                 )
             }
         }
-        // PSYCO · CTA primário cyan + seta · espelha o "Adicionar tempo agora →" do Figma.
+        // PSYCO · CTA primário cyan · "Comprar crédito" abre a página da conta no
+        // navegador (site payment), sem o bottom sheet de add-time.
         PrimaryButton(
-            onClick = onAddMoreTimeClick,
-            text = "Adicionar tempo agora",
+            onClick = onBuyCreditClick,
+            text = stringResource(id = R.string.buy_credit),
             trailingIcon = {
                 Icon(imageVector = Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null)
             },
@@ -289,7 +283,10 @@ private fun ButtonPanel(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
         ) {
-            Text(text = "Resgatar voucher", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = stringResource(id = R.string.redeem_voucher),
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
     }
 }

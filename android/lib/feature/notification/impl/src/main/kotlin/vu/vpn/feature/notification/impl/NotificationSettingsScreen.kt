@@ -1,5 +1,7 @@
 package vu.vpn.feature.notification.impl
 
+import vu.vpn.lib.ui.resource.R
+
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -153,7 +155,7 @@ private fun NotificationSettingsContent(
         // PSYCO · kicker cyan eyebrow estilo desktop UserInterfaceSettingsView ·
         // sinaliza "alertas no app" sem competir com a switch list abaixo.
         Text(
-            text = "ALERTAS NO APP",
+            text = stringResource(id = R.string.psyco_in_app_alerts),
             style = MaterialTheme.typography.labelSmall,
             fontFamily = GeistMonoFontFamily,
             letterSpacing = 1.6.sp,
