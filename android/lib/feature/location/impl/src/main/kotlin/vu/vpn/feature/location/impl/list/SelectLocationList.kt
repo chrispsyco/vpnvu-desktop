@@ -37,7 +37,6 @@ import vu.vpn.common.compose.animateScrollAndCentralizeItem
 import vu.vpn.common.compose.animateScrollCentralizeItem
 import vu.vpn.feature.location.api.LocationBottomSheetState
 import vu.vpn.feature.location.impl.ContentType
-import vu.vpn.feature.location.impl.CustomListHeader
 import vu.vpn.feature.location.impl.relayListContent
 import vu.vpn.lib.common.Lce
 import vu.vpn.lib.model.CustomListId
@@ -205,17 +204,12 @@ private fun SelectLocationListContent(
                 prevTopItem = state.value.relayListItems.firstOrNull()
 
                 relayListContent(
-                    relayListItems = state.value.relayListItems,
+                    relayListItems = state.value.relayListItems.withoutCustomLists(),
                     relayListType = state.value.relayListType,
                     onSelectRelayItem = { onSelectRelayItem(it, state.value.relayListType) },
                     onToggleExpand = onToggleExpand,
                     onUpdateBottomSheetState = onUpdateBottomSheetState,
-                    customListHeader = {
-                        CustomListHeader(
-                            onAddCustomList,
-                            if (it.canEdit) onEditCustomLists else null,
-                        )
-                    },
+                    latencyFor = { state.value.latencies[it] },
                 )
 
                 if (shouldScrollToTop) {
@@ -224,6 +218,33 @@ private fun SelectLocationListContent(
             }
         }
     }
+}
+
+/**
+ * Drops custom-list rows — the VPN.vu picker doesn't surface custom lists — and
+ * collapses the section dividers they leave behind, so Recents sits directly
+ * above All locations without a double gap or a dangling trailing divider.
+ */
+private fun List<RelayListItem>.withoutCustomLists(): List<RelayListItem> {
+    val noCustom =
+        filterNot {
+            it is RelayListItem.CustomListHeader ||
+                it is RelayListItem.CustomListFooter ||
+                it is RelayListItem.CustomListItem ||
+                it is RelayListItem.CustomListEntryItem
+        }
+    val collapsed = mutableListOf<RelayListItem>()
+    for (item in noCustom) {
+        val prevIsDivider = collapsed.lastOrNull() is RelayListItem.SectionDivider
+        if (item is RelayListItem.SectionDivider && (collapsed.isEmpty() || prevIsDivider)) {
+            continue
+        }
+        collapsed += item
+    }
+    while (collapsed.lastOrNull() is RelayListItem.SectionDivider) {
+        collapsed.removeAt(collapsed.lastIndex)
+    }
+    return collapsed
 }
 
 private fun LazyListScope.loading() {

@@ -28,6 +28,7 @@ import vu.vpn.lib.model.MultihopRelayListType
 import vu.vpn.lib.model.RelayItem
 import vu.vpn.lib.model.RelayItemId
 import vu.vpn.lib.model.RelayListType
+import vu.vpn.lib.repository.RelayLatencyRepository
 import vu.vpn.lib.repository.RelayListRepository
 import vu.vpn.lib.repository.SettingsRepository
 import vu.vpn.lib.repository.WireguardConstraintsRepository
@@ -47,13 +48,18 @@ class SelectLocationListViewModel(
     private val relayListRepository: RelayListRepository,
     private val recentsUseCase: RecentsUseCase,
     private val settingsRepository: SettingsRepository,
+    private val relayLatencyRepository: RelayLatencyRepository,
     relayListScrollConnection: RelayListScrollConnection,
 ) : ViewModel() {
     private val _expandedItems: MutableStateFlow<Set<String>> =
         MutableStateFlow(initialExpand(initialSelection()))
 
     val uiState: StateFlow<Lce<Unit, SelectLocationListUiState, Unit>> =
-        combine(relayListItems(), settingsRepository.settingsUpdates) { relayListItems, settings ->
+        combine(
+                relayListItems(),
+                settingsRepository.settingsUpdates,
+                relayLatencyRepository.latencies,
+            ) { relayListItems, settings, latencies ->
                 if (relayListType.isEntryAndBlocked(settings)) {
                     Lce.Error(Unit)
                 } else {
@@ -61,6 +67,7 @@ class SelectLocationListViewModel(
                         SelectLocationListUiState(
                             relayListType = relayListType,
                             relayListItems = relayListItems,
+                            latencies = latencies,
                         )
                     )
                 }

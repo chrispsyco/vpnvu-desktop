@@ -82,6 +82,7 @@ import vu.vpn.lib.repository.PaymentLogic
 import vu.vpn.lib.repository.PlayPaymentLogic
 import vu.vpn.lib.repository.ProblemReportRepository
 import vu.vpn.lib.repository.RelayListFilterRepository
+import vu.vpn.lib.repository.RelayLatencyRepository
 import vu.vpn.lib.repository.RelayListRepository
 import vu.vpn.lib.repository.RelayOverridesRepository
 import vu.vpn.lib.repository.SettingsRepository
@@ -165,6 +166,7 @@ val uiModule = module {
     single { RelayOverridesRepository(get()) }
     single { CustomListsRepository(get()) }
     single { RelayListRepository(get(), get()) }
+    single { RelayLatencyRepository(get(), get()) }
     single { RelayListFilterRepository(get()) }
     single { VoucherRepository(get(), get()) }
     single { SplitTunnelingRepository(get()) }
@@ -383,6 +385,7 @@ val uiModule = module {
     viewModel { (relayListType: RelayListType) ->
         SelectLocationListViewModel(
             relayListType,
+            get(),
             get(),
             get(),
             get(),
