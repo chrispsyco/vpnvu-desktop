@@ -84,7 +84,7 @@ export function Stars({
   radius = 18,
   count = 1100,
   heroCount = 80,
-  rotationSpeed = 0.012,
+  rotationSpeed = 0.0025,
 }: StarsProps = {}) {
   const groupRef = useRef<THREE.Group>(null);
 
@@ -126,11 +126,11 @@ export function Stars({
   // Tamanhos reduzidos pra ficarem mais sutis · 0.6/1.2 em vez de 1.4/2.6.
   // Opacities também caíram (0.35/0.7) pra não competir com o globo.
   const dimMaterial = useMemo(
-    () => makeStarShaderMaterial(0.6, 0.35),
+    () => makeStarShaderMaterial(0.4, 0.35),
     [],
   );
   const heroMaterial = useMemo(
-    () => makeStarShaderMaterial(1.2, 0.7),
+    () => makeStarShaderMaterial(0.8, 0.7),
     [],
   );
 

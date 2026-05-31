@@ -242,7 +242,7 @@ export function GlobeScene({
         <CameraZoomController
           baseZ={cameraZ}
           staticZoomBias={
-            hasActiveServer && connectionState !== 'idle' ? 0.68 : 1.35
+            hasActiveServer && connectionState !== 'idle' ? 0.8 : 1.35
           }
         />
         <CameraAlign offsetY={globeY} />
