@@ -288,7 +288,7 @@ private fun CustomListFooter(item: RelayListItem.CustomListFooter) {
     ListItemInfo(
         text =
             if (item.hasCustomList) {
-                "Pra adicionar localizações em uma lista, toque no lápis."
+                stringResource(id = R.string.psyco_relaylist_no_lists_hint)
             } else {
                 "Pra criar uma lista personalizada, toque no \"+\"."
             }

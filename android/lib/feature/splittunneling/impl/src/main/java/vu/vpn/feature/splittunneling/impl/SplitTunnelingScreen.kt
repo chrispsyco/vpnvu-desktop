@@ -210,7 +210,7 @@ private fun LazyListScope.description() {
     item(key = CommonContentKey.DESCRIPTION, contentType = ContentType.DESCRIPTION) {
         ScreenDescription(
             text =
-                "Apps abaixo são excluídos do túnel VPN. Eles usam a conexão normal da internet.",
+                stringResource(id = R.string.psyco_split_excluded_desc),
             modifier = Modifier.padding(bottom = Dimens.mediumPadding),
         )
     }

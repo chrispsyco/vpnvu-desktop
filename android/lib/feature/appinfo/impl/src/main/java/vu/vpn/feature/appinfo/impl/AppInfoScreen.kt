@@ -147,7 +147,7 @@ private fun AppInfoContent(
         // PSYCO · kicker cyan acima do bloco stringResource(id = R.string.version) + Changelog · separa
         // visualmente o hero brand do funcional.
         Text(
-            text = "VERSÃO & NOVIDADES",
+            text = stringResource(id = R.string.psyco_appinfo_kicker),
             style = MaterialTheme.typography.labelSmall,
             fontFamily = GeistMonoFontFamily,
             letterSpacing = 1.6.sp,
@@ -211,9 +211,7 @@ private fun AppVersionRow(state: AppInfoUiState, openAppListing: () -> Unit) {
 
         if (!state.version.isSupported) {
             Text(
-                text =
-                    "Sua privacidade pode estar em risco com esta versão não suportada do app. " +
-                        "Atualize agora.",
+                text = stringResource(id = R.string.psyco_appinfo_unsupported),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier =

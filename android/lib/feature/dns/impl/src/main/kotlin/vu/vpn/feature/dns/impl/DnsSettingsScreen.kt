@@ -275,9 +275,7 @@ private fun LazyListScope.content(
     if (!state.contentBlockersEnabled) {
         item {
             ListItemInfo(
-                text =
-                    "Desative \"Usar servidor DNS personalizado\" abaixo para ativar estas " +
-                        "configurações.",
+                text = stringResource(id = R.string.psyco_dns_disable_custom_hint),
                 modifier = Modifier.animateItem(),
             )
         }
@@ -336,9 +334,7 @@ private fun LazyListScope.content(
         item {
             ListItemInfo(
                 modifier = Modifier.animateItem(),
-                text =
-                    "Desative todos os \"Bloqueadores de conteúdo DNS\" acima para ativar esta " +
-                        "configuração.",
+                text = stringResource(id = R.string.psyco_dns_disable_blockers_hint),
             )
         }
     }
@@ -350,9 +346,7 @@ private fun LazyListScope.content(
 private fun LazyItemScope.Description() {
     ScreenDescription(
         modifier = Modifier.animateItem().padding(top = Dimens.smallPadding),
-        text =
-            "Quando ativados, o servidor DNS da vpn.vu bloqueia domínios dessas categorias " +
-                "antes de responder à consulta. Não inspeciona o tráfego.",
+        text = stringResource(id = R.string.psyco_dns_blockers_desc),
     )
 }
 

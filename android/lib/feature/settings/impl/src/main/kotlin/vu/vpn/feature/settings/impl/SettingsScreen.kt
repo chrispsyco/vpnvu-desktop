@@ -143,7 +143,7 @@ fun SettingsScreen(
     onAppObfuscationClick: () -> Unit = {},
 ) {
     ScaffoldWithSmallTopBar(
-        appBarTitle = "Configurações",
+        appBarTitle = stringResource(id = R.string.settings),
         navigationIcon = { NavigateCloseIconButton(onBackClick) },
     ) { modifier ->
         val lazyListState = rememberLazyListState()
@@ -304,7 +304,7 @@ private fun FaqAndGuides() {
 
 @Composable
 private fun PrivacyPolicy(state: SettingsUiState) {
-    val privacyPolicyLabel = "Política de privacidade"
+    val privacyPolicyLabel = stringResource(id = R.string.privacy_policy_label)
 
     val openPrivacyPolicy =
         LocalUriHandler.current.createUriHook(
