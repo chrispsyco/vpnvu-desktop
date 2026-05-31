@@ -350,14 +350,17 @@ export default class UserInterface implements WindowControllerDelegate {
       }
 
       case 'win32': {
-        // PSYCO: frameless real-app window. isUnpinnedWindow() returns false
-        // (see index.ts), so `frame: false` from the base options applies and
-        // the renderer paints its own header chrome. We do NOT want the rest
-        // of the Mullvad popover behavior though — the window has to show in
-        // the taskbar and must not be alwaysOnTop, so we hardcode both flags
-        // independent of unpinnedWindow.
+        // PSYCO: frameless real-app window. `isUnpinnedWindow()` is true
+        // (see index.ts) so the controller treats it as a standalone window,
+        // but we still want a frameless surface — the renderer paints its
+        // own header chrome. Hardcode `frame: false` here to override the
+        // `frame: unpinnedWindow` default from `options`. `skipTaskbar` and
+        // `alwaysOnTop` are also pinned to make sure the window shows up in
+        // the taskbar / Start menu / Alt-Tab and never floats above other
+        // apps.
         const appWindow = new BrowserWindow({
           ...options,
+          frame: false,
           alwaysOnTop: false,
           skipTaskbar: false,
           // Transparency stays on so the CSS rounded corners of #app
@@ -387,18 +390,13 @@ export default class UserInterface implements WindowControllerDelegate {
 
         appWindow.removeMenu();
 
-        // PSYCO: close-to-tray. When the user clicks the X button, hide the
-        // window instead of quitting. The app keeps running, the tunnel
-        // stays up (or down — whatever state it was in), and the tray icon
-        // remains the entry point. A real quit (Sair menu, app.quit, signal)
-        // sets isQuitting=true on the delegate so this handler lets it
-        // through.
-        appWindow.on('close', (event) => {
-          if (!this.delegate.isQuitting()) {
-            event.preventDefault();
-            appWindow.hide();
-          }
-        });
+        // Close-to-tray is wired up by `installWindowCloseHandler` (active
+        // because `isUnpinnedWindow()` is true), which calls
+        // `windowController.hide()` on close. The hide path keeps the app
+        // running and the tray icon as the entry point; a real quit (Sair
+        // menu, app.quit, signal) sets `quitInitiated` on the delegate and
+        // takes the normal close path via `windowController.close()` in
+        // `dispose`.
 
         return appWindow;
       }
