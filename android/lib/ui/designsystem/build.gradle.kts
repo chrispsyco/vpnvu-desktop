@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.ui.designsystem"
+    namespace = "vu.vpn.lib.ui.designsystem"
 
     buildFeatures { compose = true }
 }

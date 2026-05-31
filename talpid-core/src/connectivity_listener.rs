@@ -61,7 +61,7 @@ impl ConnectivityListener {
             .call_method(
                 android_context.vpn_service.as_obj(),
                 "getConnectivityListener",
-                "()Lnet/mullvad/talpid/ConnectivityListener;",
+                "()Lvu/vpn/talpid/ConnectivityListener;",
                 &[],
             )
             .map_err(|cause| {
@@ -115,7 +115,7 @@ impl ConnectivityListener {
         let is_connected = env.call_method(
             self.android_listener.as_obj(),
             "isConnected",
-            "()Lnet/mullvad/talpid/model/Connectivity;",
+            "()Lvu/vpn/talpid/model/Connectivity;",
             &[],
         );
 
@@ -161,7 +161,7 @@ impl ConnectivityListener {
 
 /// Entry point for Android Java code to notify the connectivity status.
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_net_mullvad_talpid_ConnectivityListener_notifyConnectivityChange(
+pub extern "system" fn Java_vu_vpn_talpid_ConnectivityListener_notifyConnectivityChange(
     env: JNIEnv<'_>,
     _obj: JObject<'_>,
     connectivity: JObject<'_>,

@@ -449,7 +449,7 @@ pub struct GenericTunnelOptions {
 /// configured IPv4 and/or IPv6.
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(target_os = "android", derive(FromJava))]
-#[cfg_attr(target_os = "android", jnix(package = "net.mullvad.talpid.model"))]
+#[cfg_attr(target_os = "android", jnix(package = "vu.vpn.talpid.model"))]
 pub enum Connectivity {
     /// Host is offline
     Offline,
@@ -534,7 +534,7 @@ impl fmt::Display for Connectivity {
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(target_os = "android", derive(FromJava))]
-#[cfg_attr(target_os = "android", jnix(package = "net.mullvad.talpid.model"))]
+#[cfg_attr(target_os = "android", jnix(package = "vu.vpn.talpid.model"))]
 /// Available IP versions
 pub enum IpAvailability {
     #[default]

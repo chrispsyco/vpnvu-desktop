@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.mullvad.unit.test)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.pushnotifications" }
+android { namespace = "vu.vpn.feature.pushnotifications" }
 
 dependencies {
     implementation(projects.lib.common)

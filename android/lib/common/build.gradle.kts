@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.lib.common" }
+android { namespace = "vu.vpn.lib.common" }
 
 dependencies {
     implementation(projects.lib.model)

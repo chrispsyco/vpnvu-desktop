@@ -41,14 +41,14 @@ val rustJniLibsDir = layout.buildDirectory.dir("rustJniLibs/android").get()
 val appVersion = appVersionProvider.get()
 
 android {
-    namespace = "net.mullvad.mullvadvpn"
+    namespace = "vu.vpn"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
     compileSdkMinor = libs.versions.compile.sdk.minor.get().toInt()
     buildToolsVersion = libs.versions.build.tools.get()
     ndkVersion = libs.versions.ndk.get()
 
     defaultConfig {
-        applicationId = "net.mullvad.mullvadvpn"
+        applicationId = "vu.vpn"
         minSdk = libs.versions.min.sdk.get().toInt()
         targetSdk = libs.versions.target.sdk.get().toInt()
         versionCode = appVersion.code
@@ -125,13 +125,13 @@ android {
         }
         create(Flavors.DEVMOLE) {
             dimension = FlavorDimensions.INFRASTRUCTURE
-            applicationId = "net.mullvad.mullvadvpn.devmole"
+            applicationId = "vu.vpn.devmole"
             buildConfigField("String", "API_ENDPOINT", "\"api-app.devmole.eu\"")
             buildConfigField("String", "API_IP", "\"185.217.116.4\"")
         }
         create(Flavors.STAGEMOLE) {
             dimension = FlavorDimensions.INFRASTRUCTURE
-            applicationId = "net.mullvad.mullvadvpn.stagemole"
+            applicationId = "vu.vpn.stagemole"
             buildConfigField("String", "API_ENDPOINT", "\"api-app.stagemole.eu\"")
             buildConfigField("String", "API_IP", "\"185.217.116.132\"")
         }

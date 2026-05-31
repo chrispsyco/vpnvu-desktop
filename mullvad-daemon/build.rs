@@ -9,8 +9,11 @@ fn main() {
     let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     fs::write(out_dir.join("git-commit-date.txt"), commit_date()).unwrap();
 
+    // PSYCO patch: only run winres when BOTH host AND target are Windows.
+    // cfg(windows) here matches the HOST; on Android cross-compile from Windows host
+    // winres::compile() panics with "Can only compile resource file when target_env is gnu or msvc".
     #[cfg(windows)]
-    {
+    if target_os() == Os::Windows {
         let mut res = winres::WindowsResource::new();
         res.set("ProductVersion", mullvad_version::VERSION);
         res.set_icon("../dist-assets/icon.ico");

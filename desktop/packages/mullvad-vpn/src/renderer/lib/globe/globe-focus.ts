@@ -47,8 +47,9 @@ interface Timeline {
   duration: number;
 }
 
-/** Total length of the focus animation in seconds. */
-const FOCUS_DURATION = 1.8;
+/** Total length of the focus animation in seconds. PSYCO · 6s = 30% da velocidade
+ *  original (1.8s) · feedback Chris pra splash + connect mais cinematográfico. */
+const FOCUS_DURATION = 6.0;
 /** Peak camera zoom-out multiplier (mid-pan). 1.35 = 35% farther back. */
 const ZOOM_OUT_PEAK = 1.35;
 /**

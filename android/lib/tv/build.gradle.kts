@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.tv"
+    namespace = "vu.vpn.lib.tv"
 
     buildFeatures { compose = true }
 }

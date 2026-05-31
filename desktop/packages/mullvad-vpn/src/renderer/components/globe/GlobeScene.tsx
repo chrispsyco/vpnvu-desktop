@@ -22,10 +22,19 @@ import { VolcanoMarkers } from './VolcanoMarkers';
  * rotation state, so we use a wrapping group to apply the pitch (rotation.x).
  * That way GlobeCore (which has no useFrame) also tilts correctly.
  */
-function TiltedGlobe({ children }: { children: React.ReactNode }) {
+function TiltedGlobe({
+  children,
+  extraTiltX = 0,
+}: {
+  children: React.ReactNode;
+  /** Tilt extra adicionado ao pitch dinâmico. Usado no mobile pra rotacionar
+   *  o globo de tal forma que pins em latitudes sul (e.g. São Paulo) subam
+   *  pro centro visual sem precisar mover o globo no canvas. Em radianos. */
+  extraTiltX?: number;
+}) {
   const ref = useRef<THREE.Group>(null);
   useFrame(() => {
-    if (ref.current) ref.current.rotation.x = getGlobeRotationX();
+    if (ref.current) ref.current.rotation.x = getGlobeRotationX() + extraTiltX;
   });
   return <group ref={ref}>{children}</group>;
 }
@@ -38,16 +47,38 @@ function TiltedGlobe({ children }: { children: React.ReactNode }) {
  * every frame so it stays smooth even when the focus frame snaps to active
  * mid-frame.
  */
-function CameraZoomController({ baseZ }: { baseZ: number }) {
+function CameraZoomController({
+  baseZ,
+  staticZoomBias = 1.0,
+}: {
+  baseZ: number;
+  /** Multiplicador estático adicional no targetZ · valores < 1 aproximam a
+   *  câmera (zoom-in). Usado pra fazer o globo crescer no mobile quando há
+   *  uma location ativa selecionada. */
+  staticZoomBias?: number;
+}) {
   const { camera } = useThree();
   // Track the rendered z so a re-mount with a different baseZ doesn't snap.
   const renderedZ = useRef(baseZ);
+  // PSYCO · interpola o próprio staticZoomBias num useRef pra suavizar a
+  // transição idle (1.35) → connecting/connected (0.68). Sem isto, a mudança
+  // abrupta do bias combinada com a focus animation (zoom-out → zoom-in)
+  // produzia um "salto" perceptível quando o usuário clicava pra conectar.
+  // Time constant ~400ms (k=2.5) · mais lento que a câmera (k=18) pra a
+  // transição do bias ser quase imperceptível, deixando a focus animation
+  // fazer o show.
+  const renderedBias = useRef(staticZoomBias);
   useFrame((_, delta) => {
     const focus = peekFocus();
-    const targetZ = baseZ * focus.zoom;
+    const dt = Math.min(delta, 0.05);
+
+    const biasK = 1 - Math.exp(-dt * 2.5);
+    renderedBias.current = renderedBias.current + (staticZoomBias - renderedBias.current) * biasK;
+
+    const targetZ = baseZ * focus.zoom * renderedBias.current;
     // Critically-damped follow: ~50ms time constant. Smooths over the per-
     // frame zoom changes without lagging visibly behind the animation.
-    const k = 1 - Math.exp(-Math.min(delta, 0.05) * 18);
+    const k = 1 - Math.exp(-dt * 18);
     renderedZ.current = renderedZ.current + (targetZ - renderedZ.current) * k;
     camera.position.z = renderedZ.current;
   });
@@ -132,9 +163,27 @@ interface GlobeSceneProps {
   activeLng?: number;
   /** Live tunnel state from redux. Drives pin colour + connection-arc reveal. */
   connectionState?: ActiveServerPinState;
+  /**
+   * Override pro `GLOBE_OFFSET_Y` · desloca globo E câmera juntos pra alinhar
+   * o foco do globo no centro do espaço VISÍVEL (entre header e topo do card).
+   */
+  globeOffsetYOverride?: number;
+  /**
+   * Fator de tilt X extra proporcional à latitude do pin focado · move pins
+   * em latitudes sul/norte pro centro visual do globo sem precisar mover o
+   * globo no canvas. Valor sugerido pra mobile: 0.5 (sin(lat) * 0.5 radianos).
+   * Default 0 · desktop fica como antes.
+   */
+  pinTiltFactor?: number;
 }
 
-export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeSceneProps = {}) {
+export function GlobeScene({
+  activeLat,
+  activeLng,
+  connectionState,
+  globeOffsetYOverride,
+  pinTiltFactor = 0,
+}: GlobeSceneProps = {}) {
   const { width, height } = useViewport();
   const hidden = usePauseWhenHidden();
 
@@ -155,10 +204,23 @@ export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeScene
   const cameraZ = aspect < 0.7 ? 5.5 : 5;
   const cameraFov = aspect < 0.7 ? 38 : 40;
 
+  // Offset Y aplicado a TANTO globo QUANTO câmera. CameraAlign segue · globo
+  // aparece centralizado no canvas mas deslocado verticalmente. Mobile passa
+  // positivo · globo sobe junto com a câmera · foco fica no espaço acima do
+  // card · sem deformação de perspectiva e sem cortar nas bordas.
+  const globeY = globeOffsetYOverride ?? GLOBE_OFFSET_Y;
+
+  // PSYCO · tilt extra pra subir pin focado pro centro visual sem mover o
+  // globo. Default 0 · desktop sem mudança. Mobile passa pinTiltFactor=0.5
+  // · pin de SP (lat -23°) ganha ~11° de tilt forward · sobe pro centro.
+  const extraTiltX = activeLat != null && pinTiltFactor !== 0
+    ? Math.sin((activeLat * Math.PI) / 180) * pinTiltFactor
+    : 0;
+
   return (
     <Canvas
       dpr={dpr}
-      camera={{ position: [0, GLOBE_OFFSET_Y, cameraZ], fov: cameraFov }}
+      camera={{ position: [0, globeY, cameraZ], fov: cameraFov }}
       gl={{ antialias: true, alpha: true }}
       frameloop={hidden ? 'never' : 'always'}
     >
@@ -170,16 +232,25 @@ export function GlobeScene({ activeLat, activeLng, connectionState }: GlobeScene
       <Stars />
       <Suspense fallback={null}>
         <GlobeRotator />
-        <CameraZoomController baseZ={cameraZ} />
-        <CameraAlign offsetY={GLOBE_OFFSET_Y} />
+        {/* PSYCO · zoom-in perto APENAS quando connectionState != idle
+            (connecting / connected · usuário focado em um server). Quando
+            idle (mesmo com user location passada) entra em zoom-OUT afastado
+            · globo "respira" enquanto não tem tunnel ativo. */}
+        <CameraZoomController
+          baseZ={cameraZ}
+          staticZoomBias={
+            hasActiveServer && connectionState !== 'idle' ? 0.68 : 1.35
+          }
+        />
+        <CameraAlign offsetY={globeY} />
         {/* Vertical offset slides the whole globe down so the visible centre
             lines up with the middle of the area between header and connect
             card (not with the canvas centre, which sits a bit too high).
             CameraAlign above tilts the camera to match, so the perspective
             stays straight-on rather than reading as "looking up from below". */}
-        <group position={[0, GLOBE_OFFSET_Y, 0]}>
+        <group position={[0, globeY, 0]}>
           <Atmosphere />
-          <TiltedGlobe>
+          <TiltedGlobe extraTiltX={extraTiltX}>
             <GlobeCore radius={1.59} />
           <GlobeGrid radius={1.6} opacity={0.13} latStep={30} lngStep={30} />
           <CountryBorders radius={1.605} opacity={0.45} />

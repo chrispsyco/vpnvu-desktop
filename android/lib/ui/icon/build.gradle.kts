@@ -3,6 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.lib.ui.icon" }
+android { namespace = "vu.vpn.lib.ui.icon" }
 
 dependencies { implementation(libs.compose.ui) }

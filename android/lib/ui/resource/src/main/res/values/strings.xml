@@ -6,7 +6,7 @@
     <string name="foreground_notification_channel_description">Shows current VPN tunnel status</string>
     <string name="account_time_notification_channel_name">Account time reminders</string>
     <string name="account_time_notification_channel_description">Shows reminders when the account time is about to expire</string>
-    <string name="connecting_to_daemon">Connecting to Mullvad system service...</string>
+    <string name="connecting_to_daemon">Connecting to VPN.vu system service...</string>
     <string name="log_in">Log in</string>
     <string name="login_description">Enter your account number</string>
     <string name="logging_in_title">Logging in...</string>
@@ -49,13 +49,13 @@
     <string name="owned">Owned</string>
     <string name="rented">Rented</string>
     <string name="number_of_providers">Providers: %d</string>
-    <string name="mullvad_owned_only">Mullvad owned only</string>
+    <string name="mullvad_owned_only">VPN.vu owned only</string>
     <string name="all_providers">All providers</string>
     <string name="rented_only">Rented only</string>
-    <string name="device_name_info_first_paragraph">This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website.</string>
-    <string name="device_name_info_second_paragraph">You can have up to 5 devices logged in on one Mullvad account.</string>
+    <string name="device_name_info_first_paragraph">This is the name assigned to the device. Each device logged in on a VPN.vu account gets a unique name that helps you identify it when you manage your devices in the app or on the website.</string>
+    <string name="device_name_info_second_paragraph">You can have up to 5 devices logged in on one VPN.vu account.</string>
     <string name="device_name_info_third_paragraph">If you log out, the device and the device name is removed. When you log back in again, the device will get a new name.</string>
-    <string name="copied_mullvad_account_number">Copied Mullvad account number to clipboard</string>
+    <string name="copied_mullvad_account_number">Copied VPN.vu account number to clipboard</string>
     <string name="paid_until">Paid until</string>
     <string name="log_out">Log out</string>
     <string name="local_network_sharing">Local network sharing</string>
@@ -63,7 +63,7 @@
     <string name="auto_connect_and_lockdown_mode_footer">Makes sure the device is always on the VPN tunnel.</string>
     <string name="go_to_vpn_settings">Go to VPN settings</string>
     <string name="auto_connect_carousel_first_slide_top_text">The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"VPN.vu\" name.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about</string>
@@ -157,10 +157,10 @@
     <string name="failed_to_remove_device">Failed to remove device</string>
     <string name="always_on_vpn_error_notification_title">Always-on VPN assigned to %s</string>
     <string name="always_on_vpn_error_notification_content">
-        <![CDATA[Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN.]]>
+        <![CDATA[Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using VPN.vu.]]>
     </string>
     <string name="legacy_always_on_vpn_error_notification_title">Always-on VPN assigned to other VPN</string>
-    <string name="legacy_always_on_vpn_error_notification_content">Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN.</string>
+    <string name="legacy_always_on_vpn_error_notification_content">Unable to start tunnel connection. Please disable Always-on VPN before using VPN.vu.</string>
     <string name="vpn_permission_error_notification_title">VPN permission error</string>
     <string name="vpn_permission_error_notification_message">Please press connect to request VPN permission</string>
 
@@ -172,7 +172,7 @@
     <string name="new_changelog_notification_message">Click here to see what’s new.</string>
     <string name="agree_and_continue">Agree and continue</string>
     <string name="privacy_disclaimer_title">Privacy</string>
-    <string name="privacy_disclaimer_body_first_paragraph">To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you.</string>
+    <string name="privacy_disclaimer_body_first_paragraph">To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to VPN.vu servers. VPN.vu keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you.</string>
     <string name="privacy_disclaimer_body_second_paragraph">If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device.</string>
     <string name="submit_button">Submit</string>
     <string name="remove_button">Remove</string>
@@ -202,7 +202,7 @@
     <string name="quantum_resistant_info_second_paragaph">It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established.</string>
     <string name="on">On</string>
     <string name="wireguard_port_title">WireGuard port</string>
-    <string name="search_placeholder">Search for...</string>
+    <string name="search_placeholder">Buscar...</string>
     <string name="search_no_matches_for_text">No result for \"%s\", please try a different search</string>
     <string name="wireguard_custon_port_title">Custom</string>
     <string name="port">Port</string>
@@ -220,7 +220,7 @@
     <string name="got_it">Got it!</string>
     <string name="payment_billing_error_dialog_title">Google Play unavailable</string>
     <string name="payment_billing_error_dialog_message">We were unable to start the payment process, please make sure you have the latest version of Google Play.</string>
-    <string name="payment_obfuscation_id_error_dialog_title">Mullvad services unavailable</string>
+    <string name="payment_obfuscation_id_error_dialog_title">VPN.vu services unavailable</string>
     <string name="payment_obfuscation_id_error_dialog_message">We were unable to start the payment process, please try again later.</string>
     <string name="payment_status_pending_long">Google Play payment pending, this might take some time</string>
     <string name="payment_status_pending_short">Google Play payment pending</string>
@@ -291,10 +291,10 @@
     <string name="settings_api_access">API access</string>
     <string name="settings_notifications">Notifications</string>
     <string name="add">Add</string>
-    <string name="api_access_description">Manage and add custom methods to access the Mullvad API.</string>
+    <string name="api_access_description">Manage and add custom methods to access the VPN.vu API.</string>
     <string name="current_method">Current: %s</string>
     <string name="current_device">Current device</string>
-    <string name="api_access_method_info_first_line">The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations.</string>
+    <string name="api_access_method_info_first_line">The app needs to communicate with a VPN.vu API server to log you in, fetch server lists, and other critical operations.</string>
     <string name="api_access_method_info_second_line">On some networks, where various types of censorship are being used, the API servers might not be directly reachable.</string>
     <string name="api_access_method_info_third_line">This feature allows you to circumvent that censorship by adding custom ways to access the API via proxies and similar methods.</string>
     <string name="api_access_method_info_fourth_line">The \"Current\" method represent which method the app is using to reach the API.</string>
@@ -357,7 +357,7 @@
     <string name="changelog_title">What’s new</string>
     <string name="version">Version</string>
     <string name="local_network_sharing_info_block_connections_warning">Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work.</string>
-    <string name="encrypted_dns_proxy_info_message_part1">With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers.</string>
+    <string name="encrypted_dns_proxy_info_message_part1">With the “Encrypted DNS proxy” method, the app will communicate with our VPN.vu API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers.</string>
     <string name="encrypted_dns_proxy_info_message_part2">If you are not connected to our VPN, then the Encrypted DNS proxy will use your own non-VPN IP when connecting. The DoH servers are hosted by one of the following providers: Quad9 or Cloudflare.</string>
     <string name="connection_details_out">Out</string>
     <string name="multihop">Multihop</string>
@@ -438,8 +438,8 @@
     <string name="read_more_here">read more here</string>
     <string name="read_more">Read more</string>
     <string name="unable_to_reach_api">Unable to reach API</string>
-    <string name="unable_to_reach_api_dialog_message_first_login">The app was unable to login due to not being able to reach the Mullvad API.</string>
-    <string name="unable_to_reach_api_dialog_message_first_create_account">The app was unable to create an account due to not being able to reach the Mullvad API.</string>
+    <string name="unable_to_reach_api_dialog_message_first_login">The app was unable to login due to not being able to reach the VPN.vu API.</string>
+    <string name="unable_to_reach_api_dialog_message_first_create_account">The app was unable to create an account due to not being able to reach the VPN.vu API.</string>
     <string name="unable_to_reach_api_dialog_message_second">This might be due to censorship or network issues. Please try to:</string>
     <string name="unable_to_reach_api_dialog_message_list_first">Restart your device</string>
     <string name="unable_to_reach_api_dialog_message_list_second">Connect to a different network</string>
@@ -471,13 +471,13 @@
     <string name="navigate">Navigate</string>
     <string name="anti_censorship">Anti-censorship</string>
     <string name="method">Method</string>
-    <string name="anti_censorship_info_first_paragraph">These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works.</string>
+    <string name="anti_censorship_info_first_paragraph">These methods may be useful in situations where you are blocked from reaching VPN.vu. When “Automatic” is selected, the app will attempt all methods until one works.</string>
     <string name="anti_censorship_info_second_paragraph"><b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b></string>
     <string name="custom_port_recommended_range_first"><b>Attention:</b> Only some servers support the full port range.</string>
     <string name="custom_port_recommended_range_second">Valid range for all servers: %s</string>
     <string name="appearance">Appearance</string>
     <string name="icon_and_title">Icon and title</string>
-    <string name="appearance_description">Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications.</string>
+    <string name="appearance_description">Change the title and icon of the VPN.vu app on your Android device. This will not change the icon for any VPN.vu related notifications.</string>
     <string name="appearance_description_warning"><b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection.</string>
     <string name="appearance_description_warning_restart">If the icon and title is still not changed after the app has closed, please try restarting the device.</string>
     <string name="applying_changes">Applying changes...</string>
@@ -492,14 +492,14 @@
     <string name="invalid_ipv6_config">Invalid IPv6 config, please try to change the VPN settings.</string>
     <string name="delete_account">Delete account</string>
     <string name="cont">Continue</string>
-    <string name="delete_account_info">You are about to delete your Mullvad VPN account.</string>
+    <string name="delete_account_info">You are about to delete your VPN.vu account.</string>
     <string name="delete_account_info_part2">Deleting your account:</string>
     <string name="delete_account_first_item">You will lose access to this account on all devices.</string>
     <string name="delete_account_second_item">Any remaining time will be null and void.</string>
     <string name="delete_account_third_item">Refunds will not be possible.</string>
     <string name="delete_account_forth_item">Account recovery will not be possible.</string>
     <string name="delete_account_confirmation_check">By checking this box I agree to the risks involved with deleting my account</string>
-    <string name="delete_account_confirmation_enter_account_number">To delete your Mullvad VPN account, please enter your account number below.</string>
+    <string name="delete_account_confirmation_enter_account_number">To delete your VPN.vu account, please enter your account number below.</string>
     <string name="delete_account_cant_be_undone">Deleting your account cannot be undone.</string>
     <string name="account_delete_placeholder">Enter account number digits</string>
     <string name="account_deleted">Account deleted</string>

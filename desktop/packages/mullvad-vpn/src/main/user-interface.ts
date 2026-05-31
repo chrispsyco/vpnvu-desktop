@@ -260,6 +260,9 @@ export default class UserInterface implements WindowControllerDelegate {
   public reloadWindow = () => this.windowController.window?.reload();
   public isWindowVisible = () => this.windowController.isVisible();
   public showWindow = () => this.windowController.show();
+  // VPN.vu · public hook for the 5-tap easter egg in AppInfoView.
+  public openDevTools = () =>
+    this.windowController.window?.webContents.openDevTools({ mode: 'detach' });
   public updateTrayTheme = () => this.trayIconController?.updateTheme() ?? Promise.resolve();
   public setMonochromaticIcon = (value: boolean) =>
     this.trayIconController?.setMonochromaticIcon(value);

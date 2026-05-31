@@ -1,0 +1,7 @@
+package vu.vpn.lib.common.constant
+
+object BuildTypes {
+    const val DEBUG = "debug"
+    const val RELEASE = "release"
+    const val LEAK_CANARY = "leakCanary"
+}

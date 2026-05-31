@@ -92,7 +92,7 @@ impl AndroidTunProvider {
                 .attach_current_thread_as_daemon()
                 .expect("Failed to attach thread to Java VM"),
         );
-        let talpid_vpn_service_class = env.get_class("net/mullvad/talpid/TalpidVpnService");
+        let talpid_vpn_service_class = env.get_class("vu/vpn/talpid/TalpidVpnService");
 
         AndroidTunProvider {
             jvm: context.jvm,
@@ -167,8 +167,8 @@ impl AndroidTunProvider {
         let java_config = config.into_java(&env);
         let result = self.call_method(
             method_name,
-            "(Lnet/mullvad/talpid/model/TunConfig;)Lnet/mullvad/talpid/model/CreateTunResult;",
-            JavaType::Object("net/mullvad/talpid/model/CreateTunResult".to_owned()),
+            "(Lvu/vpn/talpid/model/TunConfig;)Lvu/vpn/talpid/model/CreateTunResult;",
+            JavaType::Object("vu/vpn/talpid/model/CreateTunResult".to_owned()),
             &[JValue::Object(java_config.as_obj())],
         )?;
 
@@ -269,7 +269,7 @@ impl AndroidTunProvider {
 
 /// Configuration to use for VpnService
 #[derive(Clone, Debug, Eq, PartialEq, IntoJava)]
-#[jnix(class_name = "net.mullvad.talpid.model.TunConfig")]
+#[jnix(class_name = "vu.vpn.talpid.model.TunConfig")]
 pub struct VpnServiceConfig {
     /// IP addresses for the tunnel interface.
     pub addresses: Vec<IpAddr>,
@@ -432,7 +432,7 @@ impl AsFd for VpnServiceTun {
 }
 
 #[derive(FromJava)]
-#[jnix(package = "net.mullvad.talpid.model")]
+#[jnix(package = "vu.vpn.talpid.model")]
 enum CreateTunResult {
     Success {
         tun_fd: i32,

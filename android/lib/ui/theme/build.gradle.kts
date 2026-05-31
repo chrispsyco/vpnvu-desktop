@@ -4,12 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.ui.theme"
+    namespace = "vu.vpn.lib.ui.theme"
 
     buildFeatures { compose = true }
 }
 
 dependencies {
+    implementation(projects.lib.ui.resource)
     implementation(libs.compose.material3)
     implementation(libs.compose.ui)
     implementation(libs.kotlin.stdlib)

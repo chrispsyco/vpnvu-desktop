@@ -1,0 +1,23 @@
+package vu.vpn.lib.ui.component
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
+import vu.vpn.lib.common.util.groupPasswordModeWithSpaces
+import vu.vpn.lib.common.util.groupWithSpaces
+
+@Composable
+fun AccountNumberView(
+    accountNumber: String,
+    obfuscateWithPasswordDots: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    InformationView(
+        content =
+            if (obfuscateWithPasswordDots) accountNumber.groupPasswordModeWithSpaces()
+            else accountNumber.groupWithSpaces(),
+        modifier = modifier,
+        fontFamily = FontFamily.Monospace,
+        whenMissing = MissingPolicy.SHOW_SPINNER,
+    )
+}
