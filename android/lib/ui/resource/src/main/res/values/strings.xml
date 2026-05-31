@@ -548,6 +548,7 @@
     <string name="psyco_no_recent_selections">No recent selections yet.</string>
     <string name="psyco_locations">Locations</string>
     <string name="psyco_your_exit">Your exit</string>
+    <string name="psyco_last_exit">Last exit</string>
     <string name="psyco_login_description">Use your 16-digit account number to log in. No email, no password, no tracking.</string>
     <string name="psyco_excluded_from_vpn">Excluded from VPN</string>
     <string name="psyco_split_tunneling">Split tunneling</string>

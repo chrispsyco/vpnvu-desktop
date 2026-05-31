@@ -26,10 +26,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import vu.vpn.feature.location.api.LocationBottomSheetState
 import vu.vpn.lib.model.CustomListId
+import vu.vpn.lib.model.GeoLocationId
 import vu.vpn.lib.model.RelayItem
 import vu.vpn.lib.model.RelayItemId
+import vu.vpn.lib.model.RelayLatency
 import vu.vpn.lib.model.RelayListType
-import vu.vpn.lib.ui.component.listitem.SelectableListItem
 import vu.vpn.lib.ui.component.relaylist.RelayListItem
 import vu.vpn.lib.ui.component.relaylist.SelectableRelayListItem
 import vu.vpn.lib.ui.component.text.ListItemInfo
@@ -48,6 +49,7 @@ fun LazyListScope.relayListContent(
     onSelectRelayItem: (RelayItem) -> Unit,
     onToggleExpand: (RelayItemId, CustomListId?, Boolean) -> Unit,
     onUpdateBottomSheetState: (LocationBottomSheetState) -> Unit,
+    latencyFor: (GeoLocationId) -> RelayLatency? = { null },
     customListHeader:
         @Composable
         (LazyItemScope.(listItem: RelayListItem.CustomListHeader) -> Unit) =
@@ -84,6 +86,7 @@ fun LazyListScope.relayListContent(
                         GeoLocationItem(
                             listItem = listItem,
                             relayListType = relayListType,
+                            latency = listItem.item.geoId()?.let(latencyFor),
                             onSelect = onSelectRelayItem,
                             onToggleExpand = onToggleExpand,
                             onUpdateBottomSheetState = onUpdateBottomSheetState,
@@ -94,6 +97,7 @@ fun LazyListScope.relayListContent(
                         RecentListItem(
                             listItem = listItem,
                             relayListType = relayListType,
+                            latency = listItem.item.geoId()?.let(latencyFor),
                             onSelect = onSelectRelayItem,
                             onUpdateBottomSheetState = onUpdateBottomSheetState,
                         )
@@ -133,12 +137,23 @@ fun Modifier.positionalPadding(itemPosition: Position): Modifier =
 private fun GeoLocationItem(
     listItem: RelayListItem.GeoLocationItem,
     relayListType: RelayListType,
+    latency: RelayLatency?,
     onSelect: (RelayItem) -> Unit,
     onToggleExpand: (RelayItemId, CustomListId?, Boolean) -> Unit,
     onUpdateBottomSheetState: (LocationBottomSheetState) -> Unit,
 ) {
-    SelectableRelayListItem(
-        relayListItem = listItem,
+    RichRelayRow(
+        name = listItem.item.name,
+        countryCode = listItem.item.geoCountryCode(),
+        subtitle = listItem.item.locationSubtitle(),
+        selected = listItem.isSelected,
+        active = listItem.item.active,
+        canExpand = listItem.canExpand,
+        expanded = listItem.expanded,
+        latency = latency,
+        position = listItem.itemPosition,
+        hierarchy = listItem.hierarchy,
+        modifier = Modifier.positionalPadding(listItem.itemPosition).testTag(LOCATION_CELL_TEST_TAG),
         onClick = { onSelect(listItem.item) },
         onLongClick = {
             onUpdateBottomSheetState(
@@ -149,7 +164,6 @@ private fun GeoLocationItem(
             )
         },
         onToggleExpand = { onToggleExpand(listItem.item.id, null, it) },
-        modifier = Modifier.positionalPadding(listItem.itemPosition).testTag(LOCATION_CELL_TEST_TAG),
     )
 }
 
@@ -157,29 +171,22 @@ private fun GeoLocationItem(
 private fun RecentListItem(
     listItem: RelayListItem.RecentListItem,
     relayListType: RelayListType,
+    latency: RelayLatency?,
     onSelect: (RelayItem) -> Unit,
     onUpdateBottomSheetState: (LocationBottomSheetState) -> Unit,
 ) {
-    val subtitle =
-        when (val relayItem = listItem.item) {
-            is RelayItem.Location.Relay ->
-                stringResource(
-                    R.string.country_comma_city,
-                    relayItem.countryName,
-                    relayItem.cityName,
-                )
-            is RelayItem.Location.City -> relayItem.countryName
-            is RelayItem.Location.Country,
-            is RelayItem.CustomList -> null
-        }
-
-    SelectableListItem(
-        modifier = Modifier.positionalPadding(listItem.itemPosition),
-        isSelected = listItem.isSelected,
-        isEnabled = listItem.item.active,
-        testTag = RECENT_CELL_TEST_TAG,
-        title = listItem.item.name,
-        subtitle = subtitle,
+    RichRelayRow(
+        name = listItem.item.name,
+        countryCode = listItem.item.geoCountryCode(),
+        subtitle = listItem.item.locationSubtitle(),
+        selected = listItem.isSelected,
+        active = listItem.item.active,
+        canExpand = false,
+        expanded = false,
+        latency = latency,
+        position = listItem.itemPosition,
+        hierarchy = Hierarchy.Parent,
+        modifier = Modifier.positionalPadding(listItem.itemPosition).testTag(RECENT_CELL_TEST_TAG),
         onClick = { onSelect(listItem.item) },
         onLongClick = {
             when (val entry = listItem.item) {
@@ -201,6 +208,28 @@ private fun RecentListItem(
         },
     )
 }
+
+/** Two-letter country code for the avatar tile, or null for custom lists. */
+private fun RelayItem.geoCountryCode(): String? =
+    when (this) {
+        is RelayItem.Location.Country -> id.code
+        is RelayItem.Location.City -> id.country.code
+        is RelayItem.Location.Relay -> id.city.country.code
+        is RelayItem.CustomList -> null
+    }
+
+/** GeoLocationId for latency lookup, or null for custom lists (no ping). */
+private fun RelayItem.geoId(): GeoLocationId? = (this as? RelayItem.Location)?.id
+
+@Composable
+private fun RelayItem.locationSubtitle(): String? =
+    when (this) {
+        is RelayItem.Location.Relay ->
+            stringResource(R.string.country_comma_city, countryName, cityName)
+        is RelayItem.Location.City -> countryName
+        is RelayItem.Location.Country,
+        is RelayItem.CustomList -> null
+    }
 
 @Composable
 private fun CustomListItem(

@@ -3,42 +3,28 @@ package vu.vpn.feature.location.impl
 import vu.vpn.lib.ui.resource.R
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.EaseInQuint
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddLocationAlt
-import androidx.compose.material.icons.outlined.WrongLocation
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.ui.unit.sp
-import vu.vpn.lib.ui.theme.typeface.GeistMonoFontFamily
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,33 +38,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.Velocity
-import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ExperimentalMotionApi
-import androidx.constraintlayout.compose.MotionLayout
-import androidx.constraintlayout.compose.MotionScene
-import androidx.constraintlayout.compose.Visibility
-import androidx.constraintlayout.compose.layoutId
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
-import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import vu.vpn.common.compose.CollectSideEffectWithLifecycle
 import vu.vpn.common.compose.dropUnlessResumed
-import vu.vpn.common.compose.isTv
 import vu.vpn.common.compose.showSnackbarImmediately
 import vu.vpn.core.LocalResultStore
 import vu.vpn.core.Navigator
@@ -101,28 +71,17 @@ import vu.vpn.feature.location.impl.bottomsheet.showResultSnackbar
 import vu.vpn.feature.location.impl.list.SelectLocationList
 import vu.vpn.lib.common.Lc
 import vu.vpn.lib.model.Constraint
-import vu.vpn.lib.model.ErrorStateCause
 import vu.vpn.lib.model.HopSelection
 import vu.vpn.lib.model.MultihopRelayListType
-import vu.vpn.lib.model.ParameterGenerationError
 import vu.vpn.lib.model.RelayItem
 import vu.vpn.lib.model.RelayListType
-import vu.vpn.lib.ui.component.MultihopSelector
-import vu.vpn.lib.ui.component.ScaffoldWithSmallTopBar
-import vu.vpn.lib.ui.component.Singlehop
-import vu.vpn.lib.ui.component.button.SearchButton
 import vu.vpn.lib.ui.designsystem.MullvadCircularProgressIndicatorLarge
 import vu.vpn.lib.ui.icon.DeleteHistory
 import vu.vpn.lib.ui.tag.SELECT_LOCATION_MENU_BUTTON_TEST_TAG
 import vu.vpn.lib.ui.tag.SELECT_LOCATION_SCREEN_TEST_TAG
 import vu.vpn.lib.ui.theme.AppTheme
 import vu.vpn.lib.ui.theme.Dimens
-import vu.vpn.lib.ui.theme.color.AlphaDisabled
-import vu.vpn.lib.usecase.FilterChip
 import org.koin.androidx.compose.koinViewModel
-
-val SCROLL_COLLAPSE_DISTANCE = 150.dp
-const val ANIMATION_DELAY_FADE_IN = 90
 
 @Preview("Loading|Default|Filters|Multihop|Multihop and Filters")
 @Composable
@@ -387,139 +346,69 @@ fun SelectLocationScreen(
     navigateToBottomSheet: (LocationBottomSheetState) -> Unit,
 ) {
     val backgroundColor = MaterialTheme.colorScheme.surface
-    var fabHeight by remember { mutableIntStateOf(0) }
-    val bottomMarginList =
-        if (isTv()) {
-            0.dp
-        } else {
-            with(LocalDensity.current) { fabHeight.toDp() + Dimens.fabSpacing }
-        }
 
-    ScaffoldWithSmallTopBar(
-        appBarTitle = stringResource(id = R.string.psyco_select_location_title),
-        navigationIcon = {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Rounded.Close,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    contentDescription = stringResource(id = R.string.back),
-                )
-            }
-        },
+    Scaffold(
         modifier = Modifier.testTag(SELECT_LOCATION_SCREEN_TEST_TAG),
-        snackbarHostState = snackbarHostState,
-        floatingActionButton = {
-            if (!isTv() && state is Lc.Content && state.value.isSearchButtonEnabled) {
-                FloatingActionButton(
-                    modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
-                    onClick = { onSearchClick(state.value.relayListType) },
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiary,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Search,
-                        contentDescription = stringResource(id = R.string.search),
-                        tint = MaterialTheme.colorScheme.onSurface,
+        containerColor = backgroundColor,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            val recentsEnabled = state.contentOrNull()?.isRecentsEnabled == true
+            val menuScope = rememberCoroutineScope()
+            val recentsDisabledText = stringResource(id = R.string.recents_disabled)
+            SelectLocationHeader(
+                title = stringResource(id = R.string.psyco_select_location_title),
+                backContentDescription = stringResource(id = R.string.back),
+                onBackClick = onBackClick,
+                trailing = {
+                    SelectLocationDropdownMenu(
+                        recentsEnabled = recentsEnabled,
+                        onRecentsToggleEnableClick = {
+                            if (recentsEnabled) {
+                                menuScope.launch {
+                                    snackbarHostState.showSnackbarImmediately(recentsDisabledText)
+                                }
+                            }
+                            onRecentsToggleEnableClick()
+                        },
+                        onRefreshRelayList = onRefreshRelayList,
                     )
-                }
-            }
-        },
-        actions = {
-            if (isTv()) {
-                val isSearchButtonEnabled = state.contentOrNull()?.isSearchButtonEnabled == true
-                SearchButton(
-                    enabled = isSearchButtonEnabled,
-                    onClick = { state.contentOrNull()?.let { onSearchClick(it.relayListType) } },
-                )
-            }
-            val filterButtonEnabled = state.contentOrNull()?.isFilterButtonEnabled == true
-            val recentsCurrentlyEnabled = state.contentOrNull()?.isRecentsEnabled == true
-            val multihopEnabled = state.contentOrNull()?.multihopEnabled == true
-            val disabledText = stringResource(id = R.string.recents_disabled)
-            val scope = rememberCoroutineScope()
-
-            SelectLocationDropdownMenu(
-                filterButtonEnabled = filterButtonEnabled,
-                onFilterClick = onFilterClick,
-                recentsEnabled = recentsCurrentlyEnabled,
-                multihopEnabled = multihopEnabled,
-                onRecentsToggleEnableClick = {
-                    if (recentsCurrentlyEnabled) {
-                        scope.launch { snackbarHostState.showSnackbarImmediately(disabledText) }
-                    }
-                    onRecentsToggleEnableClick()
                 },
-                onRefreshRelayList = onRefreshRelayList,
-                onMultihopToggleEnableClick = { toggleMultihop(!multihopEnabled) },
             )
         },
-    ) { modifier ->
-        val expandProgress = remember { Animatable(1f) }
-
-        val scope = rememberCoroutineScope()
-        val scrollRequired = with(LocalDensity.current) { SCROLL_COLLAPSE_DISTANCE.toPx() }
-
-        val nestedScrollConnection = remember {
-            object : NestedScrollConnection {
-                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                    val delta = available.y / scrollRequired
-                    scope.launch {
-                        expandProgress.snapTo((expandProgress.value + delta).coerceIn(0f, 1f))
-                    }
-                    return super.onPreScroll(available, source)
-                }
-
-                override suspend fun onPostFling(
-                    consumed: Velocity,
-                    available: Velocity,
-                ): Velocity {
-                    scope.launch {
-                        expandProgress.animateTo(
-                            expandProgress.value.roundToInt().toFloat(),
-                            animationSpec = tween(),
-                        )
-                    }
-                    return super.onPostFling(consumed, available)
-                }
-            }
-        }
+    ) { paddingValues ->
         Column(
-            modifier =
-                modifier
-                    .nestedScroll(nestedScrollConnection)
-                    .background(backgroundColor)
-                    .fillMaxSize(),
-            verticalArrangement =
-                when (state) {
-                    is Lc.Loading -> Arrangement.Center
-                    is Lc.Content -> Arrangement.Top
-                },
+            modifier = Modifier.padding(paddingValues).background(backgroundColor).fillMaxSize()
         ) {
             when (state) {
-                is Lc.Loading -> {
-                    Loading()
-                }
+                is Lc.Loading ->
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        MullvadCircularProgressIndicatorLarge()
+                    }
 
                 is Lc.Content -> {
-                    SectionKicker(label = stringResource(id = R.string.psyco_your_exit))
-                    SelectionContainer(
-                        progress = expandProgress.value,
-                        relayListType = state.value.relayListType,
-                        filterChips = state.value.filterChips,
-                        hopSelection = state.value.hopSelection,
-                        error = state.value.tunnelErrorStateCause,
-                        onSelectRelayList = onSelectRelayList,
-                        removeOwnershipFilter = removeOwnershipFilter,
-                        removeProviderFilter = removeProviderFilter,
-                        scrollToRelayItem = { relayListType: RelayListType, relayItem: RelayItem ->
-                            scrollToItem(relayListType to relayItem)
-                        },
-                    )
-
-                    SectionKicker(label = stringResource(id = R.string.psyco_all_locations))
+                    // "Última saída" = the currently selected exit. Multihop is no
+                    // longer surfaced in this UI, but resolve its exit anyway so the
+                    // card is correct if multihop is ever toggled on elsewhere.
+                    val exitConstraint =
+                        when (val hop = state.value.hopSelection) {
+                            is HopSelection.Single -> hop.relay
+                            is HopSelection.Multi -> hop.exit
+                        }
+                    Column(modifier = Modifier.padding(horizontal = Dimens.mediumPadding)) {
+                        LastExitCard(
+                            label = stringResource(id = R.string.psyco_last_exit),
+                            exitName = exitConstraint.toDisplayName(),
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.smallPadding))
+                        SearchFieldButton(
+                            placeholder = stringResource(id = R.string.psyco_locations),
+                            onClick = { onSearchClick(state.value.relayListType) },
+                        )
+                    }
                     RelayLists(
                         relayListType = state.value.relayListType,
-                        bottomMargin = bottomMarginList,
+                        bottomMargin = Dimens.mediumPadding,
                         onSelect = onSelectSinglehop,
                         onModifyMultihop = onModifyMultihop,
                         openDaitaSettings = openDaitaSettings,
@@ -535,50 +424,26 @@ fun SelectLocationScreen(
 
 @Composable
 private fun SelectLocationDropdownMenu(
-    filterButtonEnabled: Boolean,
-    onFilterClick: () -> Unit,
     recentsEnabled: Boolean,
-    multihopEnabled: Boolean,
     onRecentsToggleEnableClick: () -> Unit,
     onRefreshRelayList: () -> Unit,
-    onMultihopToggleEnableClick: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
-    IconButton(
-        modifier = Modifier.testTag(SELECT_LOCATION_MENU_BUTTON_TEST_TAG),
+    RoundIconButton(
+        icon = Icons.Rounded.MoreVert,
+        contentDescription = stringResource(R.string.more_actions),
         onClick = { showMenu = !showMenu },
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.MoreVert,
-            contentDescription = stringResource(R.string.more_actions),
-        )
-    }
+        modifier = Modifier.testTag(SELECT_LOCATION_MENU_BUTTON_TEST_TAG),
+    )
     DropdownMenu(
         modifier = Modifier.background(MaterialTheme.colorScheme.tertiaryContainer),
         expanded = showMenu,
         onDismissRequest = { showMenu = false },
     ) {
-        val colors =
-            MenuDefaults.itemColors(
-                leadingIconColor = MaterialTheme.colorScheme.onPrimary,
-                disabledLeadingIconColor =
-                    MaterialTheme.colorScheme.onPrimary.copy(alpha = AlphaDisabled),
-            )
+        val colors = MenuDefaults.itemColors(leadingIconColor = MaterialTheme.colorScheme.onPrimary)
 
-        DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.filter)) },
-            onClick = {
-                showMenu = false
-                onFilterClick()
-            },
-            enabled = filterButtonEnabled,
-            colors = colors,
-            leadingIcon = { Icon(Icons.Rounded.FilterList, contentDescription = null) },
-        )
-
-        // Keep these assets in remember so we don't change them as we animate away the dropdown
-        // menu
+        // Keep the asset in remember so it doesn't flip as the menu animates away.
         var recentsItemTextId by remember {
             mutableIntStateOf(
                 if (recentsEnabled) R.string.disable_recents else R.string.enable_recents
@@ -595,28 +460,6 @@ private fun SelectLocationDropdownMenu(
             },
             colors = colors,
             leadingIcon = { Icon(imageVector = recentsIcon, contentDescription = null) },
-        )
-
-        // Keep these assets in remember so we don't change them as we animate away the dropdown
-        // menu
-        var multihopItemTextId by remember {
-            mutableIntStateOf(
-                if (multihopEnabled) R.string.disable_multihop else R.string.enable_multihop
-            )
-        }
-        var multihopIcon by remember {
-            mutableStateOf(
-                if (multihopEnabled) Icons.Outlined.WrongLocation else Icons.Outlined.AddLocationAlt
-            )
-        }
-        DropdownMenuItem(
-            text = { Text(text = stringResource(multihopItemTextId)) },
-            onClick = {
-                showMenu = false
-                onMultihopToggleEnableClick()
-            },
-            colors = colors,
-            leadingIcon = { Icon(multihopIcon, contentDescription = null) },
         )
 
         DropdownMenuItem(
@@ -703,174 +546,10 @@ private fun RelayLists(
     }
 }
 
-@OptIn(ExperimentalMotionApi::class)
-@Suppress("LongMethod")
-@Composable
-private fun SelectionContainer(
-    progress: Float, // 0 - 1
-    relayListType: RelayListType,
-    hopSelection: HopSelection,
-    error: ErrorStateCause?,
-    filterChips: List<FilterChip>,
-    onSelectRelayList: (MultihopRelayListType) -> Unit,
-    removeOwnershipFilter: () -> Unit,
-    removeProviderFilter: () -> Unit,
-    scrollToRelayItem: (RelayListType, RelayItem) -> Unit,
-) {
-
-    var multihopListSelector by remember { mutableStateOf(MultihopRelayListType.EXIT) }
-    if (relayListType is RelayListType.Multihop) {
-        multihopListSelector = relayListType.multihopRelayListType
-    }
-
-    Column {
-        AnimatedContent(
-            hopSelection,
-            contentKey = { it is HopSelection.Multi },
-            transitionSpec = {
-                fadeIn(tween(delayMillis = ANIMATION_DELAY_FADE_IN)).togetherWith(fadeOut())
-            },
-            modifier = Modifier.padding(horizontal = Dimens.mediumPadding),
-        ) { hopSelection ->
-            when (hopSelection) {
-                is HopSelection.Single ->
-                    Singlehop(
-                        exitLocation = hopSelection.relay.toDisplayName(),
-                        errorText = error.errorText(RelayListType.Single),
-                        expandProgress = progress,
-                        onSelect = {
-                            hopSelection.relay?.getOrNull()?.let {
-                                scrollToRelayItem(RelayListType.Single, it)
-                            }
-                        },
-                    )
-
-                is HopSelection.Multi ->
-                    MultihopSelector(
-                        exitSelected = multihopListSelector == MultihopRelayListType.EXIT,
-                        exitLocation = hopSelection.exit.toDisplayName(),
-                        exitErrorText =
-                            error.errorText(RelayListType.Multihop(MultihopRelayListType.EXIT)),
-                        onExitClick = {
-                            if (multihopListSelector == MultihopRelayListType.EXIT) {
-                                hopSelection.exit?.getOrNull()?.let {
-                                    scrollToRelayItem(
-                                        RelayListType.Multihop(MultihopRelayListType.EXIT),
-                                        it,
-                                    )
-                                }
-                            } else {
-                                onSelectRelayList(MultihopRelayListType.EXIT)
-                            }
-                        },
-                        entryLocation = hopSelection.entry.toDisplayName(),
-                        entryErrorText =
-                            error.errorText(RelayListType.Multihop(MultihopRelayListType.ENTRY)),
-                        onEntryClick = {
-                            if (multihopListSelector == MultihopRelayListType.ENTRY) {
-                                hopSelection.entry?.getOrNull()?.let {
-                                    scrollToRelayItem(
-                                        RelayListType.Multihop(MultihopRelayListType.ENTRY),
-                                        it,
-                                    )
-                                }
-                            } else {
-                                onSelectRelayList(MultihopRelayListType.ENTRY)
-                            }
-                        },
-                        expandProgress = progress,
-                    )
-            }
-        }
-
-        val keyFilters = "filters"
-        val scene = MotionScene {
-            val expandSet =
-                constraintSet("expanded") {
-                    val filters = createRefFor(keyFilters)
-                    constrain(filters) {
-                        centerTo(parent)
-                        visibility = Visibility.Visible
-                    }
-                }
-
-            val collapseSet =
-                constraintSet("collapsed") {
-                    val filters = createRefFor(keyFilters)
-                    constrain(filters) {
-                        linkTo(start = parent.start, end = parent.end)
-                        bottom.linkTo(parent.top)
-                        visibility = Visibility.Invisible
-                    }
-                }
-
-            defaultTransition(collapseSet, expandSet) {}
-        }
-        MotionLayout(
-            modifier = Modifier.padding(bottom = Dimens.smallPadding),
-            motionScene = scene,
-            progress = progress,
-        ) {
-            FilterRow(
-                modifier = Modifier.layoutId(keyFilters).alpha(EaseInQuint.transform(progress)),
-                filters = filterChips,
-                onRemoveOwnershipFilter = { removeOwnershipFilter() },
-                onRemoveProviderFilter = { removeProviderFilter() },
-            )
-        }
-    }
-}
-
 @Composable
 fun Constraint<RelayItem>?.toDisplayName() =
     when (this) {
         Constraint.Any -> stringResource(R.string.automatic)
         is Constraint.Only<RelayItem> -> value.name
         null -> stringResource(R.string.unavailable)
-    }
-
-@Composable
-private fun ColumnScope.Loading() {
-    MullvadCircularProgressIndicatorLarge(modifier = Modifier.align(Alignment.CenterHorizontally))
-}
-
-// PSYCO · kicker eyebrow cyan uppercase agrupando seções do select-location ·
-// porta o `StyledCurrentLocationKicker` do desktop. Caps + cor brand sinaliza
-// "section header" sem competir visualmente com o Singlehop/Multihop selector.
-@Composable
-private fun SectionKicker(label: String) {
-    Text(
-        text = label.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        fontFamily = GeistMonoFontFamily,
-        letterSpacing = 1.6.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier =
-            Modifier.fillMaxWidth()
-                .padding(
-                    start = Dimens.mediumPadding,
-                    end = Dimens.mediumPadding,
-                    top = Dimens.smallPadding,
-                    bottom = Dimens.miniPadding,
-                ),
-    )
-}
-
-@Composable
-private fun ErrorStateCause?.errorText(relayListType: RelayListType) =
-    when ((this as? ErrorStateCause.TunnelParameterError)?.error) {
-        ParameterGenerationError.NoMatchingRelay if relayListType is RelayListType.Single ->
-            stringResource(R.string.no_matching_relay)
-
-        ParameterGenerationError.NoMatchingRelayEntry if
-            relayListType is RelayListType.Multihop &&
-                relayListType.multihopRelayListType == MultihopRelayListType.ENTRY
-         -> stringResource(R.string.no_matching_relay)
-
-        ParameterGenerationError.NoMatchingRelayExit if
-            relayListType is RelayListType.Multihop &&
-                relayListType.multihopRelayListType == MultihopRelayListType.EXIT
-         -> stringResource(R.string.no_matching_relay)
-
-        else -> null
     }
