@@ -261,7 +261,10 @@ class ListItemColors(
 object ListItemDefaults {
     @Composable
     fun colors(
-        containerColorParent: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        // PSYCO · sóbrio como o desktop: itens num tom escuro (surfaceContainer)
+        // em vez do antigo surfaceContainerHighest, que deixava os cards "azul
+        // claro chapado". Mantém leve destaque sobre o surface do fundo.
+        containerColorParent: Color = MaterialTheme.colorScheme.surfaceContainer,
         containerColorChild1: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
         containerColorChild2: Color = MaterialTheme.colorScheme.surfaceContainer,
         containerColorChild3: Color = MaterialTheme.colorScheme.surfaceContainerLow,

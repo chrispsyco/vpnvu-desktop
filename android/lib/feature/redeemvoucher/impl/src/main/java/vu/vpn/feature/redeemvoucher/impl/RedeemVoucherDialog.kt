@@ -1,6 +1,8 @@
 package vu.vpn.feature.redeemvoucher.impl
 
 import android.content.res.Configuration
+import android.os.Build
+import android.view.WindowManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,10 +15,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -27,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.util.concurrent.TimeUnit
@@ -133,6 +138,11 @@ fun RedeemVoucherDialog(
                     VariantButton(
                         text = stringResource(id = R.string.redeem),
                         onClick = { onRedeem(state.voucherInput) },
+                        // Match the desktop: keep Resgatar dimmed until a full
+                        // 16-char code is entered (and not mid-verification).
+                        isEnabled =
+                            state.voucherInput.length == MAX_VOUCHER_LENGTH &&
+                                state.voucherState !is VoucherDialogState.Verifying,
                         modifier = Modifier.padding(bottom = Dimens.buttonSpacing),
                     )
                 }
@@ -153,6 +163,7 @@ fun RedeemVoucherDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                DialogBackgroundBlur()
                 TimeUnit.DAYS.toSeconds(1)
                 if (state.voucherState is VoucherDialogState.Success) {
                     val days: Int =
@@ -197,6 +208,25 @@ fun RedeemVoucherDialog(
             ),
     )
 }
+
+// Blurs the content behind the dialog to echo the desktop's backdrop blur.
+// Window blur-behind needs API 31+ AND device support (cross-window blur can be
+// turned off system-wide); when unavailable this is a no-op and the plain scrim
+// stays. Driven from inside the dialog so it targets the dialog's own window.
+@Composable
+private fun DialogBackgroundBlur() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    val view = LocalView.current
+    LaunchedEffect(view) {
+        val window = (view.parent as? DialogWindowProvider)?.window ?: return@LaunchedEffect
+        window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+        val params = window.attributes
+        params.blurBehindRadius = BLUR_BEHIND_RADIUS_PX
+        window.attributes = params
+    }
+}
+
+private const val BLUR_BEHIND_RADIUS_PX = 60
 
 @Composable
 private fun RedeemSuccessBody(message: String) {

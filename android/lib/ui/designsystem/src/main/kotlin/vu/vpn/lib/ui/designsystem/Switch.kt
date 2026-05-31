@@ -60,14 +60,16 @@ fun mullvadSwitchColors(): SwitchColors =
         checkedThumbColor = MaterialTheme.colorScheme.positive,
         checkedTrackColor = Color.Transparent,
         checkedBorderColor = MaterialTheme.colorScheme.onPrimary,
-        uncheckedThumbColor = MaterialTheme.colorScheme.error,
+        // PSYCO · thumb do switch desligado no azul/cyan da VPN.vu (primary) em
+        // vez do vermelho (error), que parecia estado de alerta.
+        uncheckedThumbColor = MaterialTheme.colorScheme.primary,
         uncheckedTrackColor = Color.Transparent,
         uncheckedBorderColor = MaterialTheme.colorScheme.onPrimary,
         disabledCheckedThumbColor = MaterialTheme.colorScheme.positive.copy(alpha = AlphaDisabled),
         disabledCheckedTrackColor = Color.Transparent,
         disabledCheckedBorderColor =
             MaterialTheme.colorScheme.onPrimary.copy(alpha = AlphaDisabled),
-        disabledUncheckedThumbColor = MaterialTheme.colorScheme.error.copy(alpha = AlphaDisabled),
+        disabledUncheckedThumbColor = MaterialTheme.colorScheme.primary.copy(alpha = AlphaDisabled),
         disabledUncheckedTrackColor = Color.Transparent,
         disabledUncheckedBorderColor =
             MaterialTheme.colorScheme.onPrimary.copy(alpha = AlphaDisabled),
