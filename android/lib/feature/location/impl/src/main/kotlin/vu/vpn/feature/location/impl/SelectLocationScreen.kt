@@ -396,7 +396,7 @@ fun SelectLocationScreen(
         }
 
     ScaffoldWithSmallTopBar(
-        appBarTitle = "Selecionar localização",
+        appBarTitle = stringResource(id = R.string.psyco_select_location_title),
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(

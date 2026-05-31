@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +56,7 @@ import vu.vpn.app.MainActivity
 import vu.vpn.common.compose.CollectSideEffectWithLifecycle
 import vu.vpn.core.Navigator
 import vu.vpn.feature.login.api.LoginNavKey
+import vu.vpn.lib.ui.resource.R
 import vu.vpn.lib.ui.designsystem.MullvadCircularProgressIndicatorMedium
 import vu.vpn.lib.ui.designsystem.PrimaryButton
 import vu.vpn.lib.ui.theme.AppTheme
@@ -74,24 +76,24 @@ private const val READ_THRESHOLD = 0.92f
 private const val TOTAL_STEPS = 2
 
 private data class StepMeta(
-    val headerLabel: String,
-    val kicker: String,
-    val titleLead: String,
-    val titleAccent: String,
+    val headerLabel: Int,
+    val kicker: Int,
+    val titleLead: Int,
+    val titleAccent: Int,
 )
 
 private val STEP_META = mapOf(
     1 to StepMeta(
-        headerLabel = "Privacidade",
-        kicker = "Aviso de privacidade · primeiro acesso",
-        titleLead = "Antes da gente ",
-        titleAccent = "começar.",
+        headerLabel = R.string.psyco_privacy_step1_label,
+        kicker = R.string.psyco_privacy_step1_kicker,
+        titleLead = R.string.psyco_privacy_step1_title_lead,
+        titleAccent = R.string.psyco_privacy_step1_title_accent,
     ),
     2 to StepMeta(
-        headerLabel = "Termos & LGPD",
-        kicker = "Termos de uso · proteção de dados",
-        titleLead = "Como a gente trata ",
-        titleAccent = "seus dados.",
+        headerLabel = R.string.psyco_privacy_step2_label,
+        kicker = R.string.psyco_privacy_step2_kicker,
+        titleLead = R.string.psyco_privacy_step2_title_lead,
+        titleAccent = R.string.psyco_privacy_step2_title_accent,
     ),
 )
 
@@ -225,13 +227,14 @@ private fun HeaderRow(currentStep: Int) {
             },
             fontSize = 22.sp,
         )
+        val headerLabel = STEP_META[currentStep]?.headerLabel?.let { stringResource(it) } ?: ""
         Text(
             text = buildAnnotatedString {
                 withStyle(
                     SpanStyle(color = Color.White, fontWeight = FontWeight.SemiBold)
                 ) { append(currentStep.toString()) }
                 withStyle(SpanStyle(color = Color(0xFF9BAEB6))) {
-                    append(" de $TOTAL_STEPS · ${STEP_META[currentStep]?.headerLabel ?: ""}")
+                    append(stringResource(R.string.psyco_privacy_step_suffix, TOTAL_STEPS, headerLabel))
                 }
             },
             fontSize = 12.sp,
@@ -244,7 +247,7 @@ private fun Hero(currentStep: Int) {
     val meta = STEP_META[currentStep] ?: return
     Column {
         Text(
-            text = meta.kicker.uppercase(),
+            text = stringResource(meta.kicker).uppercase(),
             color = MaterialTheme.colorScheme.primary,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
@@ -252,13 +255,13 @@ private fun Hero(currentStep: Int) {
         Spacer(Modifier.height(10.dp))
         Text(
             text = buildAnnotatedString {
-                withStyle(SpanStyle(color = Color.White)) { append(meta.titleLead) }
+                withStyle(SpanStyle(color = Color.White)) { append(stringResource(meta.titleLead)) }
                 withStyle(
                     SpanStyle(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                     )
-                ) { append(meta.titleAccent) }
+                ) { append(stringResource(meta.titleAccent)) }
             },
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
@@ -293,70 +296,70 @@ private fun ScrollableContent(currentStep: Int, scrollState: androidx.compose.fo
 @Composable
 private fun PrivacyStepContent() {
     DisclaimerSection(
-        heading = "O essencial",
-        body = "A VPN.vu foi desenhada pra não saber quem é você. Sem e-mail, sem senha, sem nome. Você abre o app e usa.",
+        heading = stringResource(id = R.string.psyco_privacy_s1_essential_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_essential_b),
     )
     DisclaimerSection(
-        heading = "Política no-logs",
-        body = "Não guardamos histórico, IP, DNS query, timestamp de sessão, nem nada que ligue tráfego à conta. Nossos servidores rodam em RAM e zeram a cada reboot.",
+        heading = stringResource(id = R.string.psyco_privacy_s1_nologs_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_nologs_b),
     )
     DisclaimerSection(
-        heading = "Criptografia",
-        body = "Toda conexão usa WireGuard com curve25519. As chaves são geradas no seu dispositivo e nunca saem dele em claro.",
+        heading = stringResource(id = R.string.psyco_privacy_s1_crypto_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_crypto_b),
     )
     DisclaimerSection(
-        heading = "Dados que coletamos",
-        body = "Sério. Não pedimos e-mail, telefone, nome, CPF, endereço, foto de perfil, idade, gênero, localização ou qualquer outra coisa que ligue você a uma identidade.",
-        bigHeadline = "Nenhum.",
+        heading = stringResource(id = R.string.psyco_privacy_s1_collect_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_collect_b),
+        bigHeadline = stringResource(id = R.string.psyco_privacy_s1_collect_big),
     )
     DisclaimerSection(
-        heading = "Identificação interna",
-        body = "Sua conta é um número de 16 dígitos gerado aleatoriamente no primeiro uso. Anota ele em algum lugar seguro · se perder, não tem como recuperar (porque nem a gente sabe quem é você).",
+        heading = stringResource(id = R.string.psyco_privacy_s1_id_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_id_b),
     )
     DisclaimerSection(
-        heading = "Pagamento",
-        body = "Aceitamos crypto e cash anônimo via correio. Pix e cartão também rolam, mas aí o processador de pagamento vê o seu nome · não a gente.",
+        heading = stringResource(id = R.string.psyco_privacy_s1_payment_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_payment_b),
     )
     DisclaimerSection(
-        heading = "Jurisdição",
-        body = "A VPN.vu opera sob jurisdição offshore (Seicheles), fora do alcance do 5/9/14 Eyes. Não respondemos a pedidos de dados de governos · até porque não temos o que entregar.",
+        heading = stringResource(id = R.string.psyco_privacy_s1_jurisdiction_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_jurisdiction_b),
     )
     DisclaimerSection(
-        heading = "Código aberto",
-        body = "O cliente VPN.vu é 100% open source (GPL-3.0) no nosso GitHub. Você pode auditar, compilar do source, ou só usar o binário assinado.",
+        heading = stringResource(id = R.string.psyco_privacy_s1_opensource_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_opensource_b),
     )
     DisclaimerSection(
-        heading = "Última coisa",
-        body = "Ao aceitar, você concorda em usar a VPN.vu de forma legal no seu país. Spam, fraude e abuso de rede levam ao bloqueio do número · sem aviso.",
+        heading = stringResource(id = R.string.psyco_privacy_s1_last_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_last_b),
     )
 }
 
 @Composable
 private fun TermsStepContent() {
     DisclaimerSection(
-        heading = "Direitos sob a LGPD",
-        body = "Você pode consultar, corrigir ou pedir exclusão dos dados que o app guarda no seu dispositivo · basicamente o número da sua conta. Como a gente não tem coleta server-side, não tem o que devolver do nosso lado.",
+        heading = stringResource(id = R.string.psyco_privacy_s2_lgpd_h),
+        body = stringResource(id = R.string.psyco_privacy_s2_lgpd_b),
     )
     DisclaimerSection(
-        heading = "Encarregado de proteção de dados",
-        body = "Pra dúvidas formais de LGPD, manda email pro nosso DPO em dpo@vpn.vu. Respondemos em até 15 dias úteis · normalmente bem mais rápido.",
+        heading = stringResource(id = R.string.psyco_privacy_s2_dpo_h),
+        body = stringResource(id = R.string.psyco_privacy_s2_dpo_b),
     )
     DisclaimerSection(
-        heading = "Compartilhamento",
-        body = "A gente não compartilha dados com terceiros, governos, parceiros comerciais, redes de afiliados, nada. E não é por boa vontade · é que a gente literalmente não tem o que compartilhar.",
-        bigHeadline = "Zero.",
+        heading = stringResource(id = R.string.psyco_privacy_s2_sharing_h),
+        body = stringResource(id = R.string.psyco_privacy_s2_sharing_b),
+        bigHeadline = stringResource(id = R.string.psyco_privacy_s2_sharing_big),
     )
     DisclaimerSection(
-        heading = "Uso aceitável",
-        body = "Usar a VPN.vu pra spam, fraude, ataque DDoS ou conteúdo ilegal sob a lei brasileira resulta em bloqueio do número sem reembolso. A gente não monitora tráfego pra detectar isso · só age em cima de denúncia formal validada.",
+        heading = stringResource(id = R.string.psyco_privacy_s2_acceptable_h),
+        body = stringResource(id = R.string.psyco_privacy_s2_acceptable_b),
     )
     DisclaimerSection(
-        heading = "Transparency report",
-        body = "Publicamos a cada trimestre quantos pedidos governamentais a gente recebeu em vpn.vu/transparency. Se algum dia esse canary sumir do site, é pra você assumir que houve comprometimento e parar de usar.",
+        heading = stringResource(id = R.string.psyco_privacy_s2_transparency_h),
+        body = stringResource(id = R.string.psyco_privacy_s2_transparency_b),
     )
     DisclaimerSection(
-        heading = "Jurisdição contratual",
-        body = "Disputas com users brasileiros tramitam no foro de São Paulo/Brasil. Pra users internacionais vale a jurisdição offshore (Seicheles). Em qualquer caso, a gente não tem dado de tráfego pra entregar.",
+        heading = stringResource(id = R.string.psyco_privacy_s2_forum_h),
+        body = stringResource(id = R.string.psyco_privacy_s2_forum_b),
     )
 }
 
@@ -397,7 +400,7 @@ private fun ReadHint(done: Boolean) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = if (done) "✓ Você leu tudo" else "↓ Role pra ler tudo",
+            text = if (done) stringResource(id = R.string.psyco_privacy_read_done) else stringResource(id = R.string.psyco_privacy_read_scroll),
             color = if (done) MaterialTheme.colorScheme.primary else Color(0xFF9BAEB6),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
@@ -415,8 +418,8 @@ private fun CtaGroup(
 ) {
     val isFinal = currentStep == TOTAL_STEPS
     val primaryLabel = when {
-        isFinal -> "Aceitar e começar"
-        else -> "Aceitar e continuar"
+        isFinal -> stringResource(id = R.string.psyco_privacy_cta_start)
+        else -> stringResource(id = R.string.psyco_privacy_cta_continue)
     }
 
     Column(

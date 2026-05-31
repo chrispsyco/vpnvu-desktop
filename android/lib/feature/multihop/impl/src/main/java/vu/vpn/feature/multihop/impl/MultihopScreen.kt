@@ -188,19 +188,18 @@ private fun ColumnScope.MultihopContent(
 private fun Description() {
     ScreenDescription(
         modifier = Modifier.padding(vertical = Dimens.mediumPadding),
-        text =
-            "Adiciona um servidor de entrada antes do servidor de saída. " +
-                "Maior privacidade, latência um pouco maior.",
+        text = stringResource(id = R.string.psyco_multihop_desc),
     )
 }
 
 // PSYCO · resolve o relay selecionado pra um nome legível (espelha o
 // toDisplayName do SelectLocation, mas em PT-BR e local ao módulo).
+@Composable
 private fun Constraint<RelayItem>?.toDisplayName(): String =
     when (this) {
-        Constraint.Any -> "Automático"
+        Constraint.Any -> stringResource(id = R.string.automatic)
         is Constraint.Only<RelayItem> -> value.name
-        null -> "Indisponível"
+        null -> stringResource(id = R.string.psyco_unavailable)
     }
 
 // PSYCO · section-label cinza-mono (Geist Mono) batendo o .mv-section-title do Figma.

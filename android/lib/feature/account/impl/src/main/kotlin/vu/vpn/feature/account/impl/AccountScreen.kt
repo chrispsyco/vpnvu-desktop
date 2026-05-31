@@ -117,7 +117,7 @@ fun Account(navigator: Navigator) {
     val state by vm.uiState.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val copyTextString = "Número da conta copiado"
+    val copyTextString = stringResource(id = R.string.copied_mullvad_account_number)
     val errorString = stringResource(id = R.string.error_occurred)
     val copyToClipboard =
         createCopyToClipboardHandle(snackbarHostState = snackbarHostState, isSensitive = true)
@@ -413,30 +413,32 @@ private enum class ExpiryTone {
 private val EXPIRY_DATE_FORMATTER: DateTimeFormatter =
     DateTimeFormatter.ofPattern("d 'de' MMM 'de' yyyy, HH:mm", Locale.forLanguageTag("pt-BR"))
 
-private fun expiryChipLabel(tone: ExpiryTone, days: Long): String =
+// Returns a string-resource id for the expiry chip so the label follows the
+// device locale (resolved by the @Composable caller).
+private fun expiryChipLabel(tone: ExpiryTone, days: Long): Int =
     when {
-        tone == ExpiryTone.DANGER -> "Expirado"
-        tone == ExpiryTone.WARNING -> "Renovar"
-        days >= 300 -> "Anual"
-        days >= 80 -> "90 dias"
-        else -> "Ativo"
+        tone == ExpiryTone.DANGER -> R.string.psyco_expiry_expired
+        tone == ExpiryTone.WARNING -> R.string.psyco_expiry_renew
+        days >= 300 -> R.string.psyco_plan_annual
+        days >= 80 -> R.string.psyco_plan_90days
+        else -> R.string.psyco_plan_active
     }
 
 // PSYCO · porta o renderRemainingLabel do desktop (FormattedAccountExpiry.tsx):
-// >= 2 anos mostra em anos, >= ~2 meses em meses, senão em dias. Assim a conta
-// anual lê "12 meses restantes" igual ao desktop, não "365 dias".
-private fun remainingValueUnit(days: Long): Pair<String, String> {
+// >= 2 anos mostra em anos, >= ~2 meses em meses, senão em dias. Retorna o
+// valor + o id da string da unidade (singular/plural), resolvido no @Composable.
+private fun remainingValueUnit(days: Long): Pair<String, Int> {
     val d = maxOf(0L, days)
     return when {
         d >= 730 -> {
             val years = d / 365
-            years.toString() to if (years == 1L) "ano restante" else "anos restantes"
+            years.toString() to if (years == 1L) R.string.psyco_year_left else R.string.psyco_years_left
         }
         d >= 60 -> {
             val months = d / 30
-            months.toString() to if (months == 1L) "mês restante" else "meses restantes"
+            months.toString() to if (months == 1L) R.string.psyco_month_left else R.string.psyco_months_left
         }
-        else -> d.toString() to if (d == 1L) "dia restante" else "dias restantes"
+        else -> d.toString() to if (d == 1L) R.string.psyco_day_left else R.string.psyco_days_left
     }
 }
 
@@ -458,7 +460,7 @@ private fun ColumnScope.RichExpiry(accountExpiry: ZonedDateTime) {
             ExpiryTone.DANGER -> MaterialTheme.colorScheme.error
         }
     val fill = (days.toFloat() / 360f).coerceIn(0.02f, 1f)
-    val (value, unit) = if (expired) "0" to "dias restantes" else remainingValueUnit(days)
+    val (value, unitRes) = if (expired) "0" to R.string.psyco_days_left else remainingValueUnit(days)
 
     Row(
         modifier = Modifier.fillMaxWidth().padding(top = Dimens.smallPadding),
@@ -471,14 +473,14 @@ private fun ColumnScope.RichExpiry(accountExpiry: ZonedDateTime) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = unit,
+                text = stringResource(id = unitRes),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = Dimens.smallPadding, bottom = Dimens.miniPadding),
             )
         }
         Text(
-            text = expiryChipLabel(tone, days).uppercase(),
+            text = stringResource(id = expiryChipLabel(tone, days)).uppercase(),
             style = MaterialTheme.typography.labelSmall,
             fontFamily = GeistMonoFontFamily,
             letterSpacing = 1.sp,
