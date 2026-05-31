@@ -201,7 +201,10 @@ export function GlobeScene({
   // Pull the camera closer instead of widening the FOV — that keeps the
   // poles from distorting at the screen edges.
   const aspect = width / height;
-  const cameraZ = aspect < 0.7 ? 5.5 : 5;
+  // PSYCO mobile · câmera bem mais próxima (3.6 em vez de 5.5) pro globo idle
+  // preencher a vertical com pouca margem · pedido do Chris. Só afeta viewports
+  // estreitos (WebView Android); o desktop (aspect ≥ 0.7) segue em z=5.
+  const cameraZ = aspect < 0.7 ? 4.2 : 5;
   const cameraFov = aspect < 0.7 ? 38 : 40;
 
   // Offset Y aplicado a TANTO globo QUANTO câmera. CameraAlign segue · globo

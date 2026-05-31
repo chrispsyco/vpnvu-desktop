@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -527,18 +528,22 @@ private fun ConnectionCard(
 ) {
     var expanded by
         rememberSaveable(state.tunnelState is TunnelState.Disconnected) { mutableStateOf(false) }
+    // PSYCO · card glassmorphism (translúcido azulado + borda luminosa sutil) no
+    // lugar do overlay escuro opaco · deixa o globo respirar por trás. Sem blur
+    // de backdrop (exigiria dep nova bloqueada pelo verification-metadata).
     val containerColor =
         animateColorAsState(
-            if (expanded) MaterialTheme.colorScheme.secondaryContainer
-            else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = Alpha80),
+            if (expanded) MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f)
+            else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
             label = "connection_card_color",
         )
 
     Card(
         modifier =
             modifier.widthIn(max = Dimens.connectionCardMaxWidth).padding(Dimens.mediumPadding),
-        Shapes.large,
+        shape = Shapes.large,
         colors = CardDefaults.cardColors(containerColor = containerColor.value),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
     ) {
         Column(modifier = Modifier.padding(all = Dimens.mediumPadding)) {
             ConnectionCardHeader(state, state.location, expanded) { expanded = !expanded }
@@ -775,14 +780,17 @@ fun TunnelState.toMarker(location: GeoIpLocation?): Marker? {
 
 @Composable
 fun TunnelState.topBarColor(): Color =
-    if (isSecured()) MaterialTheme.colorScheme.positive else MaterialTheme.colorScheme.error
+    // PSYCO · header escuro (surface) quando desconectado em vez do vermelho
+    // sólido, que ficava forte demais. Como o desktop · o estado "desligado"
+    // segue sinalizado no card e no globo. Conectado mantém o verde.
+    if (isSecured()) MaterialTheme.colorScheme.positive else MaterialTheme.colorScheme.surface
 
 @Composable
 fun TunnelState.iconTintColor(): Color =
     if (isSecured()) {
         MaterialTheme.colorScheme.onTertiary
     } else {
-        MaterialTheme.colorScheme.onError
+        MaterialTheme.colorScheme.onSurface
     }
 
 fun GeoIpLocation.toLatLong() =
