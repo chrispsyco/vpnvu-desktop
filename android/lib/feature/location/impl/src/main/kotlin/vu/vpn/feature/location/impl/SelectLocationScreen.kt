@@ -1,5 +1,7 @@
 package vu.vpn.feature.location.impl
 
+import vu.vpn.lib.ui.resource.R
+
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
@@ -159,7 +161,7 @@ fun SelectLocation(navigator: Navigator, initialHop: MultihopRelayListType? = nu
     val vm = koinViewModel<SelectLocationViewModel>()
     val state = vm.uiState.collectAsStateWithLifecycle()
 
-    // PSYCO · quando aberto pela seção "Servidores" do Multihop, pré-seleciona
+    // PSYCO · quando aberto pela seção stringResource(id = R.string.psyco_servers) do Multihop, pré-seleciona
     // a aba entry/exit em vez do default EXIT.
     LaunchedEffect(initialHop) { initialHop?.let { vm.selectRelayList(it) } }
 
@@ -499,7 +501,7 @@ fun SelectLocationScreen(
                 }
 
                 is Lc.Content -> {
-                    SectionKicker(label = "Sua saída")
+                    SectionKicker(label = stringResource(id = R.string.psyco_your_exit))
                     SelectionContainer(
                         progress = expandProgress.value,
                         relayListType = state.value.relayListType,
@@ -514,7 +516,7 @@ fun SelectLocationScreen(
                         },
                     )
 
-                    SectionKicker(label = "Todas as localizações")
+                    SectionKicker(label = stringResource(id = R.string.psyco_all_locations))
                     RelayLists(
                         relayListType = state.value.relayListType,
                         bottomMargin = bottomMarginList,

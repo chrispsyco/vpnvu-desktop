@@ -1,5 +1,8 @@
 package vu.vpn.feature.appinfo.impl
 
+import androidx.compose.ui.res.stringResource
+import vu.vpn.lib.ui.resource.R
+
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -98,7 +101,7 @@ fun AppInfo(
     openAppListing: () -> Unit,
 ) {
     ScaffoldWithSmallTopBar(
-        appBarTitle = "Sobre o app",
+        appBarTitle = stringResource(id = R.string.psyco_about_app),
         navigationIcon = {
             unlessIsDetail { NavigateBackIconButton(onNavigateBack = onBackClick) }
         },
@@ -141,7 +144,7 @@ private fun AppInfoContent(
         // cyan + tagline (YOUR VPN · NO NAME, NO TRACES) + version chip.
         AppInfoBrandHero(state)
 
-        // PSYCO · kicker cyan acima do bloco "Versão" + Changelog · separa
+        // PSYCO · kicker cyan acima do bloco stringResource(id = R.string.version) + Changelog · separa
         // visualmente o hero brand do funcional.
         Text(
             text = "VERSÃO & NOVIDADES",
@@ -179,7 +182,7 @@ private fun AppInfoBrandHero(state: AppInfoUiState) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "YOUR VPN · NO NAME, NO TRACES",
+                text = stringResource(id = R.string.psyco_appinfo_tagline),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = Dimens.miniPadding),
@@ -198,7 +201,7 @@ private fun AppInfoBrandHero(state: AppInfoUiState) {
 private fun AppVersionRow(state: AppInfoUiState, openAppListing: () -> Unit) {
     Column {
         ExternalLinkListItem(
-            title = "Versão",
+            title = stringResource(id = R.string.version),
             subtitle = state.version.currentVersion,
             subTitleTextDirection = TextDirection.Ltr,
             showWarning = !state.version.isSupported,
@@ -229,7 +232,7 @@ private fun AppVersionRow(state: AppInfoUiState, openAppListing: () -> Unit) {
 @Composable
 private fun ChangelogRow(navigateToChangelog: () -> Unit) {
     NavigationListItem(
-        title = "Novidades",
+        title = stringResource(id = R.string.psyco_news),
         onClick = navigateToChangelog,
         position = Position.Top,
     )

@@ -1,5 +1,7 @@
 package vu.vpn.feature.location.impl
 
+import vu.vpn.lib.ui.resource.R
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -260,7 +262,7 @@ private fun CustomListEntryItem(
 @Composable
 fun CustomListHeader(addCustomList: () -> Unit, editCustomLists: (() -> Unit)?) {
     ListHeader(
-        { PsycoKickerText(label = "Listas personalizadas") },
+        { PsycoKickerText(label = stringResource(id = R.string.psyco_custom_lists)) },
         actions = {
             IconButton(onClick = addCustomList) {
                 Icon(
@@ -295,12 +297,12 @@ private fun CustomListFooter(item: RelayListItem.CustomListFooter) {
 
 @Composable
 private fun RelayLocationHeader() {
-    ListHeader(content = { PsycoKickerText(label = "Todas as localizações") })
+    ListHeader(content = { PsycoKickerText(label = stringResource(id = R.string.psyco_all_locations)) })
 }
 
 @Composable
 private fun RecentsListHeader() {
-    ListHeader(content = { PsycoKickerText(label = "Recentes") })
+    ListHeader(content = { PsycoKickerText(label = stringResource(id = R.string.psyco_recent)) })
 }
 
 // PSYCO · kicker eyebrow cyan uppercase pra section headers internos da relay list ·
@@ -320,7 +322,7 @@ private fun PsycoKickerText(label: String) {
 
 @Composable
 private fun RecentsListFooter() {
-    ListItemInfo(text = "Sem seleções recentes ainda.")
+    ListItemInfo(text = stringResource(id = R.string.psyco_no_recent_selections))
 }
 
 @Composable

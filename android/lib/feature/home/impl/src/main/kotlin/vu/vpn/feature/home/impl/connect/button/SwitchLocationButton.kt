@@ -42,13 +42,13 @@ private fun PreviewConnectionButton() {
     AppTheme {
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.mediumSpacer)) {
             SwitchLocationButton(
-                text = "Switch Location",
+                text = stringResource(id = R.string.psyco_switch_location),
                 onSwitchLocation = {},
                 reconnectClick = {},
                 isReconnectButtonEnabled = true,
             )
             SwitchLocationButton(
-                text = "Switch Location",
+                text = stringResource(id = R.string.psyco_switch_location),
                 onSwitchLocation = {},
                 reconnectClick = {},
                 isReconnectButtonEnabled = false,

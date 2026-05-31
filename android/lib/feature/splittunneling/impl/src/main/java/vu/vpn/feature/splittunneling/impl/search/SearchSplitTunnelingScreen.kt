@@ -1,5 +1,8 @@
 package vu.vpn.feature.splittunneling.impl.search
 
+import androidx.compose.ui.res.stringResource
+import vu.vpn.lib.ui.resource.R
+
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -100,6 +103,9 @@ fun SearchSplitTunnelingScreen(
             val lazyListState = rememberLazyListState()
             val context = LocalContext.current
             val packageManager = remember(context) { context.packageManager }
+            // PSYCO · resolve em escopo @Composable (LazyListScope.appList não é @Composable).
+            val excludedHeader = stringResource(id = R.string.psyco_excluded_from_vpn)
+            val otherAppsHeader = stringResource(id = R.string.psyco_other_apps)
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier =
@@ -126,6 +132,8 @@ fun SearchSplitTunnelingScreen(
                             onResolveIcon = { packageName ->
                                 packageManager.getApplicationIconOrNull(packageName)
                             },
+                            excludedHeader = excludedHeader,
+                            otherAppsHeader = otherAppsHeader,
                         )
                     }
                 }
@@ -152,6 +160,8 @@ private fun LazyListScope.appList(
     onExcludeAppClick: (packageName: PackageName) -> Unit,
     onIncludeAppClick: (packageName: PackageName) -> Unit,
     onResolveIcon: (PackageName) -> Drawable?,
+    excludedHeader: String,
+    otherAppsHeader: String,
 ) {
     if (state.includedApps.isEmpty() && state.excludedApps.isEmpty()) {
         item { NoAppsMatchingSearch(state.searchTerm) }
@@ -159,7 +169,7 @@ private fun LazyListScope.appList(
     if (state.excludedApps.isNotEmpty()) {
         excludedAppsHeaderItem(
             key = SplitTunnelingContentKey.EXCLUDED_APPLICATIONS,
-            text = "Excluído da VPN",
+            text = excludedHeader,
             enabled = true,
             exludedAppsCount = state.excludedApps.size,
             includedAppsCount = state.includedApps.size,
@@ -177,7 +187,7 @@ private fun LazyListScope.appList(
     if (state.includedApps.isNotEmpty()) {
         headerItem(
             key = SplitTunnelingContentKey.INCLUDED_APPLICATIONS,
-            text = "Outros apps",
+            text = otherAppsHeader,
             enabled = true,
         )
         appItems(

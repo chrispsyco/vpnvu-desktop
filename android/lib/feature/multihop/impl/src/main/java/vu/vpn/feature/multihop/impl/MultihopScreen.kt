@@ -2,6 +2,8 @@
 
 package vu.vpn.feature.multihop.impl
 
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -158,23 +160,23 @@ private fun ColumnScope.MultihopContent(
     )
     Description()
     SwitchListItem(
-        title = "Ativar multihop",
+        title = stringResource(id = R.string.psyco_enable_multihop),
         isToggled = state.enable,
         onCellClicked = onMultihopClick,
     )
 
-    // PSYCO · seção "Servidores" do Figma · entry/exit selecionados, cada linha
+    // PSYCO · seção stringResource(id = R.string.psyco_servers) do Figma · entry/exit selecionados, cada linha
     // abre o seletor de localização já na aba certa. Só faz sentido com multihop on.
     if (state.enable) {
-        SectionKicker("Servidores")
+        SectionKicker(stringResource(id = R.string.psyco_servers))
         NavigationListItem(
-            title = "Entrada",
+            title = stringResource(id = R.string.psyco_entry),
             subtitle = state.entry.toDisplayName(),
             position = Position.Top,
             onClick = onEntryClick,
         )
         NavigationListItem(
-            title = "Saída",
+            title = stringResource(id = R.string.exit),
             subtitle = state.exit.toDisplayName(),
             position = Position.Bottom,
             onClick = onExitClick,

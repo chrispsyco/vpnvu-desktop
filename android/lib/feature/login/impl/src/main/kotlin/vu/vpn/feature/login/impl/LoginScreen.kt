@@ -257,10 +257,10 @@ private fun LoginScreen(
                     Modifier.align(Alignment.CenterHorizontally)
                         .padding(bottom = Dimens.largePadding),
             )
-            // PSYCO · porta do desktop · kicker eyebrow "ACESSO SEGURO" em cyan
+            // PSYCO · porta do desktop · kicker eyebrow stringResource(id = R.string.psyco_secure_access) em cyan
             // acima do title · espelha o `StyledLoginKicker` do LoginView.tsx.
             Text(
-                text = "ACESSO SEGURO",
+                text = stringResource(id = R.string.psyco_secure_access),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
@@ -280,7 +280,7 @@ private fun LoginScreen(
             // do "no email, no password, no trace" estilo Mullvad.
             if (state.loginState is LoginState.Idle) {
                 Text(
-                    text = "Use seu número de conta de 16 dígitos pra entrar. Sem e-mail, sem senha, sem rastro.",
+                    text = stringResource(id = R.string.psyco_login_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     modifier = Modifier
