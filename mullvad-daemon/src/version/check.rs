@@ -539,6 +539,13 @@ fn cache_is_stale(cache: &VersionCache, current_version: &Version) -> bool {
 }
 
 fn dev_version_cache() -> VersionCache {
+    // PSYCO: VPN.vu currently ships every public build with the `-dev`
+    // suffix (no code-signing cert yet), so Mullvad's upstream default of
+    // marking dev caches as unsupported would paint "UNSUPPORTED VERSION"
+    // on every install. Flip it to `true` until we publish signed `2026.x`
+    // releases — at that point this branch stops running because
+    // `CHECK_ENABLED` becomes true for non-dev versions and the real value
+    // comes from `/app/v1/releases/*` on the backend.
     VersionCache {
         cache_version: mullvad_version::VERSION.parse().unwrap(),
         // PSYCO: keep dev builds reported as supported until VPN.vu has a real
