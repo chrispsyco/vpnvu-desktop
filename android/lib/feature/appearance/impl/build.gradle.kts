@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.appearance.impl" }
+android { namespace = "vu.vpn.feature.appearance.impl" }
 
 dependencies {
     implementation(projects.lib.feature.appicon.api)

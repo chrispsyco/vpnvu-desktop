@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.repository"
+    namespace = "vu.vpn.lib.repository"
 
     buildFeatures { buildConfig = true }
 }

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.usecase"
+    namespace = "vu.vpn.lib.usecase"
 
     buildFeatures { buildConfig = true }
 }

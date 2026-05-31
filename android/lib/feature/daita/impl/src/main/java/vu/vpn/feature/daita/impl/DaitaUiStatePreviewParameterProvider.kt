@@ -1,0 +1,14 @@
+package vu.vpn.feature.daita.impl
+
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import vu.vpn.lib.common.Lc
+import vu.vpn.lib.common.toLc
+
+class DaitaUiStatePreviewParameterProvider : PreviewParameterProvider<Lc<Boolean, DaitaUiState>> {
+    override val values: Sequence<Lc<Boolean, DaitaUiState>> =
+        sequenceOf(
+            Lc.Loading(true),
+            DaitaUiState(daitaEnabled = true, directOnly = false, isModal = false).toLc(),
+            DaitaUiState(daitaEnabled = true, directOnly = true, isModal = true).toLc(),
+        )
+}

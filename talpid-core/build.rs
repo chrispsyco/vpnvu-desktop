@@ -1,6 +1,16 @@
 fn main() {
+    // PSYCO patch: only run Windows-specific logic when BOTH host AND target are Windows.
+    // Upstream Mullvad assumes Linux/macOS hosts cross-compiling to Android; cross-compiling
+    // from Windows host to non-Windows target was unsupported because cfg(windows) here is
+    // evaluated against the host (always true on Windows) and would unconditionally call
+    // win::main(), which panics on any non-Windows TARGET in target_platform_dir().
     #[cfg(windows)]
-    win::main();
+    {
+        let target = std::env::var("TARGET").unwrap_or_default();
+        if target.contains("windows") {
+            win::main();
+        }
+    }
 }
 
 #[cfg(windows)]

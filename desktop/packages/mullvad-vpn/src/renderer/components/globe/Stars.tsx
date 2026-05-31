@@ -119,30 +119,69 @@ export function Stars({
     groupRef.current.rotation.y += dt * rotationSpeed;
   });
 
+  // PSYCO · ShaderMaterial com discard circular em vez de PointsMaterial default.
+  // PointsMaterial renderiza quadrados (sem `texture` ou `alphaMap`) em alguns drivers
+  // GL — especificamente o WebView Android. ShaderMaterial dá controle total da forma.
+  //
+  // Tamanhos reduzidos pra ficarem mais sutis · 0.6/1.2 em vez de 1.4/2.6.
+  // Opacities também caíram (0.35/0.7) pra não competir com o globo.
+  const dimMaterial = useMemo(
+    () => makeStarShaderMaterial(0.6, 0.35),
+    [],
+  );
+  const heroMaterial = useMemo(
+    () => makeStarShaderMaterial(1.2, 0.7),
+    [],
+  );
+
   return (
     <group ref={groupRef}>
-      <points geometry={dimGeom}>
-        <pointsMaterial
-          size={1.4}
-          sizeAttenuation
-          vertexColors
-          transparent
-          opacity={0.55}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
-      <points geometry={heroGeom}>
-        <pointsMaterial
-          size={2.6}
-          sizeAttenuation
-          vertexColors
-          transparent
-          opacity={0.95}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
+      <points geometry={dimGeom} material={dimMaterial} />
+      <points geometry={heroGeom} material={heroMaterial} />
     </group>
   );
+}
+
+const STAR_VERTEX = /* glsl */ `
+  attribute float size;
+  attribute vec3 color;
+  varying vec3 vColor;
+  uniform float uBaseSize;
+
+  void main() {
+    vColor = color;
+    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+    // Equivalent ao sizeAttenuation do PointsMaterial · escala pelo inverso da distância
+    gl_PointSize = size * uBaseSize * (300.0 / max(1.0, -mvPos.z));
+    gl_Position = projectionMatrix * mvPos;
+  }
+`;
+
+const STAR_FRAGMENT = /* glsl */ `
+  precision mediump float;
+  varying vec3 vColor;
+  uniform float uOpacity;
+
+  void main() {
+    vec2 cxy = gl_PointCoord * 2.0 - 1.0;
+    float r = length(cxy);
+    if (r > 1.0) discard;
+    // Suavização circular · centro sólido, borda decai
+    float alpha = 1.0 - smoothstep(0.4, 1.0, r);
+    gl_FragColor = vec4(vColor, alpha * uOpacity);
+  }
+`;
+
+function makeStarShaderMaterial(baseSize: number, opacity: number): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uBaseSize: { value: baseSize },
+      uOpacity: { value: opacity },
+    },
+    vertexShader: STAR_VERTEX,
+    fragmentShader: STAR_FRAGMENT,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
 }

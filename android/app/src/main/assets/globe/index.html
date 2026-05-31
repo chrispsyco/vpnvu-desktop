@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <meta name="color-scheme" content="dark" />
+    <title>VPN.vu globe</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #030C0F;
+        overflow: hidden;
+      }
+      /* PSYCO mobile · canvas full viewport · sem padding-bottom · evita o
+         "corte reto" embaixo quando o globo é zoom-in. O deslocamento visual
+         pra cima é feito via Three.js camera offset (ver main.tsx). */
+      #root {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #030C0F;
+        overflow: hidden;
+      }
+      /* CSS vars usadas pelos componentes do globo (CountryBorders etc) */
+      :root {
+        --bg: #06181E;
+        --surface: #0A2128;
+        --brand: #099EB4;
+        --brand-glow: #5BC8DA;
+        --brand-deep: #0E4850;
+      }
+    </style>
+    <script type="module" crossorigin src="./main.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

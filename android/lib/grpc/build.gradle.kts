@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.grpc"
+    namespace = "vu.vpn.lib.grpc"
 
     sourceSets {
         getByName("main") {

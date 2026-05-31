@@ -12,14 +12,14 @@ plugins {
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.test.e2e"
+    namespace = "vu.vpn.test.e2e"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
     compileSdkMinor = libs.versions.compile.sdk.minor.get().toInt()
     buildToolsVersion = libs.versions.build.tools.get()
 
     defaultConfig {
         minSdk = libs.versions.min.sdk.get().toInt()
-        testApplicationId = "net.mullvad.mullvadvpn.test.e2e"
+        testApplicationId = "vu.vpn.test.e2e"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Required to run mock api tests via Android studio
         testInstrumentationRunnerArguments["runnerBuilder"] =

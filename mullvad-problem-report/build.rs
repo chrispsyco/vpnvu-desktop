@@ -4,8 +4,9 @@ fn make_lang_id(p: u16, s: u16) -> u16 {
 }
 
 fn main() {
+    // PSYCO patch: only run winres when BOTH host AND target are Windows.
     #[cfg(windows)]
-    {
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         let mut res = winres::WindowsResource::new();
         res.set("ProductVersion", mullvad_version::VERSION);
         res.set_icon("../dist-assets/icon.ico");

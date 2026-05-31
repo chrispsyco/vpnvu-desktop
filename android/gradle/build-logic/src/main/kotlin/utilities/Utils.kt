@@ -19,7 +19,12 @@ fun Project.isReleaseBuild() =
 
 fun Project.generateRemapArguments(): String {
     val script = "${projectDir.parent}/../building/rustc-remap-path-prefix.sh"
-    return providers.exec { commandLine(script) }.standardOutput.asText.get().trim()
+    // PSYCO · Windows can't exec a .sh by shebang, so the bare path fails to
+    // start (DROID-1696). Invoke it through bash (Git Bash on PATH) on Windows;
+    // POSIX hosts (CI/Linux/macOS) keep running the script directly.
+    val isWindows = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
+    val command = if (isWindows) listOf("bash", script) else listOf(script)
+    return providers.exec { commandLine(command) }.standardOutput.asText.get().trim()
 }
 
 fun Project.getStringPropertyOrNull(name: String): String? = findProperty(name)?.toString()

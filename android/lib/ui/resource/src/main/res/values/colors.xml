@@ -1,5 +1,9 @@
 <resources>
-    <color name="colorPrimary">#294D73</color>
-    <color name="darkBlue">#192E45</color>
+    <!-- PSYCO · paleta VPN.vu cyan substitui azul Mullvad -->
+    <color name="colorPrimary">#099EB4</color>
+    <color name="darkBlue">#0A2128</color>
     <color name="icon_background">@color/darkBlue</color>
+    <!-- Background do system splash · igual ao bg do Compose splash · faz a
+         transição entre os 2 splashes ficar invisível (sem flash de cor). -->
+    <color name="splashBg">#02080C</color>
 </resources>

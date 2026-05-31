@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.deleteaccount.impl" }
+android { namespace = "vu.vpn.feature.deleteaccount.impl" }
 
 dependencies {
     implementation(projects.lib.feature.deleteaccount.api)

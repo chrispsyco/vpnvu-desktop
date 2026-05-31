@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.daita.impl" }
+android { namespace = "vu.vpn.feature.daita.impl" }
 
 dependencies {
     implementation(projects.lib.repository)

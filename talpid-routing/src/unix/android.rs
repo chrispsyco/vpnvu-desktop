@@ -37,7 +37,7 @@ enum JvmError {
     InvalidMethodResult(&'static str, &'static str, String),
 }
 
-/// The sender used by [Java_net_mullvad_talpid_ConnectivityListener_notifyDefaultNetworkChange]
+/// The sender used by [Java_vu_vpn_talpid_ConnectivityListener_notifyDefaultNetworkChange]
 /// to notify the route manager of changes to the network.
 static ROUTE_UPDATES_TX: Mutex<Option<UnboundedSender<Option<NetworkState>>>> = Mutex::new(None);
 
@@ -180,7 +180,7 @@ fn configured_routes(state: &NetworkState) -> HashSet<Route> {
 
 /// Entry point for Android Java code to notify the current default network state.
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_net_mullvad_talpid_ConnectivityListener_notifyDefaultNetworkChange(
+pub extern "system" fn Java_vu_vpn_talpid_ConnectivityListener_notifyDefaultNetworkChange(
     env: JNIEnv<'_>,
     _: JObject<'_>,
     network_state: JObject<'_>,
@@ -217,7 +217,7 @@ fn current_network_state(
         .call_method(
             android_context.vpn_service.as_obj(),
             "getConnectivityListener",
-            "()Lnet/mullvad/talpid/ConnectivityListener;",
+            "()Lvu/vpn/talpid/ConnectivityListener;",
             &[],
         )
         .map_err(|cause| JvmError::CallMethod("getConnectivityListener", cause))?;
@@ -239,7 +239,7 @@ fn current_network_state(
         .call_method(
             connectivity_listener.as_obj(),
             "getCurrentDefaultNetworkState",
-            "()Lnet/mullvad/talpid/model/NetworkState;",
+            "()Lvu/vpn/talpid/model/NetworkState;",
             &[],
         )
         .map_err(|cause| JvmError::CallMethod("getCurrentDefaultNetworkState", cause))?;

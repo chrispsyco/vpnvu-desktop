@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.managedevices.impl" }
+android { namespace = "vu.vpn.feature.managedevices.impl" }
 
 dependencies {
     implementation(projects.lib.navigation)

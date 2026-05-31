@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.navigation" }
+android { namespace = "vu.vpn.navigation" }
 
 dependencies {
     api(libs.androidx.navigation3.runtime)

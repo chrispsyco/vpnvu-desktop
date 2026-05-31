@@ -206,7 +206,7 @@ mod test {
             };
 
             let enabled = true;
-            let apps = ["com.android.chrome", "net.mullvad.mullvadvpn"];
+            let apps = ["com.android.chrome", "vu.vpn"];
 
             let mut settings = serde_json::from_str(V9_ANDROID_SETTINGS).unwrap();
             // Perform the actual settings migration while skipping the I/O performed in
@@ -427,7 +427,7 @@ mod test {
   "show_beta_releases": true,
   "split_tunnel": {
     "enable_exclusions": true,
-    "apps": ["com.android.chrome", "net.mullvad.mullvadvpn"]
+    "apps": ["com.android.chrome", "vu.vpn"]
   }
   "settings_version": 10
   }
