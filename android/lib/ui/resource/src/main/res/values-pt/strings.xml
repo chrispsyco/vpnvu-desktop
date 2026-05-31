@@ -214,7 +214,7 @@
     <string name="encrypted_dns_proxy_info_message_part1">Com o método \"Proxy DNS encriptado\", a aplicação irá comunicar com a nossa API VPN.vu através de um endereço proxy. Para tal, obtém um endereço de um servidor DNS sobre HTTPS (DoH) e utiliza-o para aceder aos nossos servidores de API.</string>
     <string name="encrypted_dns_proxy_info_message_part2">Se não estiver ligado à nossa VPN, o proxy DNS encriptado utiliza o seu próprio IP e não a VPN ao estabelecer a ligação. Os servidores DoH são alojados por um dos seguintes fornecedores: Quad9 ou Cloudflare.</string>
     <string name="enter_value_placeholder">Introduzir MTU</string>
-    <string name="enter_voucher_code">Introduza o código do voucher</string>
+    <string name="enter_voucher_code">Insira o código do voucher</string>
     <string name="entry">Entrada</string>
     <string name="entry_and_exit_are_same">O retransmissor de entrada é o mesmo que o de saída</string>
     <string name="error_occurred">Ocorreu um erro.</string>
@@ -373,7 +373,7 @@
     <string name="recents">Recentes</string>
     <string name="recents_disabled">Recentes desativados e histórico eliminado</string>
     <string name="reconnect">Religar</string>
-    <string name="redeem">Reclamar</string>
+    <string name="redeem">Resgatar</string>
     <string name="redeem_voucher">Resgatar voucher</string>
     <string name="refresh_server_list">Atualizar lista de servidores</string>
     <string name="relay_item_already_selected_as_entry">%1$s já está selecionado como retransmissor de entrada</string>
@@ -420,7 +420,7 @@
     <string name="set_dns_error">Não foi possível definir o servidor DNS do sistema. Envie um relatório do problema.</string>
     <string name="set_firewall_policy_error">Não foi possível aplicar as regras de firewall. Experimente a resolução de problemas ou envie um relatório do problema.</string>
     <string name="setting_chip">Definição: %1$s</string>
-    <string name="settings">Definições</string>
+    <string name="settings">Configurações</string>
     <string name="settings_account">Conta</string>
     <string name="settings_api_access">Acesso à API</string>
     <string name="settings_changes_effect_warning_short">As definições de DNS podem não fazer efeito imediatamente</string>
