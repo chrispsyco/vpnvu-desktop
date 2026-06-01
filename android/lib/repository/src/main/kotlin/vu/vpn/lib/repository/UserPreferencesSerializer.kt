@@ -8,7 +8,15 @@ import java.io.OutputStream
 import vu.vpn.repository.UserPreferences
 
 object UserPreferencesSerializer : Serializer<UserPreferences> {
-    override val defaultValue: UserPreferences = UserPreferences.getDefaultInstance()
+    // PSYCO: mostrar a localização (país/cidade/servidor) na notificação de
+    // status por padrão. A notificação é VISIBILITY_SECRET (oculta na
+    // lockscreen), então isso não vaza a localização pra quem olha o aparelho
+    // bloqueado. O usuário pode desligar em Configurações > Notificações.
+    override val defaultValue: UserPreferences =
+        UserPreferences.getDefaultInstance()
+            .toBuilder()
+            .setShowLocationInSystemNotification(true)
+            .build()
 
     override suspend fun readFrom(input: InputStream): UserPreferences {
         try {

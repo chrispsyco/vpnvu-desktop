@@ -1,5 +1,9 @@
 package vu.vpn.screen.privacy
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -114,6 +118,26 @@ fun PrivacyDisclaimer(navigator: Navigator) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
+
+    // Pedimos POST_NOTIFICATIONS no aceite do onboarding (Android 13+) em vez
+    // de só "quando o serviço conecta" — esse momento é claro e o usuário não
+    // perde/nega o diálogo sem querer. Seguimos pro accept independente da
+    // resposta: a notificação de status é desejável, mas a permissão não é
+    // pré-requisito do túnel. Se negada, o banner da home (NotificationPermission
+    // use case) orienta a reativar nas configurações.
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
+            viewModel.setPrivacyDisclosureAccepted()
+        }
+
+    val onAccept: () -> Unit = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            viewModel.setPrivacyDisclosureAccepted()
+        }
+    }
+
     CollectSideEffectWithLifecycle(viewModel.uiSideEffect) {
         when (it) {
             PrivacyDisclaimerUiSideEffect.NavigateToLogin ->
@@ -134,7 +158,7 @@ fun PrivacyDisclaimer(navigator: Navigator) {
     }
     PrivacyDisclaimerScreen(
         state = state,
-        onAcceptClicked = viewModel::setPrivacyDisclosureAccepted,
+        onAcceptClicked = onAccept,
     )
 }
 
