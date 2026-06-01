@@ -1,5 +1,7 @@
 package vu.vpn.lib.repository
 
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import vu.vpn.lib.model.GeoLocationId
 import vu.vpn.lib.model.RelayItem
 import vu.vpn.lib.model.RelayLatency
@@ -40,10 +43,12 @@ import vu.vpn.lib.model.RelayOverride
  * far relay reading proportionally more.
  *
  * The user's position is approximated from the device timezone (no location
- * permission needed); the relay's position is seeded from the bundled
- * relays.json. A deterministic sine-wave jitter per refresh tick keeps the pill
- * looking "alive" rather than frozen. Aggregate locations inherit the lowest
- * latency among their descendants.
+ * permission needed); the relay's IP and position are pulled LIVE from the API
+ * relay list (ip + coords per server), so adding a server is backend-only — no
+ * app release. A bundled SEED covers the offline/first-load case. A
+ * deterministic sine-wave jitter per refresh tick keeps the pill looking "alive"
+ * rather than frozen. Aggregate locations inherit the lowest latency among their
+ * descendants.
  */
 class RelayLatencyRepository(
     relayListRepository: RelayListRepository,
@@ -60,13 +65,20 @@ class RelayLatencyRepository(
     // Approximate user position, resolved once from the device timezone.
     private val userLocation: GeoPoint by lazy { estimateUserLocation() }
 
+    // PSYCO · relay IP + coordinates pulled LIVE from the API relay list
+    // (api.vpn.vu/app/v1/relays) so adding a server is a backend-only change —
+    // no app release needed. Starts empty; measure() falls back to the bundled
+    // SEED until the first fetch lands and whenever the network is unavailable.
+    private val relayMeta = MutableStateFlow<Map<String, RelaySeed>>(emptyMap())
+
     val latencies: StateFlow<Map<GeoLocationId, RelayLatency>> =
         combine(
                 relayListRepository.relayList,
                 relayOverridesRepository.relayOverrides,
+                relayMeta,
                 tick,
-            ) { countries, overrides, currentTick ->
-                measure(countries, overrides.orEmpty(), currentTick)
+            ) { countries, overrides, meta, currentTick ->
+                measure(countries, overrides.orEmpty(), meta, currentTick)
             }
             .stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS), emptyMap())
 
@@ -77,11 +89,20 @@ class RelayLatencyRepository(
                 tick.value += 1
             }
         }
+        // Refresh the relay metadata from the API up front and periodically, so
+        // newly-added servers get real IPs/coordinates without an app update.
+        scope.launch {
+            while (isActive) {
+                fetchRelayMeta()?.let { relayMeta.value = it }
+                delay(RELAY_META_REFRESH_MS)
+            }
+        }
     }
 
     private suspend fun measure(
         countries: List<RelayItem.Location.Country>,
         overrides: List<RelayOverride>,
+        meta: Map<String, RelaySeed>,
         tick: Long,
     ): Map<GeoLocationId, RelayLatency> {
         val overrideIp = overrides.associate { it.hostname to it.ipv4AddressIn?.hostAddress }
@@ -93,7 +114,8 @@ class RelayLatencyRepository(
                 val relayLatencies = mutableListOf<RelayLatency>()
                 for (relay in city.relays) {
                     val hostname = relay.id.code
-                    val seed = SEED[hostname]
+                    // API metadata wins; bundled SEED is the offline/first-load fallback.
+                    val seed = meta[hostname] ?: SEED[hostname]
                     val ip = overrideIp[hostname] ?: seed?.ip
                     val real = if (relay.active) ip?.let { pinger.pingMillis(it) } else null
                     val latency =
@@ -188,6 +210,51 @@ class RelayLatencyRepository(
         return (a + b) * 0.5
     }
 
+    /**
+     * Pulls `hostname -> (ip, lat, lng)` from the live API relay list. The
+     * Mullvad relay-list shape carries `wireguard.relays[].ipv4_addr_in` and
+     * `locations[code].{latitude,longitude}`, which is everything the latency
+     * probe needs — so a server added on the backend shows real RTT with no app
+     * update. Returns null on any failure; the caller then keeps the previous
+     * map (or the bundled SEED fallback).
+     */
+    private suspend fun fetchRelayMeta(): Map<String, RelaySeed>? =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                    val conn =
+                        (URL(RELAY_LIST_URL).openConnection() as HttpURLConnection).apply {
+                            connectTimeout = RELAY_META_TIMEOUT_MS
+                            readTimeout = RELAY_META_TIMEOUT_MS
+                            requestMethod = "GET"
+                        }
+                    try {
+                        if (conn.responseCode != HttpURLConnection.HTTP_OK) {
+                            return@runCatching null
+                        }
+                        val body = conn.inputStream.bufferedReader().use { it.readText() }
+                        val root = JSONObject(body)
+                        val locations = root.getJSONObject("locations")
+                        val relays = root.getJSONObject("wireguard").getJSONArray("relays")
+                        val map = mutableMapOf<String, RelaySeed>()
+                        for (i in 0 until relays.length()) {
+                            val relay = relays.getJSONObject(i)
+                            val hostname = relay.optString("hostname")
+                            val ip = relay.optString("ipv4_addr_in")
+                            if (hostname.isEmpty() || ip.isEmpty()) continue
+                            val loc = locations.optJSONObject(relay.optString("location")) ?: continue
+                            val lat = loc.optDouble("latitude", Double.NaN)
+                            val lng = loc.optDouble("longitude", Double.NaN)
+                            if (lat.isNaN() || lng.isNaN()) continue
+                            map[hostname] = RelaySeed(ip = ip, lat = lat, lng = lng)
+                        }
+                        map
+                    } finally {
+                        conn.disconnect()
+                    }
+                }
+                .getOrNull()
+        }
+
     private data class GeoPoint(val lat: Double, val lng: Double)
 
     private data class RelaySeed(val ip: String, val lat: Double, val lng: Double)
@@ -213,9 +280,16 @@ class RelayLatencyRepository(
         private const val MIN_MS = 4
         private const val JITTER_RATIO = 0.12
 
-        // Known relays from the bundled relays.json. The daemon's relay list
-        // doesn't surface ipv4_addr_in or coordinates to the Android layer, so we
-        // seed what we ship; a user RelayOverride still wins for the IP.
+        // Live relay metadata source. Base URL is fixed; the *servers* come from
+        // the JSON, so adding one never needs an app release. (Single-env: prod.)
+        private const val RELAY_LIST_URL = "https://api.vpn.vu/app/v1/relays"
+        private const val RELAY_META_REFRESH_MS = 300_000L // 5 min
+        private const val RELAY_META_TIMEOUT_MS = 5_000
+
+        // Offline/first-load FALLBACK only. The live relay list (RELAY_LIST_URL)
+        // is the real source of ip/coords now; this seeds the launch relay so the
+        // pill is sane before the first fetch lands or when offline. A user
+        // RelayOverride still wins for the IP.
         private val SEED =
             mapOf("br-sao-001" to RelaySeed(ip = "163.176.196.134", lat = -23.5505, lng = -46.6333))
 
