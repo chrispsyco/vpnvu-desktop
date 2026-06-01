@@ -1,98 +1,21 @@
 package vu.vpn.screen.nodaemon
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat.finishAffinity
-import androidx.lifecycle.compose.dropUnlessResumed
-import vu.vpn.R
 import vu.vpn.core.Navigator
-import vu.vpn.feature.settings.api.SettingsNavKey
-import vu.vpn.lib.ui.component.ScaffoldWithTopBar
-import vu.vpn.lib.ui.theme.AppTheme
-import vu.vpn.lib.ui.theme.Dimens
+import vu.vpn.screen.splash.SplashScreen
 
-@Preview
-@Composable
-private fun PreviewNoDaemonScreen() {
-    AppTheme { NoDaemonScreen(onNavigateToSettings = {}) }
-}
-
-// Set this as the start destination of the default nav graph
+// Start destination enquanto o daemon ainda não está conectado — inclusive ao
+// retomar o app pela lista de recentes (o Android recriou a Activity e o
+// serviço precisa reconectar). PSYCO · mostra a MESMA splash da inicial (globo
+// R3F + logo VPN.vu pulsante + status), em vez da antiga tela com branding
+// Mullvad (launch_logo / logo_text / "serviço Mullvad"). `getActivity()` vem
+// de ContextExtensions.kt no mesmo package.
 @Composable
 fun NoDaemon(navigator: Navigator) {
-    NoDaemonScreen(onNavigateToSettings = dropUnlessResumed { navigator.navigate(SettingsNavKey) })
-}
-
-@Composable
-fun NoDaemonScreen(onNavigateToSettings: () -> Unit) {
-
-    val backgroundColor = MaterialTheme.colorScheme.primary
-
     val context = LocalContext.current
     BackHandler { finishAffinity(context.getActivity()!!) }
-
-    ScaffoldWithTopBar(
-        topBarColor = backgroundColor,
-        onSettingsClicked = onNavigateToSettings,
-        onAccountClicked = null,
-        isIconAndLogoVisible = false,
-        content = {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier =
-                    Modifier.background(backgroundColor)
-                        .padding(it)
-                        .padding(bottom = it.calculateTopPadding())
-                        .fillMaxSize(),
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.launch_logo),
-                        contentDescription = "",
-                        modifier = Modifier.size(Dimens.splashLogoSize),
-                    )
-                    Image(
-                        painter = painterResource(id = R.drawable.logo_text),
-                        contentDescription = "",
-                        alpha = 0.6f,
-                        colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary),
-                        modifier =
-                            Modifier.padding(top = Dimens.mediumPadding)
-                                .height(Dimens.splashLogoTextHeight),
-                    )
-                    Text(
-                        text = stringResource(id = R.string.connecting_to_daemon),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier =
-                            Modifier.padding(top = Dimens.mediumPadding)
-                                .padding(horizontal = Dimens.sideMargin),
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-        },
-    )
+    SplashScreen()
 }
