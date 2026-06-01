@@ -57,8 +57,8 @@
     <string name="at_least_on_method_needs_to_enabled">É necessário ativar pelo menos um método</string>
     <string name="auth_failed">Não foi possível autenticar a conta. Envie um relatório do problema.</string>
     <string name="authentication">Autenticação</string>
-    <string name="auto_connect_and_lockdown_mode">Ligação automática e modo de bloqueio</string>
-    <string name="auto_connect_and_lockdown_mode_footer">Assegura que o dispositivo está sempre no túnel VPN.</string>
+    <string name="auto_connect_and_lockdown_mode">Conexão automática e Kill switch</string>
+    <string name="auto_connect_and_lockdown_mode_footer">Garante que o dispositivo fica sempre no túnel VPN.</string>
     <string name="auto_connect_carousel_first_slide_bottom_text">1. Após clicar no botão \"Ir para as definições de VPN\" abaixo, clique na roda dentada junto ao nome \"VPN.vu\".</string>
     <string name="auto_connect_carousel_first_slide_top_text">As definições da ligação automática e do modo de bloqueio podem ser encontradas nas definições do sistema Android. Siga este guia para ativar uma ou ambas as funcionalidades.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Para ativar a ligação automática, clique no botão de alternar junto a \"VPN sempre ligada\".</string>
