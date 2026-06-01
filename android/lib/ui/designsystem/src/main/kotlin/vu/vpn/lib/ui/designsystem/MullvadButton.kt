@@ -29,7 +29,6 @@ import vu.vpn.lib.ui.theme.Dimens
 import vu.vpn.lib.ui.theme.color.Alpha20
 import vu.vpn.lib.ui.theme.color.AlphaInvisible
 import vu.vpn.lib.ui.theme.color.errorDisabled
-import vu.vpn.lib.ui.theme.color.positive
 import vu.vpn.lib.ui.theme.color.primaryDisabled
 import vu.vpn.lib.ui.theme.color.tertiaryDisabled
 
@@ -114,13 +113,15 @@ fun VariantButton(
     onClick: () -> Unit,
     text: String,
     modifier: Modifier = Modifier,
-    background: Color = MaterialTheme.colorScheme.positive,
+    // PSYCO · era verde (positive); agora azul VPN.vu (primary). Pedido do Chris
+    // 01/06: todo botão de ação fica azul; só o Conectar (ConnectionButton) é verde.
+    background: Color = MaterialTheme.colorScheme.primary,
     colors: ButtonColors =
         ButtonDefaults.buttonColors(
             containerColor = background,
-            contentColor = MaterialTheme.colorScheme.onTertiary,
-            disabledContentColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = Alpha20),
-            disabledContainerColor = MaterialTheme.colorScheme.tertiaryDisabled,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = Alpha20),
+            disabledContainerColor = MaterialTheme.colorScheme.primaryDisabled,
         ),
     isEnabled: Boolean = true,
     isLoading: Boolean = false,

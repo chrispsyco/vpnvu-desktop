@@ -50,7 +50,6 @@ import vu.vpn.lib.ui.designsystem.VariantButton
 import vu.vpn.lib.ui.resource.R
 import vu.vpn.lib.ui.theme.AppTheme
 import vu.vpn.lib.ui.theme.Dimens
-import vu.vpn.lib.ui.theme.color.positive
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -287,7 +286,6 @@ private fun DeviceListButtonPanel(
             text = stringResource(id = R.string.continue_login),
             onClick = onContinueWithLogin,
             isEnabled = state is DeviceListUiState.Content,
-            background = MaterialTheme.colorScheme.positive,
         )
 
         PrimaryButton(
