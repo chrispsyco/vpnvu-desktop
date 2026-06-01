@@ -291,7 +291,7 @@ private fun ReportProblem(onReportProblemCellClick: () -> Unit) {
 
 @Composable
 private fun FaqAndGuides() {
-    val faqGuideLabel = "FAQ e guias"
+    val faqGuideLabel = stringResource(R.string.faqs_and_guides)
     val openFaqAndGuides =
         LocalUriHandler.current.createUriHook(stringResource(R.string.faqs_and_guides_url))
 
@@ -322,7 +322,7 @@ private fun PrivacyPolicy(state: SettingsUiState) {
 private fun DaitaListItem(isDaitaEnabled: Boolean, onDaitaClick: () -> Unit) {
     NavigationListItem(
         title = "DAITA",
-        subtitle = if (isDaitaEnabled) "Ligado" else "Desligado",
+        subtitle = stringResource(if (isDaitaEnabled) R.string.on else R.string.off),
         onClick = onDaitaClick,
         position = Position.Top,
         testTag = DAITA_CELL_TEST_TAG,
@@ -333,7 +333,7 @@ private fun DaitaListItem(isDaitaEnabled: Boolean, onDaitaClick: () -> Unit) {
 private fun MultihopCell(isMultihopEnabled: Boolean, onMultihopClick: () -> Unit) {
     NavigationListItem(
         title = "Multihop",
-        subtitle = if (isMultihopEnabled) "Ligado" else "Desligado",
+        subtitle = stringResource(if (isMultihopEnabled) R.string.on else R.string.off),
         onClick = onMultihopClick,
         position = Position.Middle,
         testTag = MULTIHOP_CELL_TEST_TAG,
