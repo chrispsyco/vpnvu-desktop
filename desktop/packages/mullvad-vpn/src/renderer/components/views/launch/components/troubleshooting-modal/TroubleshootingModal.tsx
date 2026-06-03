@@ -32,7 +32,7 @@ export function TroubleshootingModal({ isOpen, onClose }: TroubleshootingModalPr
       type={ModalAlertType.info}
       close={onClose}
       buttons={[
-        <Button variant="success" key="problem-report" onClick={openSendProblemReport}>
+        <Button variant="primary" key="problem-report" onClick={openSendProblemReport}>
           <Button.Text>
             {
               // TRANSLATORS: Button label for sending a problem report.

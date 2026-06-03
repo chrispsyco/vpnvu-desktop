@@ -246,15 +246,15 @@ export function FormattedAccountExpiry(props: { expiry?: string; locale: string 
   if (hasExpired(props.expiry)) {
     return (
       <FlexColumn gap="small">
+        <Text variant="labelTiny" color="whiteAlpha60">
+          {formatDate(props.expiry, props.locale)}
+        </Text>
         <StyledTopRow>
           <StyledExpiredLabel as="span" style={{ color: TONE_COLORS.danger.fg }}>
             {messages.pgettext('account-view', 'OUT OF TIME')}
           </StyledExpiredLabel>
           <StyledChip $tone="danger">{renderChipLabel('danger', 0)}</StyledChip>
         </StyledTopRow>
-        <Text variant="labelTiny" color="whiteAlpha60">
-          {formatDate(props.expiry, props.locale)}
-        </Text>
         <StyledBar>
           <StyledBarFill $width={2} $tone="danger" />
         </StyledBar>
@@ -270,6 +270,11 @@ export function FormattedAccountExpiry(props: { expiry?: string; locale: string 
 
   return (
     <FlexColumn gap="small">
+      {/* Date sits directly under the "Paid until" label so it reads as
+          "Paid until · <date>". The days-remaining counter follows below. */}
+      <Text variant="labelTiny" color="whiteAlpha60">
+        {formatDate(props.expiry, props.locale)}
+      </Text>
       <StyledTopRow>
         <StyledDays>
           {value}
@@ -277,9 +282,6 @@ export function FormattedAccountExpiry(props: { expiry?: string; locale: string 
         </StyledDays>
         <StyledChip $tone={tone}>{renderChipLabel(tone, days)}</StyledChip>
       </StyledTopRow>
-      <Text variant="labelTiny" color="whiteAlpha60">
-        {formatDate(props.expiry, props.locale)}
-      </Text>
       <StyledBar>
         <StyledBarFill $width={fill} $tone={tone} />
       </StyledBar>

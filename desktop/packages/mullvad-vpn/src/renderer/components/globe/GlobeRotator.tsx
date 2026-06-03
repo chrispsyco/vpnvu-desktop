@@ -28,7 +28,7 @@ const VARIATION = 0.32; // ±32% — subtle enough to read as "constant"
 // VPN.vu · the splash uses a calmer half-speed rotation so the brand moment
 // feels deliberate. Once the user lands on /main the globe picks up to the
 // normal pace.
-const SPLASH_SPEED_MULTIPLIER = 0.5;
+const SPLASH_SPEED_MULTIPLIER = 0.25;
 
 /** How fast pitch relaxes back to 0 when idle (per second). */
 const PITCH_RELAX_RATE = 0.8;

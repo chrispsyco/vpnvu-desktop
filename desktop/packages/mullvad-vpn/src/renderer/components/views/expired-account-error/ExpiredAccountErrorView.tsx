@@ -125,7 +125,7 @@ function ExpiredAccountErrorViewComponent() {
 
                 <ExternalPaymentButton />
 
-                <Button variant="success" onClick={navigateToRedeemVoucher}>
+                <Button variant="primary" onClick={navigateToRedeemVoucher}>
                   <Button.Text>
                     {
                       // TRANSLATORS: Button label for navigating to the voucher redemption view.
@@ -305,7 +305,7 @@ function ExternalPaymentButton() {
 
   return (
     <Button
-      variant="success"
+      variant="primary"
       disabled={openingExternalPayment || recoveryAction === RecoveryAction.disconnect}
       onClick={openExternalPayment}
       aria-description={

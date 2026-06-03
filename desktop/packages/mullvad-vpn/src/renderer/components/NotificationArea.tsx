@@ -309,7 +309,7 @@ function NotificationActionWrapper({
       </Button.Text>
     </Button>
   ) : (
-    <Button variant="success" key="problem-report" onClick={goToProblemReport}>
+    <Button variant="primary" key="problem-report" onClick={goToProblemReport}>
       <Button.Text>
         {
           // TRANSLATORS: Button label to send a problem report.

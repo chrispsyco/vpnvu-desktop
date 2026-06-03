@@ -1097,7 +1097,7 @@ msgstr "Bloqueio de Internet: a conta está sem tempo"
 
 msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
-msgstr "Conta com muitas conexões simultâneas. Desconecte outro dispositivo ou tente ligar-se novamente em breve."
+msgstr "Conta com muitas conexões simultâneas. Desconecte outro dispositivo ou tente conectar-se novamente em breve."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please send a problem report."
@@ -1511,7 +1511,7 @@ msgstr "%(suggestedUpgradeVersion)s está pronta para ser instalada."
 
 msgctxt "in-app-notifications"
 msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“ or disable “%(lockdownModeSettingName)s“ to unblock internet."
-msgstr "<a>%(lockdownModeSettingName)s</a> está ativado. Clique em \"Ligar\" ou desative “%(lockdownModeSettingName)s“ para desbloquear a Internet."
+msgstr "<a>%(lockdownModeSettingName)s</a> está ativado. Clique em \"Conectar\" ou desative “%(lockdownModeSettingName)s“ para desbloquear a Internet."
 
 msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
@@ -3143,7 +3143,7 @@ msgstr "Intervalos válidos: %(portRanges)s"
 
 msgctxt "wireguard-settings-view"
 msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr "A que porta TCP o protocolo de ofuscação UDP sobre TCP deve ligar-se no servidor VPN."
+msgstr "A que porta TCP o protocolo de ofuscação UDP sobre TCP deve se conectar ao servidor VPN."
 
 msgid "%1$s more..."
 msgstr "Mais %1$s..."
@@ -3326,7 +3326,7 @@ msgid "Auto-connect is called Always-on VPN in the Android system settings and i
 msgstr "A conexão automática é chamada de VPN sempre ativa nas configurações do sistema Android e assegura que está constantemente conectado ao túnel VPN e conectará automaticamente após o reinício."
 
 msgid "Automatically connect on device start-up."
-msgstr "Ligar automaticamente ao iniciar o dispositivo."
+msgstr "Conectar automaticamente ao iniciar o dispositivo."
 
 msgid "Blocking internet (device offline)"
 msgstr "Bloqueio de Internet (dispositivo offline)"
@@ -3344,7 +3344,7 @@ msgid "By checking this box I agree to the risks involved with deleting my accou
 msgstr "Ao assinalar esta caixa, concordo com os riscos associados à exclusão da minha conta"
 
 msgid "Can't connect?"
-msgstr "Não consegue ligar?"
+msgstr "Não consegue conectar?"
 
 msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
 msgstr "Altere o título e o ícone do aplicativo VPN.vu no seu dispositivo Android. Isto não irá alterar o ícone de nenhuma notificação relacionada com a VPN.vu."
@@ -3515,7 +3515,7 @@ msgid "For details, please see our %s."
 msgstr "Para mais detalhes, veja a nossa %s."
 
 msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "Para que a VPN se conecte automaticamente ao iniciar o dispositivo, o aplicativo deve ter permissões de VPN. Pode concedê-las clicando em \"Ligar\" na tela de mapa e selecionando \"OK\" se solicitado. Além disso, confirme se o aplicativo está instalada no armazenamento interno, verificando as informações de armazenamento nos detalhes do aplicativo, nas configurações do sistema."
+msgstr "Para que a VPN se conecte automaticamente ao iniciar o dispositivo, o aplicativo deve ter permissões de VPN. Pode concedê-las clicando em \"Conectar\" na tela de mapa e selecionando \"OK\" se solicitado. Além disso, confirme se o aplicativo está instalada no armazenamento interno, verificando as informações de armazenamento nos detalhes do aplicativo, nas configurações do sistema."
 
 msgid "Go to VPN settings"
 msgstr "Ir para as configurações de VPN"
@@ -3686,7 +3686,7 @@ msgid "Please enter a valid remote server port"
 msgstr "Insira uma porta de servidor remoto válida"
 
 msgid "Please press connect to request VPN permission"
-msgstr "Pressione \"ligar\" para solicitar a permissão de VPN"
+msgstr "Pressione \"Conectar\" para solicitar a permissão de VPN"
 
 msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
 msgstr "Reinicie o seu dispositivo e tente estabelecer a conexão novamente. Se isto não funcionar, escreva um e-mail para %s em sueco ou inglês."
@@ -4034,3 +4034,39 @@ msgid_plural "You will lose your remaining %d days."
 msgstr[0] "Irá perder o dia restante."
 msgstr[1] "Irá perder os %d dias restantes."
 
+
+# PSYCO · account-view expiry chips + remaining-time units (PT-BR)
+msgctxt "account-view"
+msgid "Active"
+msgstr "Ativa"
+
+msgctxt "account-view"
+msgid "Annual"
+msgstr "Anual"
+
+msgctxt "account-view"
+msgid "90 days"
+msgstr "90 dias"
+
+msgctxt "account-view"
+msgid "Renew"
+msgstr "Renovar"
+
+msgctxt "account-view"
+msgid "Expired"
+msgstr "Expirada"
+
+msgid "day remaining"
+msgid_plural "days remaining"
+msgstr[0] "dia restante"
+msgstr[1] "dias restantes"
+
+msgid "month remaining"
+msgid_plural "months remaining"
+msgstr[0] "mês restante"
+msgstr[1] "meses restantes"
+
+msgid "year remaining"
+msgid_plural "years remaining"
+msgstr[0] "ano restante"
+msgstr[1] "anos restantes"

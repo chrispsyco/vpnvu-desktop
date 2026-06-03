@@ -158,7 +158,7 @@ export function AccountView() {
 
             <StyledActions gap="medium">
               <Button
-                variant="success"
+                variant="primary"
                 disabled={isOffline}
                 onClick={buyMore}
                 aria-description={messages.pgettext('accessibility', 'Opens externally')}>
