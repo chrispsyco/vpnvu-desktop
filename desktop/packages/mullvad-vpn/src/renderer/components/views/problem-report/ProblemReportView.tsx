@@ -192,7 +192,7 @@ function Form() {
           </Button.Text>
           <Button.Icon icon="external" />
         </Button>
-        <Button variant="success" disabled={!validate() || disableActions} onClick={onSend}>
+        <Button variant="primary" disabled={!validate() || disableActions} onClick={onSend}>
           <Button.Text>
             {
               // TRANSLATORS: Button label for sending the problem report.
@@ -278,7 +278,7 @@ function Failed() {
             }
           </Button.Text>
         </Button>
-        <Button variant="success" onClick={onSend}>
+        <Button variant="primary" onClick={onSend}>
           <Button.Text>
             {
               // TRANSLATORS: Button label for retrying problem report submission after a failure.
@@ -384,7 +384,7 @@ function OutdatedVersionWarningDialog() {
       buttons={[
         <Button
           key="upgrade"
-          variant="success"
+          variant="primary"
           disabled={disabled}
           onClick={upgradeAction}
           aria-description={messages.pgettext('accessibility', 'Opens externally')}>

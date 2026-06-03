@@ -36,6 +36,15 @@ const Wrap = styled.div<{ $visible: boolean; $topOffsetPx: number }>`
   opacity: ${({ $visible }) => ($visible ? 1 : 0)};
   /* Short crossfade so the globe doesn't pop when switching back to main. */
   transition: opacity 160ms ease-out;
+  /* PSYCO · the R3F globe is a composited GPU canvas that escapes the #app
+     border-radius clip in Chromium (that's why the window's bottom corners
+     showed square globe over the rounded #app). clip-path is applied at the
+     compositor level and DOES clip the canvas. Bottom corners always sit on
+     the window edge; top corners only do on the launch splash ($topOffsetPx
+     === 0) — on the main view this layer starts below the header.
+     inset() round order = top-left top-right bottom-right bottom-left. */
+  clip-path: ${({ $topOffsetPx }) =>
+    $topOffsetPx === 0 ? 'inset(0 round 16px)' : 'inset(0 round 0 0 16px 16px)'};
 `;
 
 interface Props {

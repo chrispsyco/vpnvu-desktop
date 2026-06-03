@@ -206,6 +206,15 @@ export function tickFocus(dt: number): GlobeFocusFrame {
   tl.elapsed = Math.min(tl.duration, tl.elapsed + dt);
   const t = tl.elapsed / tl.duration;
   const eased = easeInOutQuart(t);
+  // Re-aim the tilt target every frame at the *current* dynamic Y. The target
+  // tilt depends on the connection-panel/banner obstacles, and the panel grows
+  // when the tunnel finishes connecting mid-flight. Without this the timeline
+  // lands on the stale (smaller-panel) target and the parking step below then
+  // closes the gap with a visible upward jump right before stopping — recomputing
+  // makes the landing equal the parking target, so the motion is continuous.
+  if (STATE.target) {
+    tl.targetX = desiredTargetX(STATE.target.lat);
+  }
   const y = tl.startY + (tl.targetY - tl.startY) * eased;
   const x = tl.startX + (tl.targetX - tl.startX) * eased;
   const zoom = 1 + (ZOOM_OUT_PEAK - 1) * zoomBell(t);

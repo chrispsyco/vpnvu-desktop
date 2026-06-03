@@ -123,7 +123,7 @@ const StyledMark = styled.div<{ $variant: 'idle' | 'ready' | 'error' }>`
   align-items: center;
   justify-content: center;
   color: rgb(255, 255, 255);
-  animation: ${markEnter} 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: ${markEnter} 1440ms cubic-bezier(0.22, 1, 0.36, 1) both;
 
   background: transparent;
 
@@ -145,7 +145,7 @@ const StyledMark = styled.div<{ $variant: 'idle' | 'ready' | 'error' }>`
     ${({ $variant }) =>
       $variant === 'idle'
         ? css`
-            animation: ${pulseRing} 2400ms ease-out infinite;
+            animation: ${pulseRing} 4800ms ease-out infinite;
           `
         : css`
             animation: none;
@@ -184,8 +184,8 @@ const Wordmark = styled.div`
      mantendo o contorno do logo legível mesmo em pontos mais claros do
      mapa. */
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.75);
-  animation: ${fadeUp} 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 120ms;
+  animation: ${fadeUp} 1040ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 240ms;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
@@ -208,8 +208,8 @@ const Tagline = styled.div`
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
   margin-top: 10px;
   text-align: center;
-  animation: ${fadeUp} 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 220ms;
+  animation: ${fadeUp} 1040ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 440ms;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
@@ -234,8 +234,8 @@ const StatusBlock = styled.div`
   gap: 14px;
   min-height: 72px;
   width: 100%;
-  animation: ${fadeUp} 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 320ms;
+  animation: ${fadeUp} 1040ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 640ms;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
@@ -248,7 +248,7 @@ const SpinnerRing = styled.div`
   border-radius: 18px;
   border: 2.5px solid rgba(91, 200, 218, 0.18);
   border-top-color: rgb(91, 200, 218);
-  animation: ${spin} 850ms linear infinite;
+  animation: ${spin} 1700ms linear infinite;
 
   @media (prefers-reduced-motion: reduce) {
     animation: ${spin} 2400ms linear infinite;
@@ -273,7 +273,7 @@ const ProgressBar = styled.div`
   background: linear-gradient(90deg, rgba(9, 158, 180, 0), rgb(9, 158, 180), rgb(91, 200, 218), rgba(91, 200, 218, 0));
   border-radius: 2px;
   box-shadow: 0 0 12px rgba(91, 200, 218, 0.55);
-  animation: ${progressSlide} 1800ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: ${progressSlide} 3600ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
 
   @media (prefers-reduced-motion: reduce) {
     animation: ${progressSlide} 3600ms linear infinite;
