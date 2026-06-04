@@ -593,7 +593,7 @@
     <string name="psyco_privacy_step2_kicker">Termos de uso · proteção de dados</string>
     <string name="psyco_privacy_step2_title_lead">Como a gente trata</string>
     <string name="psyco_privacy_step2_title_accent">seus dados.</string>
-    <string name="psyco_privacy_step_suffix"> de %1$d · %2$s</string>
+    <string name="psyco_privacy_step_suffix">de %1$d · %2$s</string>
     <string name="psyco_relaylist_no_lists_hint">Pra adicionar localizações em uma lista, toque no lápis.</string>
     <string name="psyco_select_location_title">Selecionar localização</string>
     <string name="psyco_split_excluded_desc">Apps abaixo são excluídos do túnel VPN. Eles usam a conexão normal da internet.</string>

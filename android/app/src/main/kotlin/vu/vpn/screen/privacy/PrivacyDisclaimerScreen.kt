@@ -257,6 +257,9 @@ private fun HeaderRow(currentStep: Int) {
                 withStyle(
                     SpanStyle(color = Color.White, fontWeight = FontWeight.SemiBold)
                 ) { append(currentStep.toString()) }
+                // Android trims the leading space from the string resource, gluing the
+                // number to "de" ("1de 2"). Emit the separator here instead.
+                append(" ")
                 withStyle(SpanStyle(color = Color(0xFF9BAEB6))) {
                     append(stringResource(R.string.psyco_privacy_step_suffix, TOTAL_STEPS, headerLabel))
                 }
