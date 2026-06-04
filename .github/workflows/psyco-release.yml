@@ -193,35 +193,129 @@ jobs:
   #           dist/*.rpm
 
   # ----------------------------------------------------------------------
-  # Future: macOS universal build (scaffolding, commented until needed).
-  # Requires Apple Developer cert ($99/year) for notarization.
+  # macOS universal (.pkg) build. Produces an UNSIGNED, un-notarized package
+  # until the Apple Developer Program org enrollment lands (gated on the same
+  # TMBS LLC D-U-N-S propagating at D&B as the Windows EV cert). The app icon
+  # ships from the committed dist-assets/icon-macos.icns — the build does NOT
+  # regenerate icons, so no risk of the stale graphics/macOS/ PNGs leaking in.
   # ----------------------------------------------------------------------
-  # build-macos:
-  #   name: Build macOS universal (.pkg)
-  #   runs-on: macos-latest
-  #   permissions:
-  #     contents: read
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: recursive
-  #         fetch-depth: 0
-  #     - uses: ./.github/actions/mullvad-build-env
-  #       with:
-  #         rust-cache-targets: "true"
-  #     - name: Install desktop dependencies
-  #       working-directory: desktop
-  #       run: npm run ci
-  #     - name: Build daemon + GUI universal (release, unsigned)
-  #       run: ./build.sh --optimize --universal
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: vpnvu-macos-universal
-  #         path: dist/*.pkg
+  build-macos:
+    name: Build macOS universal (.pkg, unsigned)
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up build environment (Rust + protoc + Go + Node)
+        uses: ./.github/actions/mullvad-build-env
+        with:
+          rust-cache-targets: "true"
+
+      # Universal binary needs both slices. The runner is Apple Silicon (arm64);
+      # the x86_64 slice is cross-compiled, so add that Rust target explicitly.
+      - name: Install additional Rust targets
+        shell: bash
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
+
+      - name: Cache desktop node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            desktop/node_modules
+            desktop/packages/*/node_modules
+          key: ${{ runner.os }}-desktop-node-${{ hashFiles('desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-desktop-node-
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building VPN.vu Desktop macOS universal version: $VERSION"
+
+      - name: Install desktop dependencies
+        working-directory: desktop
+        shell: bash
+        run: npm run ci
+
+      # Unsigned, un-notarized universal .pkg. Until notarization is wired up
+      # (see the commented signed step below) the package installs with a
+      # Gatekeeper warning (right-click > Open the first time).
+      - name: Build daemon + GUI universal (release, unsigned)
+        shell: bash
+        run: ./build.sh --optimize --universal
+
+      - name: Locate .pkg artifact
+        id: artifact
+        shell: bash
+        run: |
+          PKG=$(ls -1 dist/*.pkg 2>/dev/null | head -n1 || true)
+          if [[ -z "$PKG" ]]; then
+            echo "ERROR: No .pkg found in dist/"
+            ls -la dist/ || true
+            exit 1
+          fi
+          echo "Found package: $PKG"
+          echo "path=$PKG" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$PKG")" >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------------------
+      # Future code-signing + notarization (commented until the Apple Developer
+      # Program org enrollment completes — gated on the TMBS LLC D-U-N-S
+      # propagating at D&B, the same blocker as the Windows EV cert).
+      #
+      # When ready, add these repo secrets and uncomment the step:
+      #   APPLE_CSC_LINK              base64 of the Developer ID Application .p12
+      #   APPLE_CSC_KEY_PASSWORD      password for that .p12
+      #   APPLE_ID                    Apple account email (notarytool)
+      #   APPLE_APP_SPECIFIC_PASSWORD app-specific password for notarytool
+      #   APPLE_TEAM_ID               10-char Team ID
+      # electron-builder reads CSC_LINK/CSC_KEY_PASSWORD to sign; build.sh's
+      # --notarize flag then drives notarytool submit + stapler staple.
+      # ----------------------------------------------------------------------
+      # - name: Build signed + notarized universal .pkg
+      #   if: ${{ inputs.sign == true }}
+      #   shell: bash
+      #   env:
+      #     CSC_LINK: ${{ secrets.APPLE_CSC_LINK }}
+      #     CSC_KEY_PASSWORD: ${{ secrets.APPLE_CSC_KEY_PASSWORD }}
+      #     APPLE_ID: ${{ secrets.APPLE_ID }}
+      #     APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      #     APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      #   run: ./build.sh --optimize --universal --notarize
+
+      - name: Upload .pkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vpnvu-macos-universal-${{ steps.version.outputs.version }}
+          path: ${{ steps.artifact.outputs.path }}
+          if-no-files-found: error
+          retention-days: 30
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
 
   release:
     name: Create GitHub Release
-    needs: [build-windows]
+    needs: [build-windows, build-macos]
+    # Publish as long as Windows produced an installer, even if the newer,
+    # less battle-tested macOS job failed — ship what built instead of blocking
+    # the whole release on Mac. always() lets this run despite a failed need;
+    # the explicit guard keeps it gated on a successful Windows build.
+    if: ${{ always() && needs.build-windows.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -254,10 +348,11 @@ jobs:
           name: VPN.vu Desktop ${{ steps.tag.outputs.tag }}
           prerelease: ${{ steps.tag.outputs.prerelease }}
           generate_release_notes: true
-          # Why false: Linux/Mac build jobs are scaffolded but commented out
-          # (see build-linux-x64 / build-macos above). Until they're enabled,
-          # .deb/.rpm/.pkg patterns won't match any files and a strict check
-          # fails the release even when the Windows .exe built successfully.
+          # Why false: the macOS job can fail independently (release still runs
+          # via always() when Windows succeeds) and the Linux job is still
+          # commented out — so .pkg/.deb/.rpm patterns may match nothing. A
+          # strict check would fail the release even when the Windows .exe (and
+          # possibly the .pkg) built fine.
           fail_on_unmatched_files: false
           files: |
             artifacts/**/*.exe
