@@ -280,6 +280,10 @@ private fun Hero(currentStep: Int) {
         Text(
             text = buildAnnotatedString {
                 withStyle(SpanStyle(color = Color.White)) { append(stringResource(meta.titleLead)) }
+                // Android trims trailing whitespace from string resources, which glued the
+                // lead to the accent ("gentecomeçar"). Emit the separator here so the space
+                // is guaranteed for every step regardless of the resource value.
+                append(" ")
                 withStyle(
                     SpanStyle(
                         color = MaterialTheme.colorScheme.primary,

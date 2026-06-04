@@ -14,11 +14,13 @@ import vu.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import vu.vpn.lib.model.ParseVoucherCodeError
 import vu.vpn.lib.model.RedeemVoucherError
 import vu.vpn.lib.model.VoucherCode
+import vu.vpn.lib.repository.AccountRepository
 import vu.vpn.lib.repository.VoucherRepository
 import vu.vpn.lib.usecase.InternetAvailableUseCase
 
 class VoucherDialogViewModel(
     private val voucherRepository: VoucherRepository,
+    private val accountRepository: AccountRepository,
     private val internetAvailableUseCase: InternetAvailableUseCase,
 ) : ViewModel() {
 
@@ -70,7 +72,15 @@ class VoucherDialogViewModel(
     }
 
     private fun handleAddedTime(timeAdded: Long) {
-        viewModelScope.launch { vmState.update { VoucherDialogState.Success(timeAdded) } }
+        viewModelScope.launch {
+            // Refresh the cached account data immediately so the reactive redirect on the
+            // Welcome/OutOfTime screens (which observe accountData / isOutOfTime) fires as
+            // soon as the success dialog is dismissed. Without this, those screens only
+            // noticed the new time on the next 15s expiry poll — that gap read as a freeze
+            // and users had to force-close the app to get unstuck.
+            accountRepository.refreshAccountData()
+            vmState.update { VoucherDialogState.Success(timeAdded) }
+        }
     }
 
     private fun setError(error: RedeemVoucherError) {

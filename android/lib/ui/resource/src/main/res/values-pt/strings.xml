@@ -15,7 +15,7 @@
     <string name="add_locations">Adicionar localizações</string>
     <string name="add_method">Adicionar método</string>
     <string name="add_time">Adicionar tempo</string>
-    <string name="add_time_to_account">Compre crédito no nosso sítio da web ou reclame um voucher.</string>
+    <string name="add_time_to_account">Compre crédito no nosso site ou resgate um voucher.</string>
     <string name="add_to_list">Adicionar à lista</string>
     <string name="added_to_your_account">%1$s adicionado(s) à sua conta.</string>
     <string name="adding_method">A adicionar método...</string>
@@ -347,7 +347,7 @@
     <string name="password">Palavra-passe</string>
     <string name="password_optional">Palavra-passe (opcional)</string>
     <string name="patch_not_matching_specification">O patch não corresponde à especificação</string>
-    <string name="pay_to_start_using">Para começar a utilizar a aplicação, primeiro tem de adicionar tempo à sua conta.</string>
+    <string name="pay_to_start_using">Pra começar a usar, você precisa adicionar tempo à sua conta.</string>
     <string name="payment_billing_error_dialog_message">Não foi possível iniciar o processo de pagamento. Verifique se tem a versão mais recente do Google Play.</string>
     <string name="payment_billing_error_dialog_title">Google Play indisponível</string>
     <string name="payment_obfuscation_id_error_dialog_message">Não foi possível iniciar o processo de pagamento, tente novamente mais tarde.</string>
@@ -587,11 +587,11 @@
     <string name="psyco_privacy_cta_continue">Aceitar e continuar</string>
     <string name="psyco_privacy_step1_label">Privacidade</string>
     <string name="psyco_privacy_step1_kicker">Aviso de privacidade · primeiro acesso</string>
-    <string name="psyco_privacy_step1_title_lead">Antes da gente </string>
+    <string name="psyco_privacy_step1_title_lead">Antes da gente</string>
     <string name="psyco_privacy_step1_title_accent">começar.</string>
     <string name="psyco_privacy_step2_label">Termos &amp; LGPD</string>
     <string name="psyco_privacy_step2_kicker">Termos de uso · proteção de dados</string>
-    <string name="psyco_privacy_step2_title_lead">Como a gente trata </string>
+    <string name="psyco_privacy_step2_title_lead">Como a gente trata</string>
     <string name="psyco_privacy_step2_title_accent">seus dados.</string>
     <string name="psyco_privacy_step_suffix"> de %1$d · %2$s</string>
     <string name="psyco_relaylist_no_lists_hint">Pra adicionar localizações em uma lista, toque no lápis.</string>

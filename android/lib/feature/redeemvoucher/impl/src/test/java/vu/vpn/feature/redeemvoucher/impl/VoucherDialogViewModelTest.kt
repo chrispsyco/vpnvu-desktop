@@ -15,6 +15,7 @@ import vu.vpn.lib.common.test.TestCoroutineRule
 import vu.vpn.lib.model.RedeemVoucherError
 import vu.vpn.lib.model.RedeemVoucherSuccess
 import vu.vpn.lib.model.VoucherCode
+import vu.vpn.lib.repository.AccountRepository
 import vu.vpn.lib.repository.VoucherRepository
 import vu.vpn.lib.usecase.InternetAvailableUseCase
 import org.junit.jupiter.api.AfterEach
@@ -29,6 +30,8 @@ class VoucherDialogViewModelTest {
 
     private val mockVoucherRepository: VoucherRepository = mockk()
 
+    private val mockAccountRepository: AccountRepository = mockk(relaxed = true)
+
     private val mockInternetAvailableUseCase: InternetAvailableUseCase = mockk()
 
     private lateinit var viewModel: VoucherDialogViewModel
@@ -38,6 +41,7 @@ class VoucherDialogViewModelTest {
         viewModel =
             VoucherDialogViewModel(
                 voucherRepository = mockVoucherRepository,
+                accountRepository = mockAccountRepository,
                 internetAvailableUseCase = mockInternetAvailableUseCase,
             )
     }
@@ -150,6 +154,24 @@ class VoucherDialogViewModelTest {
             assertIs<VoucherDialogState.Success>(awaitItem().voucherState)
         }
     }
+
+    @Test
+    fun `given valid voucher when redeeming then refresh account data so the redirect fires`() =
+        runTest {
+            val voucher = DUMMY_VALID_VOUCHER
+
+            // Arrange
+            coEvery {
+                mockVoucherRepository.submitVoucher(VoucherCode.fromString(voucher).getOrNull()!!)
+            } returns RedeemVoucherSuccess(0, ZonedDateTime.now()).right()
+
+            // Act
+            viewModel.onRedeem(voucher)
+
+            // Assert — the cached account data must be refreshed on success so the
+            // Welcome/OutOfTime reactive redirect fires without waiting for the 15s poll.
+            coVerify(exactly = 1) { mockAccountRepository.refreshAccountData() }
+        }
 
     @Test
     fun `when voucher input is changed then clear error`() = runTest {
