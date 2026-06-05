@@ -66,14 +66,10 @@ fun WebViewGlobe(
             // A WebView é reusada · garante que não tem um parent antigo pendurado
             // antes de o AndroidView reanexar, senão crasha ("already has a parent").
             (webView.parent as? ViewGroup)?.removeView(webView)
-            webView.onResume()
+            GlobeWebViewHolder.onAttached()
             webView
         },
-        onRelease = { webView ->
-            // NÃO destruir · só desanexar e pausar pra preservar o estado renderizado.
-            (webView.parent as? ViewGroup)?.removeView(webView)
-            webView.onPause()
-        },
+        onRelease = { GlobeWebViewHolder.onDetached() },
     )
 
     // Sempre que o estado muda (ou a WebView fica ready), empurra os comandos JS.
@@ -110,6 +106,14 @@ private object GlobeWebViewHolder {
     private var webView: WebView? = null
     private val readyListeners = mutableSetOf<() -> Unit>()
 
+    // Quantas telas (AndroidView) estão usando a WebView agora. Ao navegar entre
+    // telas com globo (ex.: Splash → Connect) o destino novo anexa a MESMA WebView
+    // (mesmo holder) antes — ou logo depois — de o onRelease da tela antiga rodar.
+    // Pausar incondicionalmente no onRelease pausava o RENDERING do Chromium na
+    // tela nova → globo preto no Connect até abrir Settings e voltar (que
+    // re-chamava onResume). Só pausamos quando NINGUÉM está usando a WebView.
+    private var attachCount = 0
+
     var isReady: Boolean = false
         private set
 
@@ -120,6 +124,24 @@ private object GlobeWebViewHolder {
 
     fun removeReadyListener(listener: () -> Unit) {
         readyListeners.remove(listener)
+    }
+
+    fun onAttached() {
+        attachCount++
+        webView?.onResume()
+    }
+
+    fun onDetached() {
+        attachCount = (attachCount - 1).coerceAtLeast(0)
+        // Adia a decisão pro fim do frame: se foi uma troca de telas, o factory do
+        // destino novo já terá incrementado attachCount quando este post rodar.
+        mainHandler.post {
+            if (attachCount == 0) {
+                val wv = webView ?: return@post
+                (wv.parent as? ViewGroup)?.removeView(wv)
+                wv.onPause()
+            }
+        }
     }
 
     fun evaluate(script: String) {

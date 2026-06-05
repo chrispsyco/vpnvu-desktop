@@ -203,8 +203,15 @@ fun RedeemVoucherDialog(
         onDismissRequest = { onDismiss(state.voucherState is VoucherDialogState.Success) },
         properties =
             DialogProperties(
+                // PSYCO · No estado de sucesso o voucher já creditou o tempo e fechar o
+                // diálogo é o que dispara o redirect (OutOfTime/Welcome -> Connect, via
+                // efeito reativo a isOutOfTime). Tocar fora ou usar "voltar" fechava o
+                // diálogo de forma acidental e o usuário ficava sem o redirect esperado.
+                // Forçamos o fechamento pelo botão "Entendi" só no sucesso.
+                dismissOnClickOutside = state.voucherState !is VoucherDialogState.Success,
+                dismissOnBackPress = state.voucherState !is VoucherDialogState.Success,
                 securePolicy =
-                    if (BuildConfig.DEBUG) SecureFlagPolicy.Inherit else SecureFlagPolicy.SecureOn
+                    if (BuildConfig.DEBUG) SecureFlagPolicy.Inherit else SecureFlagPolicy.SecureOn,
             ),
     )
 }

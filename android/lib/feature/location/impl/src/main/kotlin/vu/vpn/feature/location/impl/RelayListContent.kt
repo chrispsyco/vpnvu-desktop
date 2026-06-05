@@ -227,7 +227,9 @@ private fun RelayItem.locationSubtitle(): String? =
         is RelayItem.Location.Relay ->
             stringResource(R.string.country_comma_city, countryName, cityName)
         is RelayItem.Location.City -> countryName
-        is RelayItem.Location.Country,
+        // PSYCO · O país mostra a cidade como segunda linha (ex.: "Brasil" / "São Paulo").
+        // Só quando há exatamente uma cidade — com várias, a lista de filhos (expand) cobre.
+        is RelayItem.Location.Country -> cities.singleOrNull()?.name
         is RelayItem.CustomList -> null
     }
 
