@@ -14,7 +14,7 @@ on:
         required: true
         default: "0.0.0-dev"
       sign:
-        description: "Code-sign the artifact (requires SSL_COM_* secrets). Leave false until cert is provisioned."
+        description: "Code-sign + notarize (Windows EV via SSL.com eSigner, macOS via Apple Developer ID). Needs the signing secrets — see docs/code-signing-setup.md. Leave false until the certs are issued to TMBS LLC."
         type: boolean
         required: false
         default: false
@@ -128,28 +128,27 @@ jobs:
           echo "path=$INSTALLER" >> "$GITHUB_OUTPUT"
           echo "name=$(basename "$INSTALLER")" >> "$GITHUB_OUTPUT"
 
-      # ----------------------------------------------------------------------
-      # Future code-signing step (placeholder, commented until cert is ready).
-      # When SSL.com OV cert + eSigner Cloud are provisioned, uncomment and
-      # add these secrets at the repo level: SSL_COM_USERNAME, SSL_COM_PASSWORD,
+      # EV code-signing via SSL.com eSigner Cloud (cloud HSM — no physical token).
+      # Skipped unless dispatched with sign=true. Until the EV cert is issued to
+      # TMBS LLC (gated on the D-U-N-S propagating at D&B), keep sign=false
+      # (default) and the installer ships unsigned. Required repo secrets (see
+      # docs/code-signing-setup.md): SSL_COM_USERNAME, SSL_COM_PASSWORD,
       # SSL_COM_TOTP_SECRET, SSL_COM_CREDENTIAL_ID.
-      # ----------------------------------------------------------------------
-      # - name: Code-sign installer via SSL.com eSigner Cloud
-      #   if: ${{ inputs.sign == true }}
-      #   shell: pwsh
-      #   env:
-      #     SSL_COM_USERNAME: ${{ secrets.SSL_COM_USERNAME }}
-      #     SSL_COM_PASSWORD: ${{ secrets.SSL_COM_PASSWORD }}
-      #     SSL_COM_TOTP_SECRET: ${{ secrets.SSL_COM_TOTP_SECRET }}
-      #     SSL_COM_CREDENTIAL_ID: ${{ secrets.SSL_COM_CREDENTIAL_ID }}
-      #   run: |
-      #     java -jar CodeSignTool.jar sign `
-      #       -username="$env:SSL_COM_USERNAME" `
-      #       -password="$env:SSL_COM_PASSWORD" `
-      #       -totp_secret="$env:SSL_COM_TOTP_SECRET" `
-      #       -credential_id="$env:SSL_COM_CREDENTIAL_ID" `
-      #       -input_file_path="${{ steps.artifact.outputs.path }}" `
-      #       -override=true
+      # NOTE: the eSigner action is x64-tested. arm64 (windows-11-arm) signing
+      # needs validation on the first signed run; if it fails there, sign the
+      # arm64 slice from the x64 runner instead.
+      - name: Code-sign installer (SSL.com eSigner Cloud)
+        if: ${{ inputs.sign == true }}
+        uses: sslcom/esigner-codesign@develop
+        with:
+          command: sign
+          username: ${{ secrets.SSL_COM_USERNAME }}
+          password: ${{ secrets.SSL_COM_PASSWORD }}
+          totp_secret: ${{ secrets.SSL_COM_TOTP_SECRET }}
+          credential_id: ${{ secrets.SSL_COM_CREDENTIAL_ID }}
+          file_path: ${{ steps.artifact.outputs.path }}
+          override: true
+          malware_block: false
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
@@ -200,7 +199,7 @@ jobs:
   # regenerate icons, so no risk of the stale graphics/macOS/ PNGs leaking in.
   # ----------------------------------------------------------------------
   build-macos:
-    name: Build macOS universal (.pkg, unsigned)
+    name: Build macOS universal (.pkg)
     runs-on: macos-latest
     permissions:
       contents: read
@@ -251,12 +250,37 @@ jobs:
         shell: bash
         run: npm run ci
 
-      # Unsigned, un-notarized universal .pkg. Until notarization is wired up
-      # (see the commented signed step below) the package installs with a
-      # Gatekeeper warning (right-click > Open the first time).
-      - name: Build daemon + GUI universal (release, unsigned)
+      # Universal .pkg. With sign=true (and the Apple secrets set), electron-builder
+      # signs with the Developer ID and build.sh notarizes via notarytool; otherwise
+      # an unsigned package that installs with a Gatekeeper warning (right-click > Open).
+      # See docs/code-signing-setup.md for the secrets.
+      - name: Build daemon + GUI universal
         shell: bash
-        run: ./build.sh --optimize --universal
+        env:
+          CSC_LINK: ${{ secrets.APPLE_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [[ "${{ inputs.sign }}" == "true" ]]; then
+            echo "Signed + notarized build (sign=true)"
+            # build.sh notarizes the .pkg with notarytool, which needs a keychain
+            # profile. Create a throwaway keychain and store the Apple credentials.
+            KEYCHAIN="$RUNNER_TEMP/vpnvu-notary.keychain-db"
+            security create-keychain -p "" "$KEYCHAIN"
+            security set-keychain-settings "$KEYCHAIN"
+            security unlock-keychain -p "" "$KEYCHAIN"
+            xcrun notarytool store-credentials vpnvu-notary \
+              --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+              --password "$APPLE_APP_SPECIFIC_PASSWORD" --keychain "$KEYCHAIN"
+            export NOTARIZE_KEYCHAIN="$KEYCHAIN"
+            export NOTARIZE_KEYCHAIN_PROFILE="vpnvu-notary"
+            ./build.sh --optimize --universal --notarize
+          else
+            echo "Unsigned build (sign=false) — installs with a Gatekeeper warning"
+            ./build.sh --optimize --universal
+          fi
 
       - name: Locate .pkg artifact
         id: artifact
@@ -271,31 +295,6 @@ jobs:
           echo "Found package: $PKG"
           echo "path=$PKG" >> "$GITHUB_OUTPUT"
           echo "name=$(basename "$PKG")" >> "$GITHUB_OUTPUT"
-
-      # ----------------------------------------------------------------------
-      # Future code-signing + notarization (commented until the Apple Developer
-      # Program org enrollment completes — gated on the TMBS LLC D-U-N-S
-      # propagating at D&B, the same blocker as the Windows EV cert).
-      #
-      # When ready, add these repo secrets and uncomment the step:
-      #   APPLE_CSC_LINK              base64 of the Developer ID Application .p12
-      #   APPLE_CSC_KEY_PASSWORD      password for that .p12
-      #   APPLE_ID                    Apple account email (notarytool)
-      #   APPLE_APP_SPECIFIC_PASSWORD app-specific password for notarytool
-      #   APPLE_TEAM_ID               10-char Team ID
-      # electron-builder reads CSC_LINK/CSC_KEY_PASSWORD to sign; build.sh's
-      # --notarize flag then drives notarytool submit + stapler staple.
-      # ----------------------------------------------------------------------
-      # - name: Build signed + notarized universal .pkg
-      #   if: ${{ inputs.sign == true }}
-      #   shell: bash
-      #   env:
-      #     CSC_LINK: ${{ secrets.APPLE_CSC_LINK }}
-      #     CSC_KEY_PASSWORD: ${{ secrets.APPLE_CSC_KEY_PASSWORD }}
-      #     APPLE_ID: ${{ secrets.APPLE_ID }}
-      #     APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-      #     APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      #   run: ./build.sh --optimize --universal --notarize
 
       - name: Upload .pkg artifact
         uses: actions/upload-artifact@v4
