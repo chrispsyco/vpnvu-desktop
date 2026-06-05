@@ -44,3 +44,8 @@ android/.idea
 .vscode/
 .direnv/
 .zed/
+
+# PSYCO — build outputs e arquivos de trabalho local (não versionar)
+desktop/packages/mullvad-vpn/globe-bundle-dist/
+_psyco-build.log*
+_bugs-*/
