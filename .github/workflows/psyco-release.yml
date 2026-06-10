@@ -162,10 +162,12 @@ jobs:
         env:
           BLOB_RW_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
         run: |
-          npm install -g vercel@latest
-          vercel blob put "${{ steps.artifact.outputs.path }}" \
-            --pathname "vpnvu/vpnvu-windows-${{ matrix.artifact-suffix }}.exe" \
-            --access public --allow-overwrite true --rw-token "$BLOB_RW_TOKEN"
+          # @vercel/blob SDK uploads with just the RW token (the `vercel blob put`
+          # CLI wrongly demands an account login, which CI doesn't have).
+          npm install @vercel/blob --no-save
+          node scripts/upload-blob.mjs \
+            "${{ steps.artifact.outputs.path }}" \
+            "vpnvu/vpnvu-windows-${{ matrix.artifact-suffix }}.exe"
 
       # Kept for traceability, but non-fatal: the GitHub artifact quota recalculates
       # only every 6-12h, so this can fail while the Blob upload above still succeeds.
