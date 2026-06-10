@@ -1259,6 +1259,16 @@ msgctxt "connection-info"
 msgid "Out"
 msgstr "Saída"
 
+#. Eyebrow label above the location on the main screen.
+msgctxt "connection-info"
+msgid "Current location"
+msgstr "Local atual"
+
+#. Eyebrow label above the server the user picked to connect to.
+msgctxt "connection-info"
+msgid "Selected server"
+msgstr "Servidor selecionado"
+
 #. Label for disabled menu option when a location has already been added to a custom list.
 #. Available placeholders:
 #. %(customList)s - The name of the custom list the location has been added to.

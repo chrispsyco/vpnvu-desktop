@@ -123,6 +123,63 @@ const DOT_FRAGMENT = /* glsl */ `
   }
 `;
 
+/**
+ * PSYCO · radar ping. Anel que expande a partir do pino e some, em loop —
+ * dá o efeito de "radar vivo". É um mesh SEPARADO (não mexe no shader do
+ * GL_POINT do dot, que tinha um bug de driver ao animar uniforme via
+ * useFrame). Fica dentro do mesmo group → co-rotaciona com o pino e é
+ * inclinado pelo <TiltedGlobe> pai, igual ao dot.
+ */
+function RadarPulse({
+  lat,
+  lng,
+  radius,
+  colorRgb,
+}: {
+  lat: number;
+  lng: number;
+  radius: number;
+  colorRgb: [number, number, number];
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const matRef = useRef<THREE.MeshBasicMaterial>(null);
+
+  const { pos, quat, color } = useMemo(() => {
+    // +0.004 pra flutuar logo acima da superfície e evitar z-fighting com o globo.
+    const p = latLngToVec3(lat, lng, radius + 0.004);
+    // orienta o anel (plano XY, normal +Z) tangente à superfície → normal = posição.
+    const q = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 0, 1),
+      p.clone().normalize(),
+    );
+    const c = new THREE.Color().setRGB(colorRgb[0], colorRgb[1], colorRgb[2]);
+    return { pos: p, quat: q, color: c };
+  }, [lat, lng, radius, colorRgb]);
+
+  useFrame(({ clock }) => {
+    const PERIOD = 2.2; // s por ping
+    const t = (clock.elapsedTime % PERIOD) / PERIOD; // 0..1
+    if (meshRef.current) meshRef.current.scale.setScalar(0.025 + t * 0.21);
+    // some conforme expande (ease-out quadrático), pico de opacidade no começo.
+    if (matRef.current) matRef.current.opacity = (1 - t) * (1 - t) * 0.8;
+  });
+
+  return (
+    <mesh ref={meshRef} position={pos} quaternion={quat} renderOrder={4} frustumCulled={false}>
+      <ringGeometry args={[0.82, 1.0, 48]} />
+      <meshBasicMaterial
+        ref={matRef}
+        color={color}
+        transparent
+        opacity={0.8}
+        depthTest={false}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
+
 export function ActiveServerPin({
   lat,
   lng,
@@ -201,6 +258,11 @@ export function ActiveServerPin({
 
   return (
     <group ref={groupRef}>
+      {/* PSYCO · radar ping ao redor do pino · SÓ quando conectado (verde) ·
+          o pino laranja (conectando) não pulsa. */}
+      {connectionState === 'connected' && (
+        <RadarPulse lat={lat} lng={lng} radius={radius} colorRgb={COLOR_BY_STATE[connectionState]} />
+      )}
       {/*
         frustumCulled=false is required: BufferGeometry's auto-computed
         boundingSphere for a single-vertex geometry has radius 0, so Three.js

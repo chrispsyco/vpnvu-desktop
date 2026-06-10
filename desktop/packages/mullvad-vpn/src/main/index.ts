@@ -178,6 +178,7 @@ class ApplicationMain
     }
 
     this.addSecondInstanceEventHandler();
+    this.registerDeepLinkProtocol();
 
     this.initLogging();
 
@@ -276,9 +277,37 @@ class ApplicationMain
   };
 
   private addSecondInstanceEventHandler() {
-    app.on('second-instance', (_event, _argv, _workingDirectory) => {
+    app.on('second-instance', (_event, argv, _workingDirectory) => {
       this.userInterface?.showWindow();
+      // Deep link vpnvu://app — botão "Abrir o app" da tela de sucesso do site
+      // (pós-pagamento). No Windows o link chega como argv da 2ª instância.
+      // Além de focar a janela (acima), força um refresh imediato da conta pra
+      // sair do out-of-time sem esperar o polling.
+      if (argv.some((arg) => arg.startsWith('vpnvu://'))) {
+        this.updateAccountData();
+      }
     });
+
+    // macOS entrega o deep link via 'open-url' em vez do argv.
+    app.on('open-url', (event, url) => {
+      if (url.startsWith('vpnvu://')) {
+        event.preventDefault();
+        this.userInterface?.showWindow();
+        this.updateAccountData();
+      }
+    });
+  }
+
+  // Registra o app como handler de vpnvu:// para que o navegador consiga
+  // abrir/focar o app a partir do botão "Abrir o app" no site.
+  private registerDeepLinkProtocol() {
+    if (process.defaultApp && process.argv.length >= 2) {
+      app.setAsDefaultProtocolClient('vpnvu', process.execPath, [
+        path.resolve(process.argv[1]),
+      ]);
+    } else {
+      app.setAsDefaultProtocolClient('vpnvu');
+    }
   }
 
   private overrideAppPaths() {

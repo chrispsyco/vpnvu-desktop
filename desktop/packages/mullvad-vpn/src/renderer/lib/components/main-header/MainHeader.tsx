@@ -39,6 +39,7 @@ const StyledHeader = styled.header<TransientProps<HeaderProps>>(
   ({ $size = '1', $variant = 'default' }) => {
     const v = variantStyles[$variant];
     return {
+      position: 'relative', // PSYCO · ancora a StatusStrip (absolute) na borda inferior
       height: sizes[$size],
       minHeight: sizes[$size],
       backgroundColor: colors.darkerBlue50,

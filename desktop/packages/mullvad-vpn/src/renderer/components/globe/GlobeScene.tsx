@@ -72,7 +72,14 @@ function CameraZoomController({
     const focus = peekFocus();
     const dt = Math.min(delta, 0.05);
 
-    const biasK = 1 - Math.exp(-dt * 2.5);
+    // PSYCO · biasK DIRECIONAL. Zoom-OUT do bias (disconnect · bias subindo p/
+    // 1.35) é rápido (2.5) pra alinhar com o zoom-out da focus animation — o
+    // movimento de disconnect fica perfeito. Zoom-IN do bias (connect · bias
+    // descendo p/ 0.8) é LENTO (0.7) pra NÃO atropelar a fase de zoom-out/pan da
+    // focus: assim o connect faz o mesmo "zoom out → viaja → zoom in" do
+    // disconnect e só fecha suave no zoom mais próximo no fim do trajeto.
+    const zoomingIn = staticZoomBias < renderedBias.current
+    const biasK = 1 - Math.exp(-dt * (zoomingIn ? 0.7 : 2.5))
     renderedBias.current = renderedBias.current + (staticZoomBias - renderedBias.current) * biasK;
 
     const targetZ = baseZ * focus.zoom * renderedBias.current;
@@ -213,12 +220,16 @@ export function GlobeScene({
   // card · sem deformação de perspectiva e sem cortar nas bordas.
   const globeY = globeOffsetYOverride ?? GLOBE_OFFSET_Y;
 
-  // PSYCO · tilt extra pra subir pin focado pro centro visual sem mover o
-  // globo. Default 0 · desktop sem mudança. Mobile passa pinTiltFactor=0.5
-  // · pin de SP (lat -23°) ganha ~11° de tilt forward · sobe pro centro.
-  const extraTiltX = activeLat != null && pinTiltFactor !== 0
-    ? Math.sin((activeLat * Math.PI) / 180) * pinTiltFactor
-    : 0;
+  // PSYCO · tilt extra pra subir o pin focado pro centro visual sem mover o
+  // globo. Default 0 · desktop sem mudança. Mobile passa pinTiltFactor.
+  //
+  // CONSTANTE de propósito: o globe-focus.ts já estaciona TODA cidade na mesma
+  // altura de tela (asin(targetY), independente da latitude — "SP e Stockholm
+  // param na mesma altura"). Um termo sin(lat) aqui reintroduzia a dependência
+  // de latitude e estourava cidades do norte pro polo (Londres +51° → ~76° de
+  // tilt total → Ártico). Por isso é um offset fixo em radianos (negativo =
+  // forward/cima), igual pra todas as cidades. pinTiltFactor = o tilt em rad.
+  const extraTiltX = activeLat != null ? pinTiltFactor : 0;
 
   return (
     <Canvas

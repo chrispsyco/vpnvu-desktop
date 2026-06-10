@@ -101,6 +101,13 @@ function GeographicalLocationImpl({
   const disabled = disabledProp || location.disabled || loading;
   const showChildren = locationChildren.length > 0 && expanded;
 
+  // PSYCO · país com EXATAMENTE 1 cidade mostra "País · Cidade" inline no título
+  // (ex.: "Brasil · São Paulo") em vez de só "Brasil" exigindo expand.
+  const displayLabel =
+    location.type === 'country' && locationChildren.length === 1
+      ? `${location.label} · ${locationChildren[0].label}`
+      : location.label;
+
   const handleClick = useCallback(() => {
     onSelect(location);
   }, [location, onSelect]);
@@ -156,7 +163,7 @@ function GeographicalLocationImpl({
                 )}
                 <StyledTitleWithPing>
                   <Location.Accordion.Header.Item.Title>
-                    {location.label}
+                    {displayLabel}
                   </Location.Accordion.Header.Item.Title>
                   <PingBadge location={location} />
                 </StyledTitleWithPing>

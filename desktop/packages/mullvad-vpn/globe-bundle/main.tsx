@@ -127,10 +127,12 @@ function GlobeRoot() {
       // PSYCO mobile · globo + câmera deslocados juntos pra cima · foco fica
       // no centro do espaço VISÍVEL (entre header e topo do card "CONNECTED").
       globeOffsetYOverride={0.55}
-      // PSYCO mobile · tilt extra pra subir o pin focado pro centro visual
-      // sem mover o globo no canvas. Sin(lat) * 0.5 rad → SP (-23°) ganha
-      // ~11° de tilt forward · pin sobe pro centro da área visível.
-      pinTiltFactor={0.5}
+      // PSYCO mobile · tilt extra CONSTANTE (rad) pra subir o pin focado pro
+      // centro visual sem mover o globo. -0.2 rad (~11° forward) · mesmo valor
+      // que a fórmula antiga dava pra SP, mas agora igual pra TODA cidade (o
+      // globe-focus já normaliza a latitude). Antes era sin(lat)*0.5, que
+      // estourava cidades do norte (Londres +51°) pro Polo Norte.
+      pinTiltFactor={-0.2}
     />
   );
 }

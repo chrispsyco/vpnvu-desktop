@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 import { getGlobeRotationY } from '../../lib/globe/globe-rotation';
-import { VPNVU_SERVERS } from '../../lib/globe/vpnvu-servers';
+import { useVpnvuServers } from '../../lib/globe/vpnvu-servers';
 
 /**
  * Server markers rendered on the globe surface for every VPN.vu location
@@ -118,10 +118,13 @@ function matchesActive(
 
 export function VolcanoMarkers({ radius = 1.625, activeLat, activeLng }: Props) {
   const ref = useRef<THREE.Points>(null);
+  // Lista VIVA de servidores (api.vpn.vu/v1/servers, fallback offline). Novo
+  // servidor no backend → pin novo aqui sem rebuild do app.
+  const servers = useVpnvuServers();
 
   const geometry = useMemo(() => {
     const positions: number[] = [];
-    for (const s of VPNVU_SERVERS) {
+    for (const s of servers) {
       const renderLat = s.displayLat ?? s.lat;
       const renderLng = s.displayLng ?? s.lng;
       if (matchesActive(renderLat, renderLng, activeLat, activeLng)) continue;
@@ -131,7 +134,7 @@ export function VolcanoMarkers({ radius = 1.625, activeLat, activeLng }: Props) 
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     return g;
-  }, [radius, activeLat, activeLng]);
+  }, [radius, activeLat, activeLng, servers]);
 
   const material = useMemo(
     () =>
@@ -155,5 +158,11 @@ export function VolcanoMarkers({ radius = 1.625, activeLat, activeLng }: Props) 
     if (ref.current) ref.current.rotation.y = getGlobeRotationY();
   });
 
-  return <points ref={ref} geometry={geometry} material={material} renderOrder={3} />;
+  // frustumCulled={false} é obrigatório: a bounding sphere auto-computada do
+  // BufferGeometry fica centrada no centroide dos pins (deslocado da origem,
+  // já que os servidores não cobrem o globo todo) e orbita com a rotação Y do
+  // useFrame — em certas posições de câmera (ex.: ao desconectar, quando o
+  // foco volta pra visão geral) ela sai do frustum e o Three.js culla TODOS os
+  // pins de uma vez, fazendo-os sumir. Mesmo motivo do fix no ActiveServerPin.
+  return <points ref={ref} geometry={geometry} material={material} renderOrder={3} frustumCulled={false} />;
 }

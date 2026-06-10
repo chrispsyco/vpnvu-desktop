@@ -15,6 +15,7 @@ import {
   FeatureIndicators,
   Hostname,
   Location,
+  SelectedServer,
   SelectLocationButtons,
 } from './components';
 
@@ -112,6 +113,8 @@ export const ConnectionPanel = forwardRef<HTMLDivElement>(function ConnectionPan
           <ConnectionStatus />
           <Location />
           <Hostname />
+          {/* PSYCO · "Servidor selecionado: <relay>" · só quando desconectado */}
+          <SelectedServer />
         </StyledConnectionStatusContainer>
         <StyledCustomScrollbars>
           <FeatureIndicators expanded={expanded} expandIsland={expand} />

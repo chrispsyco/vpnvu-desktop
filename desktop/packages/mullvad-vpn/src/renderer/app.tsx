@@ -600,7 +600,11 @@ export default class AppRenderer {
       log.error(`Failed to get the WWW auth token: ${error.message}`);
     }
     try {
-      await this.openUrl(`${url}?token=${token}`);
+      // PSYCO · carrega o idioma atual do app pro site abrir no mesmo locale.
+      // O site (proxy.ts) é a autoridade e colapsa pros idiomas que ele tem.
+      const locale = this.reduxStore.getState().userInterface.locale;
+      const lang = locale ? `&lang=${encodeURIComponent(locale)}` : '';
+      await this.openUrl(`${url}?token=${token}${lang}`);
     } catch (e) {
       const error = e as Error;
       log.error(`Failed to open external URL: ${error.message}`);
@@ -998,13 +1002,17 @@ export default class AppRenderer {
   private updateLocation() {
     switch (this.tunnelState.state) {
       case 'disconnected':
-        // VPN.vu · point the map at the relay we WOULD connect to, not at the
-        // user's IP-geolocation. Two reasons:
-        //   1. Showing the user's real city on a VPN app feels off — the
-        //      whole product premise is "hide where you are".
-        //   2. The map should *preview* the destination so the lockup reads
-        //      coherently with the "Trocar servidor · Brasil" CTA below.
-        this.setLocation(this.getLocationFromConstraints());
+        // VPN.vu · 1:1 com o ANDROID (ConnectViewModel: tunnelState.location ?:
+        // lastKnownDisconnectedLocation). Desconectado usa a geo REAL do usuário
+        // — texto "Local atual" + globo + pin no Brasil — NUNCA o servidor. Sem
+        // geo ainda, mantém as coords atuais pra o globo não pular pro (0,0);
+        // country/city ficam vazios → Location.tsx esconde o rótulo nesse gap.
+        if (this.tunnelState.location) {
+          this.setLocation(this.tunnelState.location);
+        } else {
+          const { longitude, latitude } = this.reduxStore.getState().connection;
+          this.setLocation({ longitude, latitude });
+        }
         break;
       case 'disconnecting':
         if (this.tunnelState.location) {
