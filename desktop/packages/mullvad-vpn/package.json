@@ -6,8 +6,8 @@
   "description": "vpn.vu desktop client",
   "main": "build/main.js",
   "author": {
-    "name": "PSYCO",
-    "email": "support@vpn.vu"
+    "name": "TMBS LLC",
+    "email": "tmbs@tmbs.tech"
   },
   "type": "module",
   "repository": "https://vpn.vu",
