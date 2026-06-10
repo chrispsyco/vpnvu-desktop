@@ -122,7 +122,10 @@ fun MullvadTopBar(
                         painter = painterResource(id = R.drawable.logo_icon),
                         contentDescription = null, // No meaningful user info or action.
                         modifier = Modifier.size(40.dp),
-                        tint = Color.Unspecified, // Logo should not be tinted
+                        // PSYCO · logo agora é monocromático (disco tintável, vulcão vazado).
+                        // Acompanha a cor dos ícones do header (branco) em vez do teal fixo,
+                        // que destoava sobre o vermelho (desconectado) e o verde (conectado).
+                        tint = iconTintColor,
                     )
                     // PSYCO · wordmark "VPN.vu" em texto Compose · substitui o
                     // VectorDrawable "MULLVAD VPN" original.

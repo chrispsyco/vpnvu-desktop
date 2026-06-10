@@ -31,6 +31,7 @@ import vu.vpn.lib.grpc.GrpcConnectivityState
 import vu.vpn.lib.grpc.ManagementService
 import vu.vpn.lib.model.PrepareError
 import vu.vpn.lib.model.Prepared
+import vu.vpn.lib.repository.AccountRepository
 import vu.vpn.lib.repository.SplashCompleteRepository
 import vu.vpn.lib.repository.UserPreferencesRepository
 import vu.vpn.lib.ui.theme.AppTheme
@@ -48,6 +49,7 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
         registerForActivityResult(CreateVpnProfile()) { _ -> mullvadAppViewModel.connect() }
 
     private val apiEndpointFromIntentHolder by inject<ApiEndpointFromIntentHolder>()
+    private val accountRepository by inject<AccountRepository>()
     private val mullvadAppViewModel by inject<MullvadAppViewModel>()
     private val userPreferencesRepository by inject<UserPreferencesRepository>()
     private val serviceConnectionManager by inject<ServiceConnectionManager>()
@@ -136,6 +138,14 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
                 apiEndpointFromIntentHolder.setApiEndpointOverride(
                     intent.getApiEndpointConfigurationExtras()
                 )
+            // Deep link vpnvu://app — botão "Abrir o app" da tela de sucesso do
+            // site, depois de pagar. Força um refresh IMEDIATO do estado da
+            // conta (ignoreTimeout) pra a tela sair do out-of-time e ir pro
+            // mapa na hora, sem esperar o polling de 15s.
+            Intent.ACTION_VIEW ->
+                if (intent.data?.scheme == "vpnvu") {
+                    lifecycleScope.launch { accountRepository.refreshAccountData() }
+                }
             KEY_REQUEST_VPN_PROFILE -> handleRequestVpnProfileIntent()
             else -> Logger.w("Unhandled intent action: $action")
         }

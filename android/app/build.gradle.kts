@@ -1,6 +1,7 @@
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.BuildConfigField
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+import java.util.Properties
 import org.gradle.internal.extensions.stdlib.capitalized
 import utilities.BuildTypes
 import utilities.FlavorDimensions
@@ -90,9 +91,28 @@ android {
         generateLocaleConfig = false
     }
 
+    // PSYCO · upload key de release. Lê keystore.properties (gitignored) da raiz
+    // do android. Se não existir (CI sem segredo, dev externo), signingConfig
+    // fica null e o release sai unsigned — não quebra o build, só não é
+    // publicável. Backup do .jks + senha em projects/thiago-moya/vpn.vu/.
+    val keystorePropsFile = rootProject.file("keystore.properties")
+    val releaseSigning =
+        if (keystorePropsFile.exists()) {
+            val props = Properties()
+            keystorePropsFile.inputStream().use { stream -> props.load(stream) }
+            signingConfigs.create("release") {
+                storeFile = rootProject.file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+            }
+        } else {
+            null
+        }
+
     buildTypes {
         getByName(BuildTypes.RELEASE) {
-            signingConfig = null
+            signingConfig = releaseSigning
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

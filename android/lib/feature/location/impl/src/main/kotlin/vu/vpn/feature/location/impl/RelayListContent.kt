@@ -143,7 +143,7 @@ private fun GeoLocationItem(
     onUpdateBottomSheetState: (LocationBottomSheetState) -> Unit,
 ) {
     RichRelayRow(
-        name = listItem.item.name,
+        name = listItem.item.displayNameInline(),
         countryCode = listItem.item.geoCountryCode(),
         subtitle = listItem.item.locationSubtitle(),
         selected = listItem.isSelected,
@@ -176,7 +176,7 @@ private fun RecentListItem(
     onUpdateBottomSheetState: (LocationBottomSheetState) -> Unit,
 ) {
     RichRelayRow(
-        name = listItem.item.name,
+        name = listItem.item.displayNameInline(),
         countryCode = listItem.item.geoCountryCode(),
         subtitle = listItem.item.locationSubtitle(),
         selected = listItem.isSelected,
@@ -209,6 +209,18 @@ private fun RecentListItem(
     )
 }
 
+/**
+ * PSYCO · país com EXATAMENTE 1 cidade mostra "País · Cidade" inline no nome
+ * (ex.: "Brasil · São Paulo"), evitando ter que expandir pra ver o único
+ * servidor. País com várias cidades, ou City/Relay/CustomList: nome normal.
+ */
+private fun RelayItem.displayNameInline(): String =
+    if (this is RelayItem.Location.Country) {
+        cities.singleOrNull()?.let { "$name · ${it.name}" } ?: name
+    } else {
+        name
+    }
+
 /** Two-letter country code for the avatar tile, or null for custom lists. */
 private fun RelayItem.geoCountryCode(): String? =
     when (this) {
@@ -227,9 +239,9 @@ private fun RelayItem.locationSubtitle(): String? =
         is RelayItem.Location.Relay ->
             stringResource(R.string.country_comma_city, countryName, cityName)
         is RelayItem.Location.City -> countryName
-        // PSYCO · O país mostra a cidade como segunda linha (ex.: "Brasil" / "São Paulo").
-        // Só quando há exatamente uma cidade — com várias, a lista de filhos (expand) cobre.
-        is RelayItem.Location.Country -> cities.singleOrNull()?.name
+        // PSYCO · país com 1 cidade mostra "País · Cidade" inline no NOME (ver
+        // displayNameInline); subtítulo fica null pra não duplicar.
+        is RelayItem.Location.Country -> null
         is RelayItem.CustomList -> null
     }
 

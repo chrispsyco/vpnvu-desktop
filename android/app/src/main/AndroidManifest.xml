@@ -80,6 +80,25 @@
                 <action android:name="vu.vpn.request_vpn_permission" />
             </intent-filter>
         </activity>
+
+        <!--
+            Deep link "Abrir o app" pós-pagamento (vpnvu://app). Alias exported
+            pro navegador conseguir abrir o app a partir da tela de sucesso do
+            site. Aponta pra MainActivity, que no handleIntent dispara um refresh
+            IMEDIATO do estado da conta (não espera o polling de 15s).
+        -->
+        <activity-alias
+            android:name="vu.vpn.app.PaymentReturnAlias"
+            android:exported="true"
+            android:targetActivity="vu.vpn.app.MainActivity"
+            tools:ignore="UnusedAttribute">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="vpnvu" android:host="app" />
+            </intent-filter>
+        </activity-alias>
         <!--
             foregroundServiceType="systemExempted" is required in Android 14+
             https://developer.android.com/guide/components/fg-service-types#system-exempted

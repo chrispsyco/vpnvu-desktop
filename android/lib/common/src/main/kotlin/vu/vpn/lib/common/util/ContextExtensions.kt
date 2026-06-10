@@ -13,12 +13,26 @@ import arrow.core.Either
 import co.touchlab.kermit.Logger
 import vu.vpn.lib.model.WebsiteAuthToken
 
-fun createAccountUri(accountUri: String, websiteAuthToken: WebsiteAuthToken?): Uri {
+// PSYCO · `lang` carrega o idioma atual do app pro site abrir no mesmo locale.
+// O site (proxy.ts) é a autoridade e colapsa o tag (ex: "pt-BR") pros idiomas
+// que ele tem (en/pt/es); o resto cai em inglês. `lang` é opcional pra manter
+// compat com chamadas antigas.
+fun createAccountUri(
+    accountUri: String,
+    websiteAuthToken: WebsiteAuthToken?,
+    lang: String? = null,
+): Uri {
     val urlString = buildString {
         append(accountUri)
-        if (websiteAuthToken != null) {
-            append("?token=")
-            append(websiteAuthToken.value)
+        val params =
+            buildList {
+                    websiteAuthToken?.let { add("token=${it.value}") }
+                    if (!lang.isNullOrBlank()) add("lang=${Uri.encode(lang)}")
+                }
+                .joinToString("&")
+        if (params.isNotEmpty()) {
+            append("?")
+            append(params)
         }
     }
     return urlString.toUri()

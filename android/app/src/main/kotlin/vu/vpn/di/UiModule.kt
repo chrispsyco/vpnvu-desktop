@@ -113,7 +113,6 @@ import vu.vpn.lib.usecase.customlists.CustomListRelayItemsUseCase
 import vu.vpn.lib.usecase.customlists.CustomListsRelayItemUseCase
 import vu.vpn.lib.usecase.customlists.FilterCustomListsRelayItemUseCase
 import vu.vpn.lib.usecase.inappnotification.AccountExpiryInAppNotificationUseCase
-import vu.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
 import vu.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
 import vu.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
 import vu.vpn.lib.usecase.inappnotification.NewDeviceNotificationUseCase
@@ -190,9 +189,9 @@ val uiModule = module {
     } bind InAppNotificationUseCase::class
     single { NewDeviceNotificationUseCase(get(), get()) } bind InAppNotificationUseCase::class
     single { NewChangelogNotificationUseCase(get()) } bind InAppNotificationUseCase::class
-    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.BAKLAVA) {
-        single { Android16UpdateWarningUseCase(get(), get()) } bind InAppNotificationUseCase::class
-    }
+    // Banner "Can't connect? / Android 16 tem um problema conhecido" REMOVIDO a
+    // pedido do cliente (Thiago) — assustava o usuário durante o "conectando".
+    // Antes só registrava em Android 16 (BAKLAVA); agora nunca aparece.
 
     single { OutOfTimeUseCase(get(), get(), MainScope()) }
     single { InternetAvailableUseCase(get()) }

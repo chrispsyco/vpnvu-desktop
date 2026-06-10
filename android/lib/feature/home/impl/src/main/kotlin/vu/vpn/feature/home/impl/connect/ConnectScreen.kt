@@ -49,7 +49,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -387,6 +386,7 @@ fun ConnectScreen(
             deviceName = state.deviceName,
             timeLeft = state.daysLeftUntilExpiry,
             snackbarHostState = snackbarHostState,
+            statusColor = state.tunnelState.statusStripColor(),
         ) {
             content(it)
         }
@@ -605,26 +605,33 @@ private fun ConnectionCardHeader(
             }
         }
 
+        // PSYCO · 2 linhas rotuladas · "Local atual" (geo do usuário · real quando
+        // desconectado, saída VPN quando conectado) + "Servidor selecionado"
+        // (relay escolhido). Substitui o título único de localização + hostname.
         Text(
             modifier = Modifier.fillMaxWidth().padding(top = Dimens.tinyPadding),
-            text = location.asString(),
-            style = MaterialTheme.typography.titleLarge,
+            text = stringResource(R.string.current_location_label, location.asString()),
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        val hostnameText = location.hostnameText()
-        AnimatedContent(hostnameText, label = "hostname") {
-            if (it != null) {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = it,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+        // PSYCO · "Servidor selecionado" só aparece DESCONECTADO · some já na
+        // etapa de conectando (e conectado), onde "Local atual" já reflete o
+        // destino/saída (pedido do Chris).
+        if (state.tunnelState is TunnelState.Disconnected) {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text =
+                    stringResource(
+                        R.string.selected_server_label,
+                        state.selectedRelayItemTitle ?: "—",
+                    ),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -636,17 +643,6 @@ private fun GeoIpLocation?.asString(): String {
         this == null -> ""
         city.isNullOrBlank() -> country
         else -> stringResource(R.string.country_comma_city, country, city)
-    }
-}
-
-@Composable
-private fun GeoIpLocation?.hostnameText(): String? {
-    val entryHostname = this?.entryHostname
-    val exitHostname = this?.hostname
-    return when {
-        entryHostname != null && exitHostname != null ->
-            stringResource(R.string.x_via_x, exitHostname, entryHostname)
-        else -> exitHostname
     }
 }
 
@@ -729,7 +725,9 @@ private fun ButtonPanel(
     }
     Column(modifier = Modifier.padding(top = Dimens.tinyPadding)) {
         SwitchLocationButton(
-            text = state.selectedRelayItemTitle ?: stringResource(id = R.string.switch_location),
+            // PSYCO · botão sempre "Selecionar servidor" (deixa explícito que é
+            // pra trocar/escolher servidor) · antes mostrava o nome do servidor.
+            text = stringResource(id = R.string.select_server),
             onSwitchLocation = onSwitchLocationClick,
             reconnectClick = {
                 handleThrottledAction {
@@ -781,12 +779,21 @@ fun TunnelState.toMarker(location: GeoIpLocation?): Marker? {
 
 @Composable
 fun TunnelState.topBarColor(): Color =
-    // PSYCO · conectado mantém o verde mas escurecido/suave (positive puxado em
-    // direção ao surface) em vez do verde forte · desconectado fica escuro
-    // (surface), sem o vermelho gritante de antes.
-    if (isSecured())
-        lerp(MaterialTheme.colorScheme.positive, MaterialTheme.colorScheme.surface, 0.5f)
-    else MaterialTheme.colorScheme.surface
+    // PSYCO · header NÃO muda mais de cor por status (pedido do Chris) · cor
+    // fixa (surface). O status agora é comunicado SÓ pela faixa animada
+    // (StatusStrip) no bottom do header.
+    MaterialTheme.colorScheme.surface
+
+// PSYCO · cor da faixa animada do header por status · laranja conectando/
+// desconectando, verde conectado, vermelho desconectado/erro. (Connecting é
+// checado antes de isSecured pra não cair como verde.)
+fun TunnelState.statusStripColor(): Color =
+    when {
+        this is TunnelState.Connecting || this is TunnelState.Disconnecting ->
+            Color(0xFFFFA62E)
+        isSecured() -> Color(0xFF44D17A)
+        else -> Color(0xFFE34349)
+    }
 
 @Composable
 fun TunnelState.iconTintColor(): Color = MaterialTheme.colorScheme.onSurface

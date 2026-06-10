@@ -2,3 +2,9 @@ build
 .gradle
 .kotlin
 local.properties
+# PSYCO · upload key de release · NUNCA commitar (segredo). Backup em
+# projects/thiago-moya/vpn.vu/keystore-android-REAL.txt
+keystore.properties
+keystore/
+*.jks
+*.keystore
