@@ -152,7 +152,25 @@ jobs:
           override: true
           malware_block: false
 
-      - name: Upload installer artifact
+      # PSYCO: push the installer straight to the Vercel Blob that backs the
+      # download page (download.vpn.vu / download.psyco.lol). This bypasses the
+      # GitHub Actions artifact storage quota entirely and lands the .exe where
+      # users download it. Fixed pathname (no random suffix) so the page's
+      # redirects keep pointing at it across builds.
+      - name: Upload installer to Vercel Blob (download page)
+        shell: bash
+        env:
+          BLOB_RW_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+        run: |
+          npm install -g vercel@latest
+          vercel blob put "${{ steps.artifact.outputs.path }}" \
+            --pathname "vpnvu/vpnvu-windows-${{ matrix.artifact-suffix }}.exe" \
+            --access public --allow-overwrite true --rw-token "$BLOB_RW_TOKEN"
+
+      # Kept for traceability, but non-fatal: the GitHub artifact quota recalculates
+      # only every 6-12h, so this can fail while the Blob upload above still succeeds.
+      - name: Upload installer artifact (GitHub, best-effort)
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: vpnvu-windows-${{ matrix.artifact-suffix }}-${{ steps.version.outputs.version }}
