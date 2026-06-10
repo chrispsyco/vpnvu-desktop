@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import styled from 'styled-components';
 
 import { useFocusOnLocation } from '../../lib/globe/useFocusOnLocation';
-import { VPNVU_SERVERS } from '../../lib/globe/vpnvu-servers';
+import { useVpnvuServers, type VpnvuServer } from '../../lib/globe/vpnvu-servers';
 import { useSelector } from '../../redux/store';
 import { ActiveServerPinState } from './ActiveServerPin';
 
@@ -16,10 +16,11 @@ import { ActiveServerPinState } from './ActiveServerPin';
 function resolveDisplayCoords(
   lat: number | undefined,
   lng: number | undefined,
+  servers: ReadonlyArray<VpnvuServer>,
 ): { lat: number | undefined; lng: number | undefined } {
   if (typeof lat !== 'number' || typeof lng !== 'number') return { lat, lng };
   if (!isFinite(lat) || !isFinite(lng)) return { lat, lng };
-  for (const s of VPNVU_SERVERS) {
+  for (const s of servers) {
     if (Math.abs(s.lat - lat) < 0.5 && Math.abs(s.lng - lng) < 0.5) {
       return { lat: s.displayLat ?? s.lat, lng: s.displayLng ?? s.lng };
     }
@@ -70,8 +71,11 @@ export function GlobeBackgroundLazy() {
   const latitude = useSelector((state) => state.connection.latitude);
   const longitude = useSelector((state) => state.connection.longitude);
   const tunnelState = useSelector((state) => state.connection.status.state);
+  // Live server list (api.vpn.vu) so the active pin's display offset works for
+  // every server, including ones added after release (DE/KR/HK/ES/FR).
+  const servers = useVpnvuServers();
 
-  const { lat: displayLat, lng: displayLng } = resolveDisplayCoords(latitude, longitude);
+  const { lat: displayLat, lng: displayLng } = resolveDisplayCoords(latitude, longitude, servers);
 
   useFocusOnLocation(displayLat, displayLng);
 
