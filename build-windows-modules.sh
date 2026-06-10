@@ -89,8 +89,9 @@ function build_solution_config {
     # for pre-compiled headers is too small. '/Zm' allow us to tweak this value. /Zm100 is the default, and the value
     # represents a multiplier expressed in percents. That is, /Zm400 equates to 4x the amount of memory VS is allowed
     # to reserve compared to the default value. This parameter may be subject to tweaking if the issue persists.
-    # /Zm200 was not enough from our empirical testing, so /Zm400 was semi-arbitrarily chosen for now.
-    cmd.exe "/c msbuild.exe $MAX_CPU_COUNT_ARG $(to_win_path "$sln") /p:Configuration=$config /p:Platform=$platform /p:AdditionalOptions=/Zm400"
+    # /Zm200 was not enough from our empirical testing; /Zm400 held for a while but the ARM64 runner
+    # (now VS 14.44) regressed to C1076 + C3859, so PSYCO bumped it to /Zm800 (8x default) for more PCH heap.
+    cmd.exe "/c msbuild.exe $MAX_CPU_COUNT_ARG $(to_win_path "$sln") /p:Configuration=$config /p:Platform=$platform /p:AdditionalOptions=/Zm800"
     set +x
 }
 

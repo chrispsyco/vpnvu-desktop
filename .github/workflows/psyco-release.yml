@@ -98,7 +98,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.arch }}" == "arm64" ]]; then
-            ./build-windows-modules.sh --max-concurrent-processes 2 build winfw nsis-plugins
+            # PSYCO: serialize (1) on ARM64 — 2 still OOM'd the PCH (C1076 + C3859) on the current
+            # windows-11-arm runner (VS 14.44). Combined with /Zm800 in build-windows-modules.sh.
+            ./build-windows-modules.sh --max-concurrent-processes 1 build winfw nsis-plugins
           else
             ./build-windows-modules.sh build winfw nsis-plugins
           fi

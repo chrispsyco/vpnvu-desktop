@@ -278,7 +278,14 @@ function build {
         fi
     fi
 
-    cargo build "${cargo_target_arg[@]}" "${cargo_features[@]}" "${CARGO_ARGS[@]}" "${cargo_crates_to_build[@]}"
+    # PSYCO: expand each array with the "${arr[@]+...}" idiom so an EMPTY array does not trip
+    # `set -u` on macOS's bundled bash 3.2 (universal build sets no --target, so cargo_target_arg
+    # is empty → "unbound variable" on line ~281 without this guard).
+    cargo build \
+        ${cargo_target_arg[@]+"${cargo_target_arg[@]}"} \
+        ${cargo_features[@]+"${cargo_features[@]}"} \
+        ${CARGO_ARGS[@]+"${CARGO_ARGS[@]}"} \
+        ${cargo_crates_to_build[@]+"${cargo_crates_to_build[@]}"}
 
     ################################################################################
     # Move binaries to correct locations in dist-assets
@@ -351,15 +358,14 @@ if [[ "$(uname -s)" == "MINGW"* ]]; then
         esac
 
         log_header "Building C++ code in $CPP_BUILD_MODE mode for $CPP_BUILD_TARGET"
-        # PSYCO: on the 4-core windows-11-arm CI runner, msbuild's default /m
+        # PSYCO: on the windows-11-arm CI runner, msbuild's default /m
         # (= core count) launches enough parallel cl.exe instances to exhaust
-        # memory during PCH allocation, producing C1076 + C3859. /Zm400 (set
-        # inside build-windows-modules.sh) helped but isn't enough on its own.
-        # Mirror what the workflow's dedicated C++ module step already does
-        # and cap msbuild to 2 concurrent processes for ARM64.
+        # memory during PCH allocation, producing C1076 + C3859. /Zm800 (set
+        # inside build-windows-modules.sh) helps but isn't enough on its own —
+        # 2 still OOM'd on VS 14.44, so serialize to 1 concurrent process on ARM64.
         CPP_MODULES_ARGS=()
         if [[ "$CPP_BUILD_TARGET" == "ARM64" ]]; then
-            CPP_MODULES_ARGS+=(--max-concurrent-processes 2)
+            CPP_MODULES_ARGS+=(--max-concurrent-processes 1)
         fi
         CPP_BUILD_MODES=$CPP_BUILD_MODE CPP_BUILD_TARGETS=$CPP_BUILD_TARGET ./build-windows-modules.sh "${CPP_MODULES_ARGS[@]}"
 
