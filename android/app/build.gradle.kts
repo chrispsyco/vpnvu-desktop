@@ -49,7 +49,9 @@ android {
     ndkVersion = libs.versions.ndk.get()
 
     defaultConfig {
-        applicationId = "vu.vpn"
+        // PSYCO: applicationId (ID na Play Store) = com.tmbs.vpnvu. O namespace do código
+        // continua "vu.vpn" (interno, não aparece na loja) — é padrão os dois divergirem.
+        applicationId = "com.tmbs.vpnvu"
         minSdk = libs.versions.min.sdk.get().toInt()
         targetSdk = libs.versions.target.sdk.get().toInt()
         versionCode = appVersion.code
@@ -145,13 +147,13 @@ android {
         }
         create(Flavors.DEVMOLE) {
             dimension = FlavorDimensions.INFRASTRUCTURE
-            applicationId = "vu.vpn.devmole"
+            applicationId = "com.tmbs.vpnvu.devmole"
             buildConfigField("String", "API_ENDPOINT", "\"api-app.devmole.eu\"")
             buildConfigField("String", "API_IP", "\"185.217.116.4\"")
         }
         create(Flavors.STAGEMOLE) {
             dimension = FlavorDimensions.INFRASTRUCTURE
-            applicationId = "vu.vpn.stagemole"
+            applicationId = "com.tmbs.vpnvu.stagemole"
             buildConfigField("String", "API_ENDPOINT", "\"api-app.stagemole.eu\"")
             buildConfigField("String", "API_IP", "\"185.217.116.132\"")
         }
