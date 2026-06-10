@@ -13,7 +13,6 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import vu.vpn.common.compose.itemWithDivider
 import vu.vpn.common.compose.unlessIsDetail
 import vu.vpn.core.Navigator
-import vu.vpn.feature.appicon.api.AppIconNavKey
 import vu.vpn.feature.language.api.LanguageNavKey
 import vu.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import vu.vpn.lib.ui.component.button.NavigateBackIconButton
@@ -27,13 +26,12 @@ import vu.vpn.lib.ui.theme.Dimens
 @Preview
 @Composable
 private fun PreviewAppearanceScreen() {
-    AppTheme { AppearanceScreen(onAppIconClick = {}, onLanguageClick = {}, onBackClick = {}) }
+    AppTheme { AppearanceScreen(onLanguageClick = {}, onBackClick = {}) }
 }
 
 @Composable
 fun Appearance(navigator: Navigator) {
     AppearanceScreen(
-        onAppIconClick = dropUnlessResumed { navigator.navigate(AppIconNavKey) },
         onLanguageClick =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 dropUnlessResumed { navigator.navigate(LanguageNavKey) }
@@ -47,7 +45,6 @@ fun Appearance(navigator: Navigator) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppearanceScreen(
-    onAppIconClick: () -> Unit,
     onLanguageClick: (() -> Unit)?,
     onBackClick: () -> Unit,
 ) {
@@ -60,19 +57,16 @@ fun AppearanceScreen(
             modifier = modifier.padding(horizontal = Dimens.sideMarginNew),
             state = lazyListState,
         ) {
-            itemWithDivider {
-                NavigationListItem(
-                    title = stringResource(id = R.string.app_icon),
-                    onClick = onAppIconClick,
-                    position = if (onLanguageClick != null) Position.Top else Position.Single,
-                )
-            }
+            // PSYCO · "App icon" (disguise/obfuscation, herança do Mullvad) removido do VPN.vu:
+            // a feature de trocar o ícone do app pra disfarçar não faz sentido no produto.
+            // Os activity-alias continuam no manifest (todos enabled=false exceto Default),
+            // mas sem ponto de entrada na UI o usuário nunca os ativa. Sobra só Idioma.
             if (onLanguageClick != null) {
                 item {
                     NavigationListItem(
                         title = stringResource(id = R.string.language),
                         onClick = onLanguageClick,
-                        position = Position.Bottom,
+                        position = Position.Single,
                     )
                 }
             }
