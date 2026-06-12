@@ -87,6 +87,14 @@ function newConfig() {
       },
       x64ArchFiles:
         'Contents/Resources/app.asar.unpacked/node_modules/nseventforwarder/dist/*/index.node',
+      // The nseventforwarder native module ships one .node per arch in its own
+      // dist/darwin-<arch> subfolder, so each slice legitimately exists in only
+      // one of the two app bundles. x64ArchFiles alone still trips
+      // @electron/universal ("the number of mach-o files is not the same");
+      // singleArchFiles whitelists these per-arch files so the merge copies each
+      // slice as-is into the universal app instead of aborting.
+      singleArchFiles:
+        'Contents/Resources/app.asar.unpacked/node_modules/nseventforwarder/dist/*/index.node',
       artifactName: 'vpn.vu-${version}.${ext}',
       category: 'public.app-category.tools',
       icon: distAssets('icon-macos.icns'),
