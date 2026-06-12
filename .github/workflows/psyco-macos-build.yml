@@ -1,0 +1,126 @@
+---
+# Standalone macOS build — runs ONLY the macOS universal (.pkg) job, with no
+# Windows build and no GitHub Release. Use this to iterate on / validate the
+# Mac build without rebuilding Windows or cutting a release (psyco-release.yml
+# does all three). Same build path as psyco-release.yml's build-macos job.
+name: VPN.vu Desktop - macOS Build (standalone)
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag for the artifact filename (e.g. 0.1.0-dev)."
+        type: string
+        required: true
+        default: "0.1.0-dev"
+      sign:
+        description: "Code-sign + notarize via Apple Developer ID. Needs the Apple secrets — leave false until TMBS LLC is enrolled in the Apple Developer Program."
+        type: boolean
+        required: false
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: psyco-macos-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # macOS universal (.pkg). Unsigned by default (installs with a Gatekeeper
+  # warning: right-click > Open). With sign=true and the Apple secrets set,
+  # electron-builder signs with the Developer ID and build.sh notarizes via
+  # notarytool. Icon ships from the committed dist-assets/icon-macos.icns.
+  build-macos:
+    name: Build macOS universal (.pkg)
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up build environment (Rust + protoc + Go + Node)
+        uses: ./.github/actions/mullvad-build-env
+        with:
+          rust-cache-targets: "true"
+
+      # Universal binary needs both slices. The runner is Apple Silicon (arm64);
+      # the x86_64 slice is cross-compiled, so add that Rust target explicitly.
+      - name: Install additional Rust targets
+        shell: bash
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
+
+      - name: Cache desktop node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            desktop/node_modules
+            desktop/packages/*/node_modules
+          key: ${{ runner.os }}-desktop-node-${{ hashFiles('desktop/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-desktop-node-
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          VERSION="${{ inputs.version }}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building VPN.vu Desktop macOS universal version: $VERSION"
+
+      - name: Install desktop dependencies
+        working-directory: desktop
+        shell: bash
+        run: npm run ci
+
+      - name: Build daemon + GUI universal
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.APPLE_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [[ "${{ inputs.sign }}" == "true" ]]; then
+            echo "Signed + notarized build (sign=true)"
+            KEYCHAIN="$RUNNER_TEMP/vpnvu-notary.keychain-db"
+            security create-keychain -p "" "$KEYCHAIN"
+            security set-keychain-settings "$KEYCHAIN"
+            security unlock-keychain -p "" "$KEYCHAIN"
+            xcrun notarytool store-credentials vpnvu-notary \
+              --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+              --password "$APPLE_APP_SPECIFIC_PASSWORD" --keychain "$KEYCHAIN"
+            export NOTARIZE_KEYCHAIN="$KEYCHAIN"
+            export NOTARIZE_KEYCHAIN_PROFILE="vpnvu-notary"
+            ./build.sh --optimize --universal --notarize
+          else
+            echo "Unsigned build (sign=false) — installs with a Gatekeeper warning"
+            ./build.sh --optimize --universal
+          fi
+
+      - name: Locate .pkg artifact
+        id: artifact
+        shell: bash
+        run: |
+          PKG=$(ls -1 dist/*.pkg 2>/dev/null | head -n1 || true)
+          if [[ -z "$PKG" ]]; then
+            echo "ERROR: No .pkg found in dist/"
+            ls -la dist/ || true
+            exit 1
+          fi
+          echo "Found package: $PKG"
+          echo "path=$PKG" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$PKG")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload .pkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vpnvu-macos-universal-${{ steps.version.outputs.version }}
+          path: ${{ steps.artifact.outputs.path }}
+          if-no-files-found: error
+          retention-days: 30
