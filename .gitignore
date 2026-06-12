@@ -49,3 +49,7 @@ android/.idea
 desktop/packages/mullvad-vpn/globe-bundle-dist/
 _psyco-build.log*
 _bugs-*/
+
+# PSYCO local-only helpers (never publish)
+_psyco-*.bat
+_tray-icons/
