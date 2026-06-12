@@ -362,6 +362,20 @@ function packMac() {
   const appOutDirs = [];
   const config = newConfig();
 
+  // Universal builds pack each arch in turn, and beforeBuild compiles the
+  // matching nseventforwarder native slice lazily. Because the arch packed last
+  // sees BOTH dist/ slices already on disk while the first sees only its own,
+  // the two app bundles end up with different file lists and @electron/universal
+  // aborts ("the number of mach-o files is not the same between the arm64 and x64
+  // builds"). Pre-building BOTH slices up front makes the bundles symmetric; the
+  // x64ArchFiles rule above then de-dupes the now-identical slices present in
+  // both. Only needed for universal — single-arch builds prune the other slice
+  // via removeNseventforwarderNativeModules() in beforePack.
+  if (universal) {
+    execFileSync('npm', ['-w', 'nseventforwarder', 'run', 'build-x86']);
+    execFileSync('npm', ['-w', 'nseventforwarder', 'run', 'build-arm']);
+  }
+
   return builder.build({
     targets: builder.Platform.MAC.createTarget(),
     config: {
