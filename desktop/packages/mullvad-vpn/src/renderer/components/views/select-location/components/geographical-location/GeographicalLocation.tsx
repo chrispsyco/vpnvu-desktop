@@ -97,12 +97,14 @@ function GeographicalLocationImpl({
 }: GeographicalLocationProps) {
   const { loading } = useGeographicalLocationContext();
   const [expanded, setExpanded] = useState(location.expanded);
-  // VPN.vu v1 picker only renders TWO levels of hierarchy: country → city
-  // (where each city == "1 servidor por estado"). The Mullvad tree exposes a
-  // third level (city → relays) which we hide here — Chris asked to keep the
-  // tree shallow until the daemon ships our own relay topology. To re-enable
-  // 3-level depth, drop the `location.type === 'city' ? [] : …` short-circuit.
-  const locationChildren = location.type === 'city' ? [] : getLocationChildren(location);
+  // VPN.vu shows the FULL three levels: country → city → server (relay). We used
+  // to collapse the third level (city → relays) to keep the tree shallow, but
+  // the Thiago asked to expose the servers under each city again, so all levels
+  // render their children now.
+  const locationChildren = getLocationChildren(location);
+  // Drives the trailing arrow: a row WITH servers under it gets a down arrow
+  // (↓), a leaf (final server) gets a right arrow (→). Same rule at every level.
+  const hasChildren = locationChildren.length > 0;
   const { selectedLocationRef } = useScrollPositionContext();
   const { hasRecents } = useRecents();
 
@@ -185,7 +187,7 @@ function GeographicalLocationImpl({
               </StyledLeftCluster>
             </Location.Accordion.Header.Item>
           </Location.Accordion.Header.ItemTrigger>
-          <GeographicalLocationTrailingActions location={location} />
+          <GeographicalLocationTrailingActions location={location} hasChildren={hasChildren} />
         </Location.Accordion.Header>
         <Location.Accordion.Content>
           {showChildren ? renderChildren() : null}
