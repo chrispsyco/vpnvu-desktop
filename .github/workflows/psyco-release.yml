@@ -3,9 +3,15 @@ name: VPN.vu Desktop - Release Build
 on:
   push:
     tags:
-      # Real-daemon release tags only. Demo (mock) builds use v*-demo,
-      # which is matched by psyco-demo.yml so the two workflows don't fight.
+      # Real-daemon release tags. Demo (mock) builds use v*-demo, matched by
+      # psyco-demo.yml so the two workflows don't fight.
+      #   v*-dev     : legacy dev artifacts (still accepted)
+      #   20*-beta*  : version-named beta tags — the tag name MUST equal
+      #                desktop-product-version.txt (e.g. 2026.6-beta1) so
+      #                mullvad-version drops the -dev-<hash> suffix and the app
+      #                reports the clean version.
       - "v*-dev"
+      - "20*-beta*"
   workflow_dispatch:
     inputs:
       version:

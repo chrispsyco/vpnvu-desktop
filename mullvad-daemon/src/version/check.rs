@@ -31,7 +31,13 @@ const VERSION_INFO_FILENAME: &str = "version-info.json";
 static APP_VERSION: LazyLock<Version> =
     LazyLock::new(|| Version::from_str(mullvad_version::VERSION).unwrap());
 static CHECK_ENABLED: LazyLock<bool> = LazyLock::new(|| {
-    !APP_VERSION.is_dev()
+    // PSYCO: VPN.vu has no version server yet (`/app/v1/releases/*` is 404), so
+    // any build that enables the network check falls back to "UNSUPPORTED
+    // VERSION". Treat BETA the same as DEV — both skip the check and report
+    // `current_version_supported: true` via `dev_version_cache()`. Only a STABLE
+    // release (no -dev, no -beta) turns the real check on, once the backend
+    // serves the releases endpoint. Was `!APP_VERSION.is_dev()`.
+    (!APP_VERSION.is_dev() && !APP_VERSION.is_beta())
         || std::env::var("MULLVAD_ENABLE_DEV_UPDATES")
             .map(|v| v != "0")
             .unwrap_or(false)
@@ -539,13 +545,13 @@ fn cache_is_stale(cache: &VersionCache, current_version: &Version) -> bool {
 }
 
 fn dev_version_cache() -> VersionCache {
-    // PSYCO: VPN.vu currently ships every public build with the `-dev`
-    // suffix (no code-signing cert yet), so Mullvad's upstream default of
-    // marking dev caches as unsupported would paint "UNSUPPORTED VERSION"
-    // on every install. Flip it to `true` until we publish signed `2026.x`
-    // releases — at that point this branch stops running because
-    // `CHECK_ENABLED` becomes true for non-dev versions and the real value
-    // comes from `/app/v1/releases/*` on the backend.
+    // PSYCO: VPN.vu currently ships every public build as `-dev` or `-beta`
+    // (no version server / code-signing cert yet), so Mullvad's upstream
+    // default of marking these caches as unsupported would paint "UNSUPPORTED
+    // VERSION" on every install. Flip it to `true` until we publish signed
+    // STABLE `2026.x` releases — at that point this branch stops running
+    // because `CHECK_ENABLED` becomes true for stable versions and the real
+    // value comes from `/app/v1/releases/*` on the backend.
     VersionCache {
         cache_version: mullvad_version::VERSION.parse().unwrap(),
         // PSYCO: keep dev builds reported as supported until VPN.vu has a real
