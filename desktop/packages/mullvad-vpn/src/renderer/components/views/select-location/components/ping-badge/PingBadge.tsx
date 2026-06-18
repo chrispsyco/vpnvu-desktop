@@ -172,22 +172,20 @@ const PING_TONE_COLORS: Record<PingTone, string> = {
 };
 
 const StyledPingPill = styled.span<{ $tone: PingTone }>`
-  /* Width is dynamic — hugs whatever ms count is currently rendering. The
-     horizontal padding is symmetrical (6px each side) so the dot sits the
-     same distance from the left edge as "ms" does from the right. Text is
-     left-aligned by default in a flex container; we don't override it. */
+  /* Sits on the 2nd line of the meta stack (below the tags), so no left margin
+     — the stack's own gap handles spacing. Scaled down to match the smaller
+     tag badges and keep the row height close to the old single-line layout. */
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin-left: 8px;
+  gap: 4px;
   font-family: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: ${({ $tone }) => PING_TONE_COLORS[$tone]};
   background: rgba(255, 255, 255, 0.04);
-  padding: 3px 6px;
-  border-radius: 8px;
+  padding: 1px 4px;
+  border-radius: 6px;
   flex-shrink: 0;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -195,10 +193,10 @@ const StyledPingPill = styled.span<{ $tone: PingTone }>`
 `;
 
 const StyledPingDot = styled.span`
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 3px;
   background: currentColor;
-  box-shadow: 0 0 6px currentColor;
+  box-shadow: 0 0 5px currentColor;
   opacity: 0.9;
 `;

@@ -32,6 +32,7 @@ import {
   SystemNotificationCategory,
 } from '../shared/notifications/notification';
 import { RoutePath } from '../shared/routes';
+import { VpnvuServerApiEntry } from '../shared/vpnvu-server-api';
 import Account, { AccountDelegate, LocaleProvider } from './account';
 import AppUpgrade from './app-upgrade';
 import { getOpenAtLogin } from './autostart';
@@ -899,6 +900,27 @@ class ApplicationMain
       };
     });
 
+    // VPN.vu · fetch the live server list from our public backend HERE, in the
+    // main process, and hand the raw entries to the renderer. The renderer's
+    // session is locked down (no network) so it can't fetch this itself; doing
+    // it in main keeps that posture intact while the globe pins + location tag
+    // badges still reflect the real fleet. Any failure returns [] and the
+    // renderer falls back to its baked-in FALLBACK_SERVERS.
+    IpcMainEventChannel.vpnvuServers.handleGet(async () => {
+      try {
+        const res = await fetch('https://api.vpn.vu/v1/servers');
+        if (!res.ok) {
+          return [];
+        }
+        const data = (await res.json()) as { servers?: VpnvuServerApiEntry[] };
+        return Array.isArray(data?.servers) ? data.servers : [];
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        log.warn(`Failed to fetch vpn.vu server list: ${reason}`);
+        return [];
+      }
+    });
+
     IpcMainEventChannel.tunnel.handleConnect(this.connectTunnel);
     IpcMainEventChannel.tunnel.handleReconnect(this.reconnectTunnel);
     IpcMainEventChannel.tunnel.handleDisconnect((source) => this.disconnectTunnel(source));
@@ -1120,6 +1142,10 @@ class ApplicationMain
         return devtoolsUrls.some((devtoolsUrl) => url.startsWith(devtoolsUrl));
       };
 
+      // VPN.vu · the server-list / globe feed is fetched in the MAIN process and
+      // delivered over IPC (see `vpnvuServers.handleGet`), so the renderer never
+      // hits the network here — the Mullvad "renderer makes no network calls"
+      // posture stays fully intact.
       return isViteDevServerRequest(url) || isDevtoolsRequest(url);
     }
 

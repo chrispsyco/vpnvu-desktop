@@ -18,6 +18,8 @@
 
 import { useEffect, useState } from 'react';
 
+import type { VpnvuServerApiEntry } from '../../../shared/vpnvu-server-api';
+
 export interface VpnvuServer {
   /** Stable identifier — must match the daemon relay hostname (e.g. `br-sao-001`). */
   readonly id: string;
@@ -49,6 +51,12 @@ export interface VpnvuServer {
   readonly online: boolean;
   /** Highlighted on the globe and surfaced first in pickers. */
   readonly popular: boolean;
+  /**
+   * Product tags rendered as badges in the location picker. Known values:
+   * `STREAMING` (residential exit, passes Netflix/Disney) and `PRIVACY`
+   * (datacenter exit). Comes from the live API; empty when none.
+   */
+  readonly tags: readonly string[];
 }
 
 // Lista FALLBACK · usada offline / enquanto o fetch de /v1/servers não responde.
@@ -68,6 +76,7 @@ export const FALLBACK_SERVERS: ReadonlyArray<VpnvuServer> = [
     provider: 'vpnvu',
     online: true,
     popular: true,
+    tags: ['PRIVACY'],
   },
   {
     id: 'us-lax',
@@ -81,6 +90,7 @@ export const FALLBACK_SERVERS: ReadonlyArray<VpnvuServer> = [
     provider: 'vpnvu',
     online: true,
     popular: false,
+    tags: ['STREAMING', 'PRIVACY'],
   },
   {
     id: 'gb-lon',
@@ -94,6 +104,7 @@ export const FALLBACK_SERVERS: ReadonlyArray<VpnvuServer> = [
     provider: 'vpnvu',
     online: true,
     popular: false,
+    tags: ['STREAMING', 'PRIVACY'],
   },
   {
     id: 'jp-tyo',
@@ -107,6 +118,7 @@ export const FALLBACK_SERVERS: ReadonlyArray<VpnvuServer> = [
     provider: 'vpnvu',
     online: true,
     popular: false,
+    tags: ['STREAMING', 'PRIVACY'],
   },
 ] as const;
 
@@ -128,15 +140,9 @@ function flagFromCountryCode(cc: string): string {
   return String.fromCodePoint(...[...code].map((ch) => 0x1f1e6 + (ch.charCodeAt(0) - 65)));
 }
 
-interface ServersApiEntry {
-  id: string;
-  country: string;
-  countryCode: string;
-  city: string;
-  cityCode: string;
-  lat: number;
-  lng: number;
-}
+// Shape of one `/v1/servers` entry · shared with the main process (which now
+// does the actual fetch — see `setServersFetcher`).
+type ServersApiEntry = VpnvuServerApiEntry;
 
 function mapApiEntry(e: ServersApiEntry): VpnvuServer {
   return {
@@ -151,17 +157,47 @@ function mapApiEntry(e: ServersApiEntry): VpnvuServer {
     provider: 'vpnvu',
     online: true,
     popular: e.id === 'br-sao',
+    // Tags vêm da API viva. Enquanto o backend não serve a coluna `tags`
+    // (transição) ela volta vazia → herdamos as conhecidas do FALLBACK pelo id
+    // pra não perder os badges. Assim que a API mandar tags reais, elas mandam.
+    tags:
+      Array.isArray(e.tags) && e.tags.length > 0
+        ? e.tags
+        : (FALLBACK_SERVERS.find((s) => s.id === e.id)?.tags ?? []),
   };
+}
+
+// Como a lista viva é obtida · injetável. O DEFAULT faz `fetch` direto, o que
+// funciona no WebView Android (globe-bundle) e em qualquer browser. No renderer
+// do Electron desktop o fetch é bloqueado (postura "renderer sem rede"), então
+// `app.tsx` injeta no boot um fetcher que pede a lista ao main via IPC. Por isso
+// este módulo NÃO importa nada de Electron — assim continua carregável no Android.
+type ServersFetcher = () => Promise<ServersApiEntry[]>;
+
+const defaultFetcher: ServersFetcher = async () => {
+  const res = await fetch(SERVERS_URL);
+  if (!res.ok) return [];
+  const data = (await res.json()) as { servers?: ServersApiEntry[] };
+  return Array.isArray(data?.servers) ? data.servers : [];
+};
+
+let serversFetcher: ServersFetcher = defaultFetcher;
+
+/**
+ * Sobrescreve a fonte da lista viva. O renderer do Electron chama isto no boot
+ * com um fetcher que vai ao main via IPC (`IpcRendererEventChannel.vpnvuServers
+ * .get`), pois o renderer não pode bater na rede direto. Não chamado no Android
+ * → permanece o `defaultFetcher` (fetch direto).
+ */
+export function setServersFetcher(fetcher: ServersFetcher): void {
+  serversFetcher = fetcher;
 }
 
 async function fetchServersOnce(): Promise<void> {
   if (fetchStarted) return;
   fetchStarted = true;
   try {
-    const res = await fetch(SERVERS_URL);
-    if (!res.ok) return;
-    const data = (await res.json()) as { servers?: ServersApiEntry[] };
-    const raw = Array.isArray(data?.servers) ? data.servers : [];
+    const raw = await serversFetcher();
     const mapped = raw.filter((e) => isFinite(e?.lat) && isFinite(e?.lng)).map(mapApiEntry);
     if (mapped.length) {
       currentServers = mapped;

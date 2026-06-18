@@ -40,6 +40,7 @@ import {
 } from './ipc-types';
 import { LogLevel } from './logging-types';
 import { RoutePath } from './routes';
+import { VpnvuServerApiEntry } from './vpnvu-server-api';
 
 interface ILogEntry {
   level: LogLevel;
@@ -130,6 +131,14 @@ export const ipcSchema = {
   },
   map: {
     getData: invoke<void, MapData>(),
+  },
+  // VPN.vu · live server list (api.vpn.vu/v1/servers) fetched in the MAIN
+  // process and handed to the renderer — keeps the "renderer makes no network
+  // calls" posture while letting the globe pins + location tag badges reflect
+  // the real fleet without a rebuild. Returns [] on any failure; the renderer
+  // then keeps FALLBACK_SERVERS.
+  vpnvuServers: {
+    get: invoke<void, VpnvuServerApiEntry[]>(),
   },
   window: {
     shape: notifyRenderer<IWindowShapeParameters>(),

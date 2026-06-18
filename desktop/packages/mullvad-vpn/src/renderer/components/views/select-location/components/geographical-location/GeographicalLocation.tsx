@@ -11,6 +11,7 @@ import { useScrollPositionContext } from '../../ScrollPositionContext';
 import { getLocationListItemMapProps } from '../../utils';
 import { Location } from '../location-list-item';
 import { PingBadge } from '../ping-badge';
+import { ServerTags } from '../server-tags';
 import { GeographicalLocationTrailingActions } from './components';
 import {
   GeographicalLocationProvider,
@@ -40,7 +41,18 @@ const StyledTitleWithPing = styled.span`
   align-items: center;
   min-width: 0;
   flex-shrink: 1;
-  gap: 6px;
+  gap: 9px;
+`;
+
+// Bloco meta à direita do nome · 2 linhas empilhadas: TAGS em cima, PING embaixo.
+// align-items:center no StyledTitleWithPing centraliza este stack com o nome de
+// 1 linha, mantendo a altura do card quase igual à de antes.
+const StyledMetaStack = styled.span`
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  flex-shrink: 0;
 `;
 
 // VPN.vu · 2-letter country flag pill rendered on the left of root country
@@ -165,7 +177,10 @@ function GeographicalLocationImpl({
                   <Location.Accordion.Header.Item.Title>
                     {displayLabel}
                   </Location.Accordion.Header.Item.Title>
-                  <PingBadge location={location} />
+                  <StyledMetaStack>
+                    <ServerTags location={location} />
+                    <PingBadge location={location} />
+                  </StyledMetaStack>
                 </StyledTitleWithPing>
               </StyledLeftCluster>
             </Location.Accordion.Header.Item>

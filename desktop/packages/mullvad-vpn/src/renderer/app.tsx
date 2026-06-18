@@ -54,6 +54,7 @@ import MacOsScrollbarDetection from './components/MacOsScrollbarDetection';
 import { ModalContainer } from './components/Modal';
 import { AppContext } from './context';
 import { Theme } from './lib/components';
+import { setServersFetcher } from './lib/globe/vpnvu-servers';
 import History from './lib/history';
 import { loadTranslations } from './lib/load-translations';
 import IpcOutput from './lib/logging';
@@ -66,6 +67,13 @@ import userInterfaceActions from './redux/userinterface/actions';
 import versionActions from './redux/version/actions';
 
 const IpcRendererEventChannel = window.ipc;
+
+// VPN.vu · the renderer's session is network-locked (Mullvad posture), so the
+// live server list is fetched in the main process and pulled over IPC. Wiring
+// it here (module load, before any globe/picker mounts) means `useVpnvuServers`
+// gets the real fleet instead of falling back to the baked-in list. The Android
+// globe-bundle never runs this file's host, so it keeps the direct-fetch default.
+setServersFetcher(() => IpcRendererEventChannel.vpnvuServers.get());
 
 interface IPreferredLocaleDescriptor {
   name: string;
