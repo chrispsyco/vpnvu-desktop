@@ -592,6 +592,8 @@
     <string name="psyco_privacy_s1_collect_h">Data we collect</string>
     <string name="psyco_privacy_s1_collect_b">Seriously. We don\'t ask for email, phone, name, tax ID, address, profile photo, age, gender, location, or anything else that ties you to an identity.</string>
     <string name="psyco_privacy_s1_collect_big">None.</string>
+    <string name="psyco_privacy_s1_apps_h">Installed apps · split tunneling</string>
+    <string name="psyco_privacy_s1_apps_b">If you use split tunneling, VPN.vu reads the list of apps installed on your device so you can choose which ones bypass the tunnel. This list is processed only on your device · it\'s never uploaded, shared, or sent to our servers. We ask for your explicit consent inside the app before reading it.</string>
     <string name="psyco_privacy_s1_id_h">Internal identification</string>
     <string name="psyco_privacy_s1_id_b">Your account is a random 16-digit number generated on first use. Save it somewhere safe · if you lose it there\'s no recovery (because not even we know who you are).</string>
     <string name="psyco_privacy_s1_payment_h">Payment</string>
@@ -619,6 +621,7 @@
     <string name="psyco_privacy_read_scroll">↓ Scroll to read it all</string>
     <string name="psyco_privacy_cta_start">Accept and start</string>
     <string name="psyco_privacy_cta_continue">Accept and continue</string>
+    <string name="psyco_privacy_agree_checkbox">I have read and agree to the above</string>
     <string name="psyco_privacy_step1_label">Privacy</string>
     <string name="psyco_privacy_step1_kicker">Privacy notice · first launch</string>
     <string name="psyco_privacy_step1_title_lead">Before we </string>
@@ -631,6 +634,9 @@
     <string name="psyco_relaylist_no_lists_hint">To add locations to a list, tap the pencil.</string>
     <string name="psyco_select_location_title">Select location</string>
     <string name="psyco_split_excluded_desc">Apps below are excluded from the VPN tunnel. They use the normal internet connection.</string>
+    <string name="psyco_split_consent_title">App-list access</string>
+    <string name="psyco_split_consent_body">VPN.vu reads the list of apps installed on your device so you can choose which apps bypass the VPN (split tunneling). This list is processed only on your device · it is never uploaded, shared, or sent to our servers. Allow access to use split tunneling?</string>
+    <string name="psyco_split_consent_grant">Allow app-list access</string>
     <string name="psyco_unavailable">Unavailable</string>
     <string name="psyco_dns_disable_custom_hint">Disable \"Use custom DNS server\" below to enable these settings.</string>
     <string name="psyco_dns_disable_blockers_hint">Disable all \"DNS content blockers\" above to enable this setting.</string>

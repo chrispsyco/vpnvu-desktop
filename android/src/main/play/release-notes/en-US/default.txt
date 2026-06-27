@@ -1,0 +1,3 @@
+- Split tunneling now asks for your permission before reading your installed-app list, and explains how it is used. The list is processed on your device and never leaves it.
+- The first-launch privacy and terms screen now requires you to tick a box to accept, so nothing is agreed to just by scrolling.
+- Minor fixes and improvements.

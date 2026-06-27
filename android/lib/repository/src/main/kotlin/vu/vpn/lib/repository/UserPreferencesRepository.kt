@@ -73,4 +73,16 @@ class UserPreferencesRepository(
             prefs.toBuilder().setShowSystemAppsSplitTunneling(show).build()
         }
     }
+
+    // Prominent-disclosure consent for reading the installed-app list used by
+    // split tunneling. Gates ApplicationsProvider.apps() so we never enumerate
+    // installed packages before the user has affirmatively opted in.
+    fun splitTunnelingAppListConsent(): Flow<Boolean> =
+        userPreferencesStore.data.map { it.splitTunnelingAppListConsent }
+
+    suspend fun setSplitTunnelingAppListConsent(granted: Boolean) {
+        userPreferencesStore.updateData { prefs ->
+            prefs.toBuilder().setSplitTunnelingAppListConsent(granted).build()
+        }
+    }
 }

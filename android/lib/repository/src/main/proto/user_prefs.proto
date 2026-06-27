@@ -10,4 +10,7 @@ message UserPreferences {
   bool show_android_16_connect_warning = 4;
   bool show_location_in_system_notification = 5;
   bool show_system_apps_split_tunneling = 6;
+  // Prominent-disclosure consent for reading the installed-app list (split
+  // tunneling). The app must NOT enumerate installed apps until this is true.
+  bool split_tunneling_app_list_consent = 7;
 }

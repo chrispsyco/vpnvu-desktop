@@ -8,8 +8,10 @@ import android.graphics.drawable.Drawable
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +21,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,6 +64,7 @@ import vu.vpn.lib.ui.component.text.ScreenDescription
 import vu.vpn.lib.ui.designsystem.ListHeader
 import vu.vpn.lib.ui.designsystem.MullvadCircularProgressIndicatorLarge
 import vu.vpn.lib.ui.designsystem.Position
+import vu.vpn.lib.ui.designsystem.PrimaryButton
 import vu.vpn.lib.ui.theme.AppTheme
 import vu.vpn.lib.ui.theme.Dimens
 import vu.vpn.lib.ui.theme.color.AlphaDisabled
@@ -83,6 +87,7 @@ private fun PreviewSplitTunnelingScreen(
             onShowSystemAppsClick = {},
             onExcludeAppClick = {},
             onIncludeAppClick = {},
+            onGrantConsent = {},
             onBackClick = {},
             navigateToSearch = {},
             onResolveIcon = { null },
@@ -112,6 +117,7 @@ fun SharedTransitionScope.SplitTunneling(
         onShowSystemAppsClick = viewModel::onShowSystemAppsClick,
         onExcludeAppClick = viewModel::onExcludeAppClick,
         onIncludeAppClick = viewModel::onIncludeAppClick,
+        onGrantConsent = viewModel::onGrantAppListConsent,
         onBackClick = dropUnlessResumed { navigator.goBack() },
         navigateToSearch = dropUnlessResumed { navigator.navigate(SearchSplitTunnelingNavKey) },
         onResolveIcon = { packageName -> packageManager.getApplicationIconOrNull(packageName) },
@@ -125,6 +131,7 @@ fun SplitTunnelingScreen(
     onShowSystemAppsClick: (show: Boolean) -> Unit,
     onExcludeAppClick: (packageName: PackageName) -> Unit,
     onIncludeAppClick: (packageName: PackageName) -> Unit,
+    onGrantConsent: () -> Unit,
     onBackClick: () -> Unit,
     onResolveIcon: (PackageName) -> Drawable?,
     navigateToSearch: () -> Unit,
@@ -160,32 +167,39 @@ fun SplitTunnelingScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             state = lazyListState,
         ) {
-            description()
             when (state) {
                 is Lc.Loading -> {
+                    description()
                     spacer()
                     loading()
                 }
                 is Lc.Content -> {
-                    enabledToggle(
-                        enabled = state.value.enabled,
-                        onEnableSplitTunneling = onEnableSplitTunneling,
-                    )
-                    item { HorizontalDivider(color = Color.Transparent) }
-                    systemAppsToggle(
-                        showSystemApps = state.value.showSystemApps,
-                        onShowSystemAppsClick = onShowSystemAppsClick,
-                        enabled = state.value.enabled,
-                    )
-                    appList(
-                        state = state.value,
-                        focusManager = focusManager,
-                        onExcludeAppClick = onExcludeAppClick,
-                        onIncludeAppClick = onIncludeAppClick,
-                        onResolveIcon = onResolveIcon,
-                        excludedHeader = excludedHeader,
-                        otherAppsHeader = otherAppsHeader,
-                    )
+                    // Prominent disclosure: until the user opts in we show ONLY
+                    // the notice — no app list is ever read before consent.
+                    if (!state.value.consentGranted) {
+                        consentNotice(onGrantConsent = onGrantConsent)
+                    } else {
+                        description()
+                        enabledToggle(
+                            enabled = state.value.enabled,
+                            onEnableSplitTunneling = onEnableSplitTunneling,
+                        )
+                        item { HorizontalDivider(color = Color.Transparent) }
+                        systemAppsToggle(
+                            showSystemApps = state.value.showSystemApps,
+                            onShowSystemAppsClick = onShowSystemAppsClick,
+                            enabled = state.value.enabled,
+                        )
+                        appList(
+                            state = state.value,
+                            focusManager = focusManager,
+                            onExcludeAppClick = onExcludeAppClick,
+                            onIncludeAppClick = onIncludeAppClick,
+                            onResolveIcon = onResolveIcon,
+                            excludedHeader = excludedHeader,
+                            otherAppsHeader = otherAppsHeader,
+                        )
+                    }
                 }
             }
         }
@@ -219,6 +233,33 @@ private fun LazyListScope.description() {
 private fun LazyListScope.loading() {
     item(key = CommonContentKey.PROGRESS, contentType = ContentType.PROGRESS) {
         MullvadCircularProgressIndicatorLarge()
+    }
+}
+
+// Prominent-disclosure notice required by Google Play before reading the list of
+// installed apps. Shown in-app, in the normal flow, with an affirmative opt-in
+// (tapping the button) — closing/going back does NOT grant consent.
+private fun LazyListScope.consentNotice(onGrantConsent: () -> Unit) {
+    item(key = CommonContentKey.CONSENT, contentType = ContentType.DESCRIPTION) {
+        Column(modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.mediumPadding)) {
+            Text(
+                text = stringResource(id = R.string.psyco_split_consent_title),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(modifier = Modifier.height(Dimens.smallPadding))
+            Text(
+                text = stringResource(id = R.string.psyco_split_consent_body),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Spacer(modifier = Modifier.height(Dimens.mediumPadding))
+            PrimaryButton(
+                text = stringResource(id = R.string.psyco_split_consent_grant),
+                onClick = onGrantConsent,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
 
@@ -409,6 +450,7 @@ fun PackageManager.getApplicationIconOrNull(packageName: PackageName): Drawable?
 object CommonContentKey {
     const val DESCRIPTION = "description"
     const val PROGRESS = "progress"
+    const val CONSENT = "consent"
 }
 
 private inline fun <T> LazyListScope.itemsIndexedWithDivider(

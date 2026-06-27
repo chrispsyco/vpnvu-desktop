@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,10 +20,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,6 +64,7 @@ import vu.vpn.common.compose.CollectSideEffectWithLifecycle
 import vu.vpn.core.Navigator
 import vu.vpn.feature.login.api.LoginNavKey
 import vu.vpn.lib.ui.resource.R
+import vu.vpn.lib.ui.designsystem.Checkbox
 import vu.vpn.lib.ui.designsystem.MullvadCircularProgressIndicatorMedium
 import vu.vpn.lib.ui.designsystem.PrimaryButton
 import vu.vpn.lib.ui.theme.AppTheme
@@ -166,12 +170,16 @@ fun PrivacyDisclaimer(navigator: Navigator) {
 fun PrivacyDisclaimerScreen(state: PrivacyDisclaimerViewState, onAcceptClicked: () -> Unit) {
     var currentStep by remember { mutableIntStateOf(1) }
     var hasReadAll by remember { mutableStateOf(false) }
+    // Rolar até o fim apenas LIBERA o checkbox; o aceite exige o usuário marcá-lo
+    // manualmente (ação afirmativa exigida pela política do Google Play).
+    var hasAgreed by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    // Resetar scroll + read state quando avança step
+    // Resetar scroll + read state + aceite quando avança step
     LaunchedEffect(currentStep) {
         scrollState.scrollTo(0)
         hasReadAll = false
+        hasAgreed = false
     }
 
     // Detectar leitura completa (READ_THRESHOLD) · também unlocka se conteúdo
@@ -215,11 +223,15 @@ fun PrivacyDisclaimerScreen(state: PrivacyDisclaimerViewState, onAcceptClicked: 
             }
 
             Spacer(Modifier.height(12.dp))
-            ReadHint(hasReadAll)
+            AgreementRow(
+                canAgree = hasReadAll,
+                isChecked = hasAgreed,
+                onCheckedChange = { hasAgreed = it },
+            )
             Spacer(Modifier.height(16.dp))
             CtaGroup(
                 currentStep = currentStep,
-                hasReadAll = hasReadAll,
+                canProceed = hasAgreed,
                 isStartingService = state.isStartingService,
                 onAdvance = { currentStep = (currentStep + 1).coerceAtMost(TOTAL_STEPS) },
                 onFinalAccept = onAcceptClicked,
@@ -344,6 +356,10 @@ private fun PrivacyStepContent() {
         bigHeadline = stringResource(id = R.string.psyco_privacy_s1_collect_big),
     )
     DisclaimerSection(
+        heading = stringResource(id = R.string.psyco_privacy_s1_apps_h),
+        body = stringResource(id = R.string.psyco_privacy_s1_apps_b),
+    )
+    DisclaimerSection(
         heading = stringResource(id = R.string.psyco_privacy_s1_id_h),
         body = stringResource(id = R.string.psyco_privacy_s1_id_b),
     )
@@ -423,17 +439,46 @@ private fun DisclaimerSection(heading: String, body: String, bigHeadline: String
 }
 
 @Composable
-private fun ReadHint(done: Boolean) {
-    val alpha by animateFloatAsState(targetValue = if (done) 1f else 0.7f, label = "readHintAlpha")
+private fun AgreementRow(
+    canAgree: Boolean,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    // Antes de rolar até o fim o checkbox fica desabilitado (acinzentado) e a
+    // linha mostra a dica de rolar. Depois de liberado, o usuário precisa
+    // marcar — rolar NÃO marca sozinho.
+    val alpha by animateFloatAsState(targetValue = if (canAgree) 1f else 0.7f, label = "agreeAlpha")
+    val label =
+        if (canAgree) stringResource(id = R.string.psyco_privacy_agree_checkbox)
+        else stringResource(id = R.string.psyco_privacy_read_scroll)
     Row(
-        modifier = Modifier.fillMaxWidth().alpha(alpha),
+        modifier =
+            Modifier.fillMaxWidth()
+                .alpha(alpha)
+                .then(
+                    if (canAgree) Modifier.clickable { onCheckedChange(!isChecked) }
+                    else Modifier
+                )
+                .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Checkbox(
+            checked = isChecked,
+            onCheckedChange = if (canAgree) onCheckedChange else null,
+            enabled = canAgree,
+            colors =
+                CheckboxDefaults.colors(
+                    checkedColor = MaterialTheme.colorScheme.primary,
+                    uncheckedColor = Color(0xFF9BAEB6),
+                    checkmarkColor = Color.White,
+                ),
+        )
+        Spacer(Modifier.width(8.dp))
         Text(
-            text = if (done) stringResource(id = R.string.psyco_privacy_read_done) else stringResource(id = R.string.psyco_privacy_read_scroll),
-            color = if (done) MaterialTheme.colorScheme.primary else Color(0xFF9BAEB6),
-            fontSize = 12.sp,
+            text = label,
+            color = if (canAgree) Color.White else Color(0xFF9BAEB6),
+            fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
         )
     }
@@ -442,7 +487,7 @@ private fun ReadHint(done: Boolean) {
 @Composable
 private fun CtaGroup(
     currentStep: Int,
-    hasReadAll: Boolean,
+    canProceed: Boolean,
     isStartingService: Boolean,
     onAdvance: () -> Unit,
     onFinalAccept: () -> Unit,
@@ -461,14 +506,14 @@ private fun CtaGroup(
             MullvadCircularProgressIndicatorMedium()
         } else {
             val onClickAction: () -> Unit = {
-                if (hasReadAll) {
+                if (canProceed) {
                     if (isFinal) onFinalAccept() else onAdvance()
                 }
             }
             PrimaryButton(
                 text = primaryLabel,
                 onClick = onClickAction,
-                isEnabled = hasReadAll,
+                isEnabled = canProceed,
             )
         }
     }

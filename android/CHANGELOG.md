@@ -30,6 +30,15 @@ Line wrap the file at 100 chars.                                              Th
 - Optimize LWO performance. The throughput is around 3 times higher in our benchmarks.
 
 
+## [android/2026.6] - 2026-06-27
+### Added
+- Add a prominent in-app disclosure and explicit consent step before split tunneling reads the
+  list of installed apps. The list is processed on-device only and is never uploaded or shared.
+### Changed
+- Require ticking a checkbox to accept the privacy notice and terms on first launch. Scrolling to
+  the end now only enables the checkbox; it no longer counts as acceptance on its own.
+
+
 ## [android/2026.5] - 2026-05-06
 ### Fixed
 - Fix a rare case of the app setting itself in a blocking state if entry location

@@ -561,6 +561,8 @@
     <string name="psyco_privacy_s1_collect_h">Dados que coletamos</string>
     <string name="psyco_privacy_s1_collect_b">Sério. Não pedimos e-mail, telefone, nome, CPF, endereço, foto de perfil, idade, gênero, localização ou qualquer outra coisa que ligue você a uma identidade.</string>
     <string name="psyco_privacy_s1_collect_big">Nenhum.</string>
+    <string name="psyco_privacy_s1_apps_h">Apps instalados · divisão do túnel</string>
+    <string name="psyco_privacy_s1_apps_b">Se você usar a divisão do túnel, a VPN.vu lê a lista de apps instalados no seu dispositivo pra você escolher quais ficam fora do túnel. Essa lista é processada só no seu aparelho · nunca é enviada, compartilhada ou mandada pros nossos servidores. A gente pede seu consentimento explícito dentro do app antes de ler.</string>
     <string name="psyco_privacy_s1_id_h">Identificação interna</string>
     <string name="psyco_privacy_s1_id_b">Sua conta é um número de 16 dígitos gerado aleatoriamente no primeiro uso. Anota ele em algum lugar seguro · se perder, não tem como recuperar (porque nem a gente sabe quem é você).</string>
     <string name="psyco_privacy_s1_payment_h">Pagamento</string>
@@ -588,6 +590,7 @@
     <string name="psyco_privacy_read_scroll">↓ Role pra ler tudo</string>
     <string name="psyco_privacy_cta_start">Aceitar e começar</string>
     <string name="psyco_privacy_cta_continue">Aceitar e continuar</string>
+    <string name="psyco_privacy_agree_checkbox">Li e concordo com o conteúdo acima</string>
     <string name="psyco_privacy_step1_label">Privacidade</string>
     <string name="psyco_privacy_step1_kicker">Aviso de privacidade · primeiro acesso</string>
     <string name="psyco_privacy_step1_title_lead">Antes da gente</string>
@@ -600,6 +603,9 @@
     <string name="psyco_relaylist_no_lists_hint">Pra adicionar localizações em uma lista, toque no lápis.</string>
     <string name="psyco_select_location_title">Selecionar localização</string>
     <string name="psyco_split_excluded_desc">Apps abaixo são excluídos do túnel VPN. Eles usam a conexão normal da internet.</string>
+    <string name="psyco_split_consent_title">Acesso à lista de apps</string>
+    <string name="psyco_split_consent_body">A VPN.vu lê a lista de apps instalados no seu dispositivo pra você escolher quais ficam fora da VPN (divisão do túnel). Essa lista é processada só no seu aparelho · nunca é enviada, compartilhada ou mandada pros nossos servidores. Permitir o acesso pra usar a divisão do túnel?</string>
+    <string name="psyco_split_consent_grant">Permitir acesso à lista de apps</string>
     <string name="psyco_unavailable">Indisponível</string>
     <string name="psyco_dns_disable_custom_hint">Desative \"Usar servidor DNS personalizado\" abaixo para ativar estas configurações.</string>
     <string name="psyco_dns_disable_blockers_hint">Desative todos os \"Bloqueadores de conteúdo DNS\" acima para ativar esta configuração.</string>

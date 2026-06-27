@@ -8,6 +8,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import io.mockk.verify
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -43,6 +44,9 @@ class SplitTunnelingViewModelTest {
     private val excludedApps: MutableStateFlow<Set<PackageName>> = MutableStateFlow(emptySet())
     private val enabled: MutableStateFlow<Boolean> = MutableStateFlow(true)
     private val showSystemApps: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    // Consent pre-granted so these tests exercise the app-list states; the
+    // consent-gating itself is asserted separately below.
+    private val appListConsent: MutableStateFlow<Boolean> = MutableStateFlow(true)
 
     @BeforeEach
     fun setup() {
@@ -50,6 +54,8 @@ class SplitTunnelingViewModelTest {
         every { mockedSplitTunnelingRepository.excludedApps } returns excludedApps
         every { mockedUserPreferencesRepository.showSystemAppsSplitTunneling() } returns
             showSystemApps
+        every { mockedUserPreferencesRepository.splitTunnelingAppListConsent() } returns
+            appListConsent
     }
 
     @AfterEach
@@ -196,6 +202,31 @@ class SplitTunnelingViewModelTest {
             assertIs<Lc.Content<SplitTunnelingUiState>>(actualState)
             assertEquals(expectedState, actualState.value)
         }
+    }
+
+    @Test
+    fun `when consent not granted the app list is not read and consent is requested`() = runTest {
+        initTestSubject(emptyList())
+        appListConsent.value = false
+
+        testSubject.uiState.test {
+            val item = awaitItem()
+            assertIs<Lc.Content<SplitTunnelingUiState>>(item)
+            assertEquals(false, item.value.consentGranted)
+        }
+        // The installed-app enumeration must never run before consent.
+        verify(exactly = 0) { mockedApplicationsProvider.apps() }
+    }
+
+    @Test
+    fun `granting consent persists the flag`() = runTest {
+        initTestSubject(emptyList())
+        coEvery { mockedUserPreferencesRepository.setSplitTunnelingAppListConsent(true) } returns
+            Unit
+
+        testSubject.onGrantAppListConsent()
+
+        coVerify { mockedUserPreferencesRepository.setSplitTunnelingAppListConsent(true) }
     }
 
     private fun initTestSubject(appList: List<AppData>) {
