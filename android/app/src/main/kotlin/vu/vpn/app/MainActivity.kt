@@ -100,6 +100,23 @@ class MainActivity : ComponentActivity(), AndroidScopeComponent {
                 }
             }
         }
+
+        // PSYCO · re-busca o estado da conta toda vez que o app volta pro
+        // foreground (STARTED). Espelha o "refetch on focus" que o desktop já
+        // faz. Sem isso, quem paga no site (Pix/cartão/cripto) e volta pro app
+        // pelo gesto do Android — sem tocar no botão de sucesso que dispara o
+        // deep link vpnvu://app — fica preso na tela out-of-time até o poll de
+        // 15s rodar (ou indefinidamente se o daemon já tiver o expiry em cache).
+        // Espera o gRPC estar Ready antes de buscar, senão a chamada falha à toa
+        // no cold start. ignoreTimeout=true força o fetch mesmo se recente.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                managementService.connectionState
+                    .filter { it is GrpcConnectivityState.Ready }
+                    .first()
+                accountRepository.refreshAccountData(ignoreTimeout = true)
+            }
+        }
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
