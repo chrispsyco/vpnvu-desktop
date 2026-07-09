@@ -29,6 +29,7 @@ import vu.vpn.lib.model.GeoLocationId
 import vu.vpn.lib.model.RelayItem
 import vu.vpn.lib.model.RelayLatency
 import vu.vpn.lib.model.RelayOverride
+import vu.vpn.lib.model.ServerTag
 
 /**
  * Measures per-relay round-trip latency and exposes it keyed by [GeoLocationId]
@@ -82,6 +83,19 @@ class RelayLatencyRepository(
             }
             .stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS), emptyMap())
 
+    // PSYCO · product tags per city ("br-sao" -> {PRIVACY} / intl -> {STREAMING,
+    // PRIVACY}), pulled LIVE from api.vpn.vu/v1/servers so re-tagging a relay in
+    // Neon reflects with no app release — same posture as the latency meta.
+    private val serverTagsByCode = MutableStateFlow<Map<String, Set<ServerTag>>>(emptyMap())
+
+    // Tags keyed by [GeoLocationId] for the picker: hostnames inherit their
+    // city's tags, and a country carries the union of its cities' tags.
+    val serverTags: StateFlow<Map<GeoLocationId, Set<ServerTag>>> =
+        combine(relayListRepository.relayList, serverTagsByCode) { countries, byCode ->
+                buildServerTags(countries, byCode)
+            }
+            .stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS), emptyMap())
+
     init {
         scope.launch {
             while (isActive) {
@@ -97,7 +111,85 @@ class RelayLatencyRepository(
                 delay(RELAY_META_REFRESH_MS)
             }
         }
+        // Same cadence for the product tags feed (STREAMING/PRIVACY badges).
+        scope.launch {
+            while (isActive) {
+                fetchServerTags()?.let { serverTagsByCode.value = it }
+                delay(RELAY_META_REFRESH_MS)
+            }
+        }
     }
+
+    // Join the live tags-by-code map onto the relay tree, producing tags keyed by
+    // GeoLocationId (city + every hostname under it + the country union). The city
+    // code from the daemon is the bare "sao"; the feed keys are "br-sao", so we
+    // normalize to "<country>-<city>" (and tolerate a code that already carries
+    // the country prefix).
+    private fun buildServerTags(
+        countries: List<RelayItem.Location.Country>,
+        byCode: Map<String, Set<ServerTag>>,
+    ): Map<GeoLocationId, Set<ServerTag>> {
+        if (byCode.isEmpty()) return emptyMap()
+        val result = mutableMapOf<GeoLocationId, Set<ServerTag>>()
+        for (country in countries) {
+            val countryCode = country.id.code.lowercase()
+            val countryTags = mutableSetOf<ServerTag>()
+            for (city in country.cities) {
+                val cityCode = city.id.code.lowercase()
+                val key = if (cityCode.startsWith("$countryCode-")) cityCode else "$countryCode-$cityCode"
+                val tags = byCode[key].orEmpty()
+                if (tags.isNotEmpty()) {
+                    result[city.id] = tags
+                    for (relay in city.relays) result[relay.id] = tags
+                    countryTags += tags
+                }
+            }
+            if (countryTags.isNotEmpty()) result[country.id] = countryTags
+        }
+        return result
+    }
+
+    /**
+     * Pulls `"<country>-<city>" -> {tags}` from api.vpn.vu/v1/servers. Shape:
+     * `{ servers: [{ countryCode, cityCode, tags: ["STREAMING","PRIVACY"] }] }`.
+     * Returns null on any failure; the caller keeps the previous map.
+     */
+    private suspend fun fetchServerTags(): Map<String, Set<ServerTag>>? =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                    val conn =
+                        (URL(SERVERS_URL).openConnection() as HttpURLConnection).apply {
+                            connectTimeout = RELAY_META_TIMEOUT_MS
+                            readTimeout = RELAY_META_TIMEOUT_MS
+                            requestMethod = "GET"
+                        }
+                    try {
+                        if (conn.responseCode != HttpURLConnection.HTTP_OK) {
+                            return@runCatching null
+                        }
+                        val body = conn.inputStream.bufferedReader().use { it.readText() }
+                        val servers = JSONObject(body).getJSONArray("servers")
+                        val map = mutableMapOf<String, Set<ServerTag>>()
+                        for (i in 0 until servers.length()) {
+                            val s = servers.getJSONObject(i)
+                            val country = s.optString("countryCode")
+                            val city = s.optString("cityCode")
+                            if (country.isEmpty() || city.isEmpty()) continue
+                            val tagsArr = s.optJSONArray("tags") ?: continue
+                            val tags = buildSet {
+                                for (j in 0 until tagsArr.length()) {
+                                    ServerTag.fromApi(tagsArr.optString(j))?.let { add(it) }
+                                }
+                            }
+                            if (tags.isNotEmpty()) map["$country-$city".lowercase()] = tags
+                        }
+                        map
+                    } finally {
+                        conn.disconnect()
+                    }
+                }
+                .getOrNull()
+        }
 
     private suspend fun measure(
         countries: List<RelayItem.Location.Country>,
@@ -283,6 +375,8 @@ class RelayLatencyRepository(
         // Live relay metadata source. Base URL is fixed; the *servers* come from
         // the JSON, so adding one never needs an app release. (Single-env: prod.)
         private const val RELAY_LIST_URL = "https://api.vpn.vu/app/v1/relays"
+        // Product-tag feed (STREAMING/PRIVACY badges). Same single-env prod host.
+        private const val SERVERS_URL = "https://api.vpn.vu/v1/servers"
         private const val RELAY_META_REFRESH_MS = 300_000L // 5 min
         private const val RELAY_META_TIMEOUT_MS = 5_000
 

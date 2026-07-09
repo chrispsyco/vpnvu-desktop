@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import vu.vpn.lib.model.RelayLatency
+import vu.vpn.lib.model.ServerTag
 import vu.vpn.lib.ui.designsystem.Hierarchy
 import vu.vpn.lib.ui.designsystem.Position
 
@@ -41,6 +42,11 @@ private val VpnVuTeal = Color(0xFF5BC8DA)
 private val PingGood = Color(0xFF44AD4D)
 private val PingMid = Color(0xFFE8AC2E)
 private val PingBad = Color(0xFFE34349)
+
+// Product-tag tones (mirror the desktop ServerTags): streaming in lava red,
+// privacy in the VPN.vu cyan.
+private val TagStreaming = Color(0xFFE2502E)
+private val TagPrivacy = VpnVuTeal
 
 private fun pingTone(millis: Int): Color =
     when {
@@ -97,6 +103,42 @@ fun LatencyPill(latency: RelayLatency, modifier: Modifier = Modifier) {
 }
 
 /**
+ * Compact product-tag chips for a location: STREAMING (lava red) and/or PRIVACY
+ * (cyan), driven by the api.vpn.vu/v1/servers feed. Mirrors the desktop
+ * ServerTags badges. Streaming leads because it's the differentiator (the whole
+ * fleet is privacy-hardened).
+ */
+@Composable
+fun ServerTagBadges(tags: Set<ServerTag>, modifier: Modifier = Modifier) {
+    if (tags.isEmpty()) return
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (ServerTag.STREAMING in tags) ServerTagChip("STREAMING", TagStreaming)
+        if (ServerTag.PRIVACY in tags) ServerTagChip("PRIVACY", TagPrivacy)
+    }
+}
+
+@Composable
+private fun ServerTagChip(label: String, tone: Color) {
+    Text(
+        text = label,
+        color = tone,
+        fontSize = 8.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontFamily = GeistMonoFontFamily,
+        letterSpacing = 0.6.sp,
+        modifier =
+            Modifier.clip(RoundedCornerShape(4.dp))
+                .background(tone.copy(alpha = 0.12f))
+                .border(1.dp, tone.copy(alpha = 0.34f), RoundedCornerShape(4.dp))
+                .padding(horizontal = 5.dp, vertical = 2.dp),
+    )
+}
+
+/**
  * A rich location row matching the redesign: country-code avatar, a green check
  * when selected, the name with an optional subtitle, the latency pill, and an
  * expand chevron when the item has children. Built standalone (not on
@@ -114,6 +156,7 @@ fun RichRelayRow(
     canExpand: Boolean,
     expanded: Boolean,
     latency: RelayLatency?,
+    tags: Set<ServerTag> = emptySet(),
     position: Position,
     hierarchy: Hierarchy,
     modifier: Modifier = Modifier,
@@ -179,6 +222,9 @@ fun RichRelayRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+            if (tags.isNotEmpty()) {
+                ServerTagBadges(tags, modifier = Modifier.padding(top = 5.dp))
             }
         }
         if (latency != null) {

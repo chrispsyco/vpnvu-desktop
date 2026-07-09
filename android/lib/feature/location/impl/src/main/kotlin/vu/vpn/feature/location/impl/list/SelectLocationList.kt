@@ -210,6 +210,7 @@ private fun SelectLocationListContent(
                     onToggleExpand = onToggleExpand,
                     onUpdateBottomSheetState = onUpdateBottomSheetState,
                     latencyFor = { state.value.latencies[it] },
+                    tagsFor = { state.value.serverTags[it].orEmpty() },
                 )
 
                 if (shouldScrollToTop) {

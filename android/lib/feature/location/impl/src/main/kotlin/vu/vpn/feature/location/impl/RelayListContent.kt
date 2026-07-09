@@ -30,6 +30,7 @@ import vu.vpn.lib.model.GeoLocationId
 import vu.vpn.lib.model.RelayItem
 import vu.vpn.lib.model.RelayItemId
 import vu.vpn.lib.model.RelayLatency
+import vu.vpn.lib.model.ServerTag
 import vu.vpn.lib.model.RelayListType
 import vu.vpn.lib.ui.component.relaylist.RelayListItem
 import vu.vpn.lib.ui.component.relaylist.SelectableRelayListItem
@@ -50,6 +51,7 @@ fun LazyListScope.relayListContent(
     onToggleExpand: (RelayItemId, CustomListId?, Boolean) -> Unit,
     onUpdateBottomSheetState: (LocationBottomSheetState) -> Unit,
     latencyFor: (GeoLocationId) -> RelayLatency? = { null },
+    tagsFor: (GeoLocationId) -> Set<ServerTag> = { emptySet() },
     customListHeader:
         @Composable
         (LazyItemScope.(listItem: RelayListItem.CustomListHeader) -> Unit) =
@@ -87,6 +89,7 @@ fun LazyListScope.relayListContent(
                             listItem = listItem,
                             relayListType = relayListType,
                             latency = listItem.item.geoId()?.let(latencyFor),
+                            tags = listItem.item.geoId()?.let(tagsFor).orEmpty(),
                             onSelect = onSelectRelayItem,
                             onToggleExpand = onToggleExpand,
                             onUpdateBottomSheetState = onUpdateBottomSheetState,
@@ -98,6 +101,7 @@ fun LazyListScope.relayListContent(
                             listItem = listItem,
                             relayListType = relayListType,
                             latency = listItem.item.geoId()?.let(latencyFor),
+                            tags = listItem.item.geoId()?.let(tagsFor).orEmpty(),
                             onSelect = onSelectRelayItem,
                             onUpdateBottomSheetState = onUpdateBottomSheetState,
                         )
@@ -138,6 +142,7 @@ private fun GeoLocationItem(
     listItem: RelayListItem.GeoLocationItem,
     relayListType: RelayListType,
     latency: RelayLatency?,
+    tags: Set<ServerTag>,
     onSelect: (RelayItem) -> Unit,
     onToggleExpand: (RelayItemId, CustomListId?, Boolean) -> Unit,
     onUpdateBottomSheetState: (LocationBottomSheetState) -> Unit,
@@ -151,6 +156,7 @@ private fun GeoLocationItem(
         canExpand = listItem.canExpand,
         expanded = listItem.expanded,
         latency = latency,
+        tags = tags,
         position = listItem.itemPosition,
         hierarchy = listItem.hierarchy,
         modifier = Modifier.positionalPadding(listItem.itemPosition).testTag(LOCATION_CELL_TEST_TAG),
@@ -172,6 +178,7 @@ private fun RecentListItem(
     listItem: RelayListItem.RecentListItem,
     relayListType: RelayListType,
     latency: RelayLatency?,
+    tags: Set<ServerTag>,
     onSelect: (RelayItem) -> Unit,
     onUpdateBottomSheetState: (LocationBottomSheetState) -> Unit,
 ) {
@@ -184,6 +191,7 @@ private fun RecentListItem(
         canExpand = false,
         expanded = false,
         latency = latency,
+        tags = tags,
         position = listItem.itemPosition,
         hierarchy = Hierarchy.Parent,
         modifier = Modifier.positionalPadding(listItem.itemPosition).testTag(RECENT_CELL_TEST_TAG),

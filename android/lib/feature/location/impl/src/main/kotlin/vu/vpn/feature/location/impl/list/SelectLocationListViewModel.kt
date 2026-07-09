@@ -59,7 +59,8 @@ class SelectLocationListViewModel(
                 relayListItems(),
                 settingsRepository.settingsUpdates,
                 relayLatencyRepository.latencies,
-            ) { relayListItems, settings, latencies ->
+                relayLatencyRepository.serverTags,
+            ) { relayListItems, settings, latencies, serverTags ->
                 if (relayListType.isEntryAndBlocked(settings)) {
                     Lce.Error(Unit)
                 } else {
@@ -68,6 +69,7 @@ class SelectLocationListViewModel(
                             relayListType = relayListType,
                             relayListItems = relayListItems,
                             latencies = latencies,
+                            serverTags = serverTags,
                         )
                     )
                 }
