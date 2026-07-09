@@ -57,6 +57,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import vu.vpn.R
 import vu.vpn.common.compose.CollectSideEffectWithLifecycle
+import vu.vpn.BuildConfig
 import vu.vpn.core.Navigator
 import vu.vpn.feature.home.api.ConnectNavKey
 import vu.vpn.feature.home.api.DeviceRevokedNavKey
@@ -183,7 +184,9 @@ fun SplashScreen() {
             contentAlignment = Alignment.BottomCenter,
         ) {
             Text(
-                text = "VPN.VU · V2026.2-DEV · ANDROID",
+                // Versão dinâmica: puxa do BuildConfig (versionName = appVersion.name)
+                // pra o footer nunca ficar defasado do build real.
+                text = "VPN.VU · V${BuildConfig.VERSION_NAME.uppercase()} · ANDROID",
                 color = Color(0xFF9BAEB6).copy(alpha = 0.55f),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
