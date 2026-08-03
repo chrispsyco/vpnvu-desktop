@@ -1,3 +1,4 @@
-- Split tunneling now asks for your permission before reading your installed-app list, and explains how it is used. The list is processed on your device and never leaves it.
-- The first-launch privacy and terms screen now requires you to tick a box to accept, so nothing is agreed to just by scrolling.
-- Minor fixes and improvements.
+- Clearer installed-apps disclosure: split tunneling now explains exactly what data is collected, why, and how it is used, before asking for your permission.
+- New STREAMING and PRIVACY tags on servers in the location picker.
+- The app now shows the build version on the splash screen.
+- Fixed account status not refreshing after adding time via the website.

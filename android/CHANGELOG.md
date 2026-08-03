@@ -30,6 +30,18 @@ Line wrap the file at 100 chars.                                              Th
 - Optimize LWO performance. The throughput is around 3 times higher in our benchmarks.
 
 
+## [android/2026.7] - 2026-08-03
+### Added
+- Add STREAMING and PRIVACY server tags in the location picker.
+- Show the live build version in the splash footer.
+### Changed
+- Rewrite the split tunneling installed-apps disclosure (consent dialog, privacy screen and
+  first-launch terms) to declare the data collected, the feature it enables and the scenario it
+  happens in, following Google Play prominent-disclosure wording requirements.
+### Fixed
+- Refetch account data on foreground to clear the out-of-time state after a web payment.
+
+
 ## [android/2026.6] - 2026-06-27
 ### Added
 - Add a prominent in-app disclosure and explicit consent step before split tunneling reads the
