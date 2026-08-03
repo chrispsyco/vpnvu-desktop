@@ -176,7 +176,7 @@
     <string name="agree_and_continue">Agree and continue</string>
     <string name="privacy_disclaimer_title">Privacy</string>
     <string name="privacy_disclaimer_body_first_paragraph">To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to VPN.vu servers. VPN.vu keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">If the split tunneling feature is used, the app collects the list of all applications installed on your device to enable choosing which apps bypass the VPN tunnel. This list is only retrieved in the split tunneling view, after you grant your explicit consent there, and is used solely to provide the split tunneling feature.</string>
     <string name="submit_button">Submit</string>
     <string name="remove_button">Remove</string>
     <string name="enter_value_placeholder">Enter MTU</string>
@@ -593,7 +593,7 @@
     <string name="psyco_privacy_s1_collect_b">Seriously. We don\'t ask for email, phone, name, tax ID, address, profile photo, age, gender, location, or anything else that ties you to an identity.</string>
     <string name="psyco_privacy_s1_collect_big">None.</string>
     <string name="psyco_privacy_s1_apps_h">Installed apps · split tunneling</string>
-    <string name="psyco_privacy_s1_apps_b">If you use split tunneling, VPN.vu reads the list of apps installed on your device so you can choose which ones bypass the tunnel. This list is processed only on your device · it\'s never uploaded, shared, or sent to our servers. We ask for your explicit consent inside the app before reading it.</string>
+    <string name="psyco_privacy_s1_apps_b">If you use split tunneling, VPN.vu collects the list of apps installed on your device to enable choosing which apps bypass the tunnel. This happens only in the split tunneling screen, after your explicit in-app consent, and the list is used solely to provide this feature · it is not shared with third parties.</string>
     <string name="psyco_privacy_s1_id_h">Internal identification</string>
     <string name="psyco_privacy_s1_id_b">Your account is a random 16-digit number generated on first use. Save it somewhere safe · if you lose it there\'s no recovery (because not even we know who you are).</string>
     <string name="psyco_privacy_s1_payment_h">Payment</string>
@@ -635,7 +635,7 @@
     <string name="psyco_select_location_title">Select location</string>
     <string name="psyco_split_excluded_desc">Apps below are excluded from the VPN tunnel. They use the normal internet connection.</string>
     <string name="psyco_split_consent_title">App-list access</string>
-    <string name="psyco_split_consent_body">VPN.vu reads the list of apps installed on your device so you can choose which apps bypass the VPN (split tunneling). This list is processed only on your device · it is never uploaded, shared, or sent to our servers. Allow access to use split tunneling?</string>
+    <string name="psyco_split_consent_body">VPN.vu collects the list of apps installed on your device to enable the split tunneling feature, so you can choose which apps bypass the VPN. The list is used solely to provide split tunneling and is not shared with third parties. Allow VPN.vu to access your app list to use split tunneling?</string>
     <string name="psyco_split_consent_grant">Allow app-list access</string>
     <string name="psyco_unavailable">Unavailable</string>
     <string name="psyco_dns_disable_custom_hint">Disable \"Use custom DNS server\" below to enable these settings.</string>

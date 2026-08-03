@@ -360,7 +360,7 @@
     <string name="port">Puerto</string>
     <string name="port_x">Puerto: %1$s</string>
     <string name="privacy_disclaimer_body_first_paragraph">Para garantizar que tiene la versión más segura e informarle de cualquier problema con la versión actual que está ejecutando, la aplicación realiza verificaciones de versiones automáticamente. Esto envía la versión de la aplicación y la versión del sistema Android a los servidores de VPN.vu. VPN.vu mantiene contadores del número de versiones de la aplicación y versiones de Android usadas. Los datos nunca se almacenan ni utilizan de forma que puedan identificarle.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Si se utiliza la característica de túnel dividido, la aplicación consultará a su sistema la lista de todas las aplicaciones instaladas. Esta lista solo se recupera en la vista de túnel dividido. La lista de aplicaciones instaladas nunca se envía desde el dispositivo.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Si se utiliza la función de túnel dividido, la aplicación recopila la lista de todas las aplicaciones instaladas en su dispositivo para permitir elegir qué aplicaciones quedan fuera del túnel VPN. Esta lista solo se obtiene en la vista de túnel dividido, tras su consentimiento explícito, y se usa únicamente para ofrecer esta función.</string>
     <string name="privacy_disclaimer_title">Privacidad</string>
     <string name="privacy_policy_label">Política de privacidad</string>
     <string name="privacy_policy_lower_case">política de privacidad</string>

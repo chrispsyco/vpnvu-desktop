@@ -360,7 +360,7 @@
     <string name="port">Porta</string>
     <string name="port_x">Porta: %1$s</string>
     <string name="privacy_disclaimer_body_first_paragraph">Para se certificar de que tem a versão mais segura e para o informar de quaisquer problemas com a versão atual em execução, a app efetua verificações de versão automaticamente. Esta envia a versão da app e a versão do sistema Android para os servidores da VPN.vu. A VPN.vu mantém um registo do número de versões da app e de versões do Android utilizadas. Os dados nunca são armazenados ou utilizados de forma a identificar o utilizador.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Se for utilizada a funcionalidade de divisão do túnel, a app consulta o seu sistema para obter uma lista de todas as aplicações instaladas. Esta lista só é recuperada na vista de divisão do túnel. A lista de aplicações instaladas nunca é enviada pelo dispositivo.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Se a divisão do túnel for usada, o app coleta a lista de todos os aplicativos instalados no seu dispositivo pra permitir escolher quais apps ficam fora do túnel da VPN. Essa lista só é obtida na tela de divisão do túnel, depois do seu consentimento explícito, e é usada somente pra oferecer esse recurso.</string>
     <string name="privacy_disclaimer_title">Privacidade</string>
     <string name="privacy_policy_label">Política de privacidade</string>
     <string name="privacy_policy_lower_case">política de privacidade</string>
@@ -562,7 +562,7 @@
     <string name="psyco_privacy_s1_collect_b">Sério. Não pedimos e-mail, telefone, nome, CPF, endereço, foto de perfil, idade, gênero, localização ou qualquer outra coisa que ligue você a uma identidade.</string>
     <string name="psyco_privacy_s1_collect_big">Nenhum.</string>
     <string name="psyco_privacy_s1_apps_h">Apps instalados · divisão do túnel</string>
-    <string name="psyco_privacy_s1_apps_b">Se você usar a divisão do túnel, a VPN.vu lê a lista de apps instalados no seu dispositivo pra você escolher quais ficam fora do túnel. Essa lista é processada só no seu aparelho · nunca é enviada, compartilhada ou mandada pros nossos servidores. A gente pede seu consentimento explícito dentro do app antes de ler.</string>
+    <string name="psyco_privacy_s1_apps_b">Se você usar a divisão do túnel, a VPN.vu coleta a lista de apps instalados no seu dispositivo pra permitir escolher quais ficam fora do túnel. Isso acontece só na tela de divisão do túnel, depois do seu consentimento explícito dentro do app, e a lista é usada somente pra esse recurso · não é compartilhada com terceiros.</string>
     <string name="psyco_privacy_s1_id_h">Identificação interna</string>
     <string name="psyco_privacy_s1_id_b">Sua conta é um número de 16 dígitos gerado aleatoriamente no primeiro uso. Anota ele em algum lugar seguro · se perder, não tem como recuperar (porque nem a gente sabe quem é você).</string>
     <string name="psyco_privacy_s1_payment_h">Pagamento</string>
@@ -604,7 +604,7 @@
     <string name="psyco_select_location_title">Selecionar localização</string>
     <string name="psyco_split_excluded_desc">Apps abaixo são excluídos do túnel VPN. Eles usam a conexão normal da internet.</string>
     <string name="psyco_split_consent_title">Acesso à lista de apps</string>
-    <string name="psyco_split_consent_body">A VPN.vu lê a lista de apps instalados no seu dispositivo pra você escolher quais ficam fora da VPN (divisão do túnel). Essa lista é processada só no seu aparelho · nunca é enviada, compartilhada ou mandada pros nossos servidores. Permitir o acesso pra usar a divisão do túnel?</string>
+    <string name="psyco_split_consent_body">A VPN.vu coleta a lista de apps instalados no seu dispositivo pra habilitar a divisão do túnel (split tunneling), permitindo escolher quais apps ficam fora da VPN. A lista é usada somente pra esse recurso e não é compartilhada com terceiros. Permitir o acesso à lista de apps pra usar a divisão do túnel?</string>
     <string name="psyco_split_consent_grant">Permitir acesso à lista de apps</string>
     <string name="psyco_unavailable">Indisponível</string>
     <string name="psyco_dns_disable_custom_hint">Desative \"Usar servidor DNS personalizado\" abaixo para ativar estas configurações.</string>
